@@ -26,32 +26,22 @@ async function main() {
     .onConflictDoNothing({ target: users.email })
     .returning();
 
-  const seedRooms = [
-    {
-      code: "MR-A",
-      name: "Ruang A",
-      floor: "3",
-      capacity: 8,
-      amenities: ["tv", "whiteboard"],
-    },
-    {
-      code: "MR-B",
-      name: "Ruang B",
-      floor: "3",
-      capacity: 4,
-      amenities: ["vc"],
-    },
-    {
-      code: "MR-C",
-      name: "Ruang C",
-      floor: "4",
-      capacity: 12,
-      amenities: ["tv", "vc", "whiteboard"],
-    },
-  ];
+  const { SEED_ROOMS } = await import("../data/seed-rooms");
 
-  for (const room of seedRooms) {
-    await db.insert(rooms).values(room).onConflictDoNothing({ target: rooms.code });
+  for (const room of SEED_ROOMS) {
+    await db
+      .insert(rooms)
+      .values({ ...room, amenities: [...room.amenities] })
+      .onConflictDoUpdate({
+        target: rooms.code,
+        set: {
+          name: room.name,
+          floor: room.floor,
+          capacity: room.capacity,
+          amenities: [...room.amenities],
+          isActive: true,
+        },
+      });
   }
 
   let employeeRow = employee;

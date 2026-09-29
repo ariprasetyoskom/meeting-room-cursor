@@ -8,6 +8,7 @@ import { formatDateId } from "@/lib/format";
 type Props = {
   open: boolean;
   room: Room | null;
+  rooms?: Room[];
   date: string;
   startHour: number;
   endHour: number;
@@ -24,12 +25,14 @@ function toOffsetIso(date: string, hour: number, minute = 0): string {
 export function BookingModal({
   open,
   room,
+  rooms = [],
   date,
   startHour,
   endHour,
   onClose,
   onSuccess,
 }: Props) {
+  const [roomId, setRoomId] = useState(room?.id ?? "");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [start, setStart] = useState(startHour);
@@ -46,10 +49,14 @@ export function BookingModal({
       setEnd(endHour);
       setError(null);
       setConflicts([]);
+      if (room) setRoomId(room.id);
     }
-  }, [open, startHour, endHour]);
+  }, [open, startHour, endHour, room]);
 
-  if (!open || !room) return null;
+  const activeRoom =
+    rooms.find((r) => r.id === roomId) ?? room;
+
+  if (!open || !activeRoom) return null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -60,7 +67,7 @@ export function BookingModal({
       await apiFetch("/api/v1/bookings", {
         method: "POST",
         body: JSON.stringify({
-          roomId: room!.id,
+          roomId: activeRoom.id,
           title,
           description: description || undefined,
           startAt: toOffsetIso(date, start),
@@ -94,9 +101,26 @@ export function BookingModal({
         role="dialog"
         aria-labelledby="booking-modal-title"
       >
-        <h2 id="booking-modal-title">Booking — {room.name}</h2>
+        <h2 id="booking-modal-title">Booking — {activeRoom.name}</h2>
         <p className="text-muted">{formatDateId(`${date}T12:00:00+07:00`)}</p>
         <form onSubmit={handleSubmit} className="form-stack">
+          {rooms.length > 1 && (
+            <label>
+              Ruangan *
+              <select
+                className="input"
+                value={roomId}
+                onChange={(e) => setRoomId(e.target.value)}
+                required
+              >
+                {rooms.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name} ({r.capacity} orang)
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <label>
             Judul meeting *
             <input

@@ -8,6 +8,7 @@ import {
   type Room,
 } from "@/lib/client-api";
 import { BookingModal } from "./BookingModal";
+import { RoomPicker } from "./RoomPicker";
 import {
   OPERATING_HOURS,
   dayBoundsUtc,
@@ -25,11 +26,17 @@ export function BookingCalendar() {
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [modal, setModal] = useState<{
     room: Room;
     startHour: number;
     endHour: number;
   } | null>(null);
+
+  const visibleRooms = useMemo(() => {
+    if (!selectedRoomId) return rooms;
+    return rooms.filter((r) => r.id === selectedRoomId);
+  }, [rooms, selectedRoomId]);
 
   const hours = useMemo(
     () =>
@@ -102,6 +109,14 @@ export function BookingCalendar() {
         </div>
       </header>
 
+      {!loading && !error && rooms.length > 0 && (
+        <RoomPicker
+          rooms={rooms}
+          selectedRoomId={selectedRoomId}
+          onSelect={setSelectedRoomId}
+        />
+      )}
+
       <div className="toolbar">
         <label className="toolbar-item">
           Tanggal
@@ -163,9 +178,9 @@ export function BookingCalendar() {
         </div>
       )}
 
-      {!loading && view === "list" && rooms.length > 0 && (
+      {!loading && view === "list" && visibleRooms.length > 0 && (
         <ul className="room-list">
-          {rooms.map((room) => (
+          {visibleRooms.map((room) => (
             <li key={room.id} className="room-card">
               <div>
                 <h3>{room.name}</h3>
@@ -186,7 +201,7 @@ export function BookingCalendar() {
         </ul>
       )}
 
-      {!loading && view === "timeline" && rooms.length > 0 && (
+      {!loading && view === "timeline" && visibleRooms.length > 0 && (
         <div className="timeline-wrap">
           <table className="timeline-table">
             <thead>
@@ -198,7 +213,7 @@ export function BookingCalendar() {
               </tr>
             </thead>
             <tbody>
-              {rooms.map((room) => (
+              {visibleRooms.map((room) => (
                 <tr key={room.id}>
                   <th scope="row" className="timeline-room">
                     <span>{room.name}</span>
@@ -237,6 +252,7 @@ export function BookingCalendar() {
       <BookingModal
         open={!!modal}
         room={modal?.room ?? null}
+        rooms={rooms}
         date={date}
         startHour={modal?.startHour ?? 9}
         endHour={modal?.endHour ?? 10}
