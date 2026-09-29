@@ -1,6 +1,11 @@
-import { and, asc, eq, gte, lte } from "drizzle-orm";
-import { db } from "@/db";
-import { auditLogs, bookings, rooms, users } from "@/db/schema";
+import {
+  cancelBookingRow,
+  findBookingById,
+  insertBooking,
+  listBookingsWithOrganizer,
+  writeAuditLog,
+} from "@/db/repositories/bookings.repository";
+import { findActiveRoomById } from "@/db/repositories/rooms.repository";
 import {
   assertBookingWindow,
   assertCanCancel,
@@ -8,6 +13,7 @@ import {
 } from "./booking-policy";
 import type { CreateBookingInput } from "./validators/booking";
 import type { SessionUser } from "./auth/session";
+
 type PostgresError = Error & { code?: string };
 
 export async function listBookings(params: {
@@ -15,38 +21,9 @@ export async function listBookings(params: {
   from?: Date;
   to?: Date;
   organizerUserId?: string;
-  /** When true (e.g. "my bookings"), include cancelled entries */
   includeAllStatuses?: boolean;
 }) {
-  const conditions = [];
-  if (!params.includeAllStatuses) {
-    conditions.push(eq(bookings.status, "confirmed"));
-  }
-  if (params.roomId) conditions.push(eq(bookings.roomId, params.roomId));
-  if (params.organizerUserId) {
-    conditions.push(eq(bookings.organizerUserId, params.organizerUserId));
-  }
-  if (params.from) conditions.push(gte(bookings.startAt, params.from));
-  if (params.to) conditions.push(lte(bookings.endAt, params.to));
-
-  const rows = await db
-    .select({
-      id: bookings.id,
-      roomId: bookings.roomId,
-      title: bookings.title,
-      description: bookings.description,
-      startAt: bookings.startAt,
-      endAt: bookings.endAt,
-      status: bookings.status,
-      organizerUserId: bookings.organizerUserId,
-      organizerName: users.displayName,
-    })
-    .from(bookings)
-    .innerJoin(users, eq(bookings.organizerUserId, users.id))
-    .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(asc(bookings.startAt));
-
-  return rows;
+  return listBookingsWithOrganizer(params);
 }
 
 export async function createBooking(
@@ -57,12 +34,7 @@ export async function createBooking(
   const endAt = new Date(input.endAt);
   assertBookingWindow(startAt, endAt);
 
-  const roomRows = await db
-    .select()
-    .from(rooms)
-    .where(and(eq(rooms.id, input.roomId), eq(rooms.isActive, true)))
-    .limit(1);
-  const room = roomRows[0];
+  const room = await findActiveRoomById(input.roomId);
   if (!room) {
     throw new PolicyError(
       "ROOM_NOT_FOUND",
@@ -72,20 +44,17 @@ export async function createBooking(
   }
 
   try {
-    const [created] = await db
-      .insert(bookings)
-      .values({
-        roomId: input.roomId,
-        organizerUserId: actor.id,
-        title: input.title,
-        description: input.description,
-        startAt,
-        endAt,
-        status: "confirmed",
-      })
-      .returning();
+    const created = await insertBooking({
+      roomId: input.roomId,
+      organizerUserId: actor.id,
+      title: input.title,
+      description: input.description,
+      startAt,
+      endAt,
+      status: "confirmed",
+    });
 
-    await db.insert(auditLogs).values({
+    await writeAuditLog({
       actorUserId: actor.id,
       entityType: "booking",
       entityId: created.id,
@@ -104,7 +73,7 @@ export async function createBooking(
   } catch (err) {
     const pg = err as PostgresError;
     if (pg.code === "23P01") {
-      const conflicts = await listBookings({
+      const conflicts = await listBookingsWithOrganizer({
         roomId: input.roomId,
         from: startAt,
         to: endAt,
@@ -120,12 +89,7 @@ export async function cancelBooking(
   actor: SessionUser,
   reason?: string,
 ) {
-  const rows = await db
-    .select()
-    .from(bookings)
-    .where(eq(bookings.id, bookingId))
-    .limit(1);
-  const booking = rows[0];
+  const booking = await findBookingById(bookingId);
   if (!booking || booking.status !== "confirmed") {
     throw new PolicyError(
       "NOT_FOUND",
@@ -136,18 +100,9 @@ export async function cancelBooking(
 
   assertCanCancel(booking.startAt, actor, booking.organizerUserId);
 
-  const [updated] = await db
-    .update(bookings)
-    .set({
-      status: "cancelled",
-      cancelledAt: new Date(),
-      cancelledBy: actor.id,
-      cancelReason: reason,
-    })
-    .where(eq(bookings.id, bookingId))
-    .returning();
+  const updated = await cancelBookingRow(bookingId, actor.id, reason);
 
-  await db.insert(auditLogs).values({
+  await writeAuditLog({
     actorUserId: actor.id,
     entityType: "booking",
     entityId: bookingId,
@@ -159,9 +114,9 @@ export async function cancelBooking(
 }
 
 export class RoomConflictError extends Error {
-  conflicts: Awaited<ReturnType<typeof listBookings>>;
+  conflicts: Awaited<ReturnType<typeof listBookingsWithOrganizer>>;
 
-  constructor(conflicts: Awaited<ReturnType<typeof listBookings>>) {
+  constructor(conflicts: Awaited<ReturnType<typeof listBookingsWithOrganizer>>) {
     super("Room conflict");
     this.name = "RoomConflictError";
     this.conflicts = conflicts;

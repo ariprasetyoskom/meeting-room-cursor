@@ -21,4 +21,7 @@ if (process.env.NODE_ENV !== "production") {
   globalForDb.sql = sql;
 }
 
+/** Drizzle ORM — single database access layer */
 export const db = drizzle(sql, { schema });
+
+export { schema };

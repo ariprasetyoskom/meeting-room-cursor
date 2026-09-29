@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import {
   boolean,
   jsonb,
@@ -16,7 +17,7 @@ export const bookingStatusEnum = pgEnum("booking_status", [
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
-  externalSub: text("external_sub"),
+  externalSub: text("external_sub").unique(),
   email: text("email").notNull().unique(),
   displayName: text("display_name").notNull(),
   role: text("role").notNull().$type<"employee" | "admin">(),
@@ -73,3 +74,43 @@ export const auditLogs = pgTable("audit_logs", {
     .notNull()
     .defaultNow(),
 });
+
+export const usersRelations = relations(users, ({ many }) => ({
+  organizedBookings: many(bookings, { relationName: "organizer" }),
+  cancelledBookings: many(bookings, { relationName: "cancelledBy" }),
+  auditLogs: many(auditLogs),
+}));
+
+export const roomsRelations = relations(rooms, ({ many }) => ({
+  bookings: many(bookings),
+}));
+
+export const bookingsRelations = relations(bookings, ({ one }) => ({
+  room: one(rooms, {
+    fields: [bookings.roomId],
+    references: [rooms.id],
+  }),
+  organizer: one(users, {
+    fields: [bookings.organizerUserId],
+    references: [users.id],
+    relationName: "organizer",
+  }),
+  cancelledByUser: one(users, {
+    fields: [bookings.cancelledBy],
+    references: [users.id],
+    relationName: "cancelledBy",
+  }),
+}));
+
+export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
+  actor: one(users, {
+    fields: [auditLogs.actorUserId],
+    references: [users.id],
+  }),
+}));
+
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+export type Room = typeof rooms.$inferSelect;
+export type Booking = typeof bookings.$inferSelect;
+export type AuditLog = typeof auditLogs.$inferSelect;

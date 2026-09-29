@@ -2,7 +2,7 @@ import { Worker } from "bullmq";
 import { eq } from "drizzle-orm";
 import "dotenv/config";
 import { db, sql } from "@/db";
-import { bookings, rooms, users } from "@/db/schema";
+import { bookings } from "@/db/schema";
 import { getRedisConnection } from "@/lib/queue/connection";
 
 const connection = getRedisConnection();
@@ -50,36 +50,28 @@ function formatBilingualEmail(payload: {
 }
 
 async function handleConfirm(bookingId: string) {
-  const rows = await db
-    .select({
-      title: bookings.title,
-      startAt: bookings.startAt,
-      roomName: rooms.name,
-      organizerName: users.displayName,
-      email: users.email,
-    })
-    .from(bookings)
-    .innerJoin(rooms, eq(bookings.roomId, rooms.id))
-    .innerJoin(users, eq(bookings.organizerUserId, users.id))
-    .where(eq(bookings.id, bookingId))
-    .limit(1);
-
-  const row = rows[0];
+  const row = await db.query.bookings.findFirst({
+    where: eq(bookings.id, bookingId),
+    with: { room: true, organizer: true },
+  });
   if (!row) return;
 
   const message = formatBilingualEmail({
     title: row.title,
-    roomName: row.roomName,
+    roomName: row.room.name,
     startAt: row.startAt,
-    organizerName: row.organizerName,
+    organizerName: row.organizer.displayName,
   });
 
   // MVP: log email; wire SMTP when credentials are configured
   if (process.env.SMTP_HOST) {
-    console.info("[email] SMTP send pending implementation for", row.email);
+    console.info(
+      "[email] SMTP send pending implementation for",
+      row.organizer.email,
+    );
   } else {
     console.info("[email] dev preview", {
-      to: row.email,
+      to: row.organizer.email,
       subject: message.subject,
     });
   }

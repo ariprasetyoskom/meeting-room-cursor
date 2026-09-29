@@ -1,22 +1,27 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { migrate } from "drizzle-orm/postgres-js/migrator";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import postgres from "postgres";
-import "dotenv/config";
+import { loadAppEnv } from "./load-env";
+
+async function applyCustomSql(sql: { unsafe: (q: string) => Promise<unknown> }) {
+  const customPath = join(
+    process.cwd(),
+    "drizzle",
+    "custom",
+    "booking_constraints.sql",
+  );
+  const custom = readFileSync(customPath, "utf8");
+  await sql.unsafe(custom);
+  console.log("Applied drizzle/custom/booking_constraints.sql");
+}
 
 async function main() {
-  const url =
-    process.env.DATABASE_URL ??
-    "postgresql://booking:booking_dev@localhost:5432/booking_meeting";
-  const sql = postgres(url, { max: 1 });
-  const migrationsDir = join(process.cwd(), "drizzle", "migrations");
-  const files = readdirSync(migrationsDir)
-    .filter((f) => f.endsWith(".sql"))
-    .sort();
-  for (const file of files) {
-    const migration = readFileSync(join(migrationsDir, file), "utf8");
-    await sql.unsafe(migration);
-    console.log(`Applied ${file}`);
-  }
+  loadAppEnv();
+  const { db, sql } = await import("./index");
+
+  await migrate(db, { migrationsFolder: "./drizzle/migrations" });
+  console.log("Drizzle ORM migrations applied.");
+  await applyCustomSql(sql);
   await sql.end();
 }
 

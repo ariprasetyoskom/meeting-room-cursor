@@ -1,11 +1,12 @@
-import { sql } from "@/db";
+import { sql } from "drizzle-orm";
+import { db } from "@/db";
 import { jsonOk } from "@/lib/api-response";
 import { getRedisConnection } from "@/lib/queue/connection";
 
 export async function GET() {
   let dbOk = false;
   try {
-    await sql`SELECT 1`;
+    await db.execute(sql`SELECT 1`);
     dbOk = true;
   } catch {
     dbOk = false;

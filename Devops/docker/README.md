@@ -18,13 +18,13 @@ docker compose up -d
 
 | Service | URL / Host | Credentials |
 |---------|------------|-------------|
-| PostgreSQL | `localhost:5432` | user `booking`, password `booking_dev`, db `booking_meeting` |
+| PostgreSQL | `127.0.0.1:5434` (host) | user `booking`, password `booking_dev`, db `booking_meeting` |
 | Redis | `localhost:6379` | no password (dev only) |
 
 **DATABASE_URL** contoh:
 
 ```text
-postgresql://booking:booking_dev@localhost:5432/booking_meeting
+postgresql://booking:booking_dev@127.0.0.1:5434/booking_meeting
 ```
 
 **REDIS_URL** contoh:

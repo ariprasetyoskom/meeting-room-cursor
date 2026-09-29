@@ -49,7 +49,9 @@ Dev auth: header `x-dev-user-id` atau env `DEV_USER_ID` dengan `AUTH_MODE=dev`.
 
 | Script | Fungsi |
 |--------|--------|
-| `npm run db:migrate` | SQL migration + exclusion constraint |
+| `npm run db:generate` | Generate migration dari `src/db/schema.ts` (Drizzle Kit) |
+| `npm run db:migrate` | Jalankan migrator Drizzle ORM + constraint SQL |
+| `npm run db:studio` | Drizzle Studio (browse data) |
 | `npm run db:seed` | User demo + ruang contoh |
 | `npm run test` | Unit tests (Vitest) |
 | `npm run worker:email` | Consumer email bilingual |

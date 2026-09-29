@@ -1,9 +1,11 @@
 import { eq } from "drizzle-orm";
-import "dotenv/config";
-import { db, sql } from "./index";
-import { rooms, users } from "./schema";
+import { loadAppEnv } from "./load-env";
 
 async function main() {
+  loadAppEnv();
+  const { db, sql } = await import("./index");
+  const { rooms, users } = await import("./schema");
+
   const [employee] = await db
     .insert(users)
     .values({
