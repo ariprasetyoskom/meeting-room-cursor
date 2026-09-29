@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import postgres from "postgres";
 import "dotenv/config";
@@ -8,16 +8,16 @@ async function main() {
     process.env.DATABASE_URL ??
     "postgresql://booking:booking_dev@localhost:5432/booking_meeting";
   const sql = postgres(url, { max: 1 });
-  const migrationPath = join(
-    process.cwd(),
-    "drizzle",
-    "migrations",
-    "0000_initial.sql",
-  );
-  const migration = readFileSync(migrationPath, "utf8");
-  await sql.unsafe(migration);
+  const migrationsDir = join(process.cwd(), "drizzle", "migrations");
+  const files = readdirSync(migrationsDir)
+    .filter((f) => f.endsWith(".sql"))
+    .sort();
+  for (const file of files) {
+    const migration = readFileSync(join(migrationsDir, file), "utf8");
+    await sql.unsafe(migration);
+    console.log(`Applied ${file}`);
+  }
   await sql.end();
-  console.log("Migration 0000_initial applied.");
 }
 
 main().catch((err) => {

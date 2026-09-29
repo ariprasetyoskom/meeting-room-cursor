@@ -16,6 +16,7 @@ export const bookingStatusEnum = pgEnum("booking_status", [
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
+  externalSub: text("external_sub"),
   email: text("email").notNull().unique(),
   displayName: text("display_name").notNull(),
   role: text("role").notNull().$type<"employee" | "admin">(),

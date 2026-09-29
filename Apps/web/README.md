@@ -65,9 +65,19 @@ src/
 drizzle/migrations/
 ```
 
+## Autentikasi
+
+| Mode | Env | Cara pakai |
+|------|-----|------------|
+| **dev** (default) | `AUTH_MODE=dev` | Banner Dev user ID atau `DEV_USER_ID` + header |
+| **oidc** | `AUTH_MODE=oidc` + `AUTH_SECRET` + `OIDC_*` | Login `/login` → SSO; session cookie ke API |
+
+Redirect URI di IdP: `{NEXT_PUBLIC_APP_URL}/api/auth/callback/oidc`
+
+Setelah ubah `.env.local`, restart `npm run dev`.
+
 ## Berikutnya
 
-- Auth.js OIDC production
-- UI timeline booking (PRD F-02–F-07)
 - SMTP pengiriman email nyata
-- Playwright E2E di staging
+- Playwright E2E (dev + OIDC staging)
+- Admin UI (F-08–F-09)

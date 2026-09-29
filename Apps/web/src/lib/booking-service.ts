@@ -15,8 +15,13 @@ export async function listBookings(params: {
   from?: Date;
   to?: Date;
   organizerUserId?: string;
+  /** When true (e.g. "my bookings"), include cancelled entries */
+  includeAllStatuses?: boolean;
 }) {
-  const conditions = [eq(bookings.status, "confirmed")];
+  const conditions = [];
+  if (!params.includeAllStatuses) {
+    conditions.push(eq(bookings.status, "confirmed"));
+  }
   if (params.roomId) conditions.push(eq(bookings.roomId, params.roomId));
   if (params.organizerUserId) {
     conditions.push(eq(bookings.organizerUserId, params.organizerUserId));
@@ -38,7 +43,7 @@ export async function listBookings(params: {
     })
     .from(bookings)
     .innerJoin(users, eq(bookings.organizerUserId, users.id))
-    .where(and(...conditions))
+    .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(asc(bookings.startAt));
 
   return rows;

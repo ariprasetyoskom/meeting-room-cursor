@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
+import { auth, isOidcEnabled } from "@/auth";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 
@@ -11,13 +12,12 @@ export type SessionUser = {
 };
 
 export async function getSessionUser(
-  request: NextRequest,
+  request?: NextRequest,
 ): Promise<SessionUser | null> {
-  const authMode = process.env.AUTH_MODE ?? "dev";
-  const devUserId =
-    request.headers.get("x-dev-user-id") ?? process.env.DEV_USER_ID;
-
-  if (authMode === "dev" && devUserId) {
+  if (!isOidcEnabled()) {
+    const devUserId =
+      request?.headers.get("x-dev-user-id") ?? process.env.DEV_USER_ID;
+    if (!devUserId) return null;
     const rows = await db
       .select()
       .from(users)
@@ -33,12 +33,19 @@ export async function getSessionUser(
     };
   }
 
-  // OIDC / Auth.js: wire in next iteration
-  return null;
+  const session = await auth();
+  if (!session?.user?.id || !session.user.email) return null;
+
+  return {
+    id: session.user.id,
+    email: session.user.email,
+    displayName: session.user.name ?? session.user.email,
+    role: session.user.role ?? "employee",
+  };
 }
 
 export async function requireSessionUser(
-  request: NextRequest,
+  request?: NextRequest,
 ): Promise<SessionUser> {
   const user = await getSessionUser(request);
   if (!user) {

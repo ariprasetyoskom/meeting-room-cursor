@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
     const bookings = await listBookings({
       roomId,
       organizerUserId: mine ? user.id : undefined,
+      includeAllStatuses: mine,
       from: from ? new Date(from) : undefined,
       to: to ? new Date(to) : undefined,
     });
