@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Build & cache
+.next/
+dist/
+out/
+coverage/
+*.tsbuildinfo
+
+# OS & IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Logs
+*.log
+npm-debug.log*
+
+# Docker volumes (local)
+Devops/docker/data/
