@@ -226,21 +226,21 @@ Correlation: propagate `x-request-id` from edge to worker logs where bookingId p
 
 ### 8.4 CI/CD
 
-Pipeline stages (see example [../Devops/ci/github/ci.yml.example](../Devops/ci/github/ci.yml.example)):
+Pipeline stages (see [../.gitlab-ci.yml](../.gitlab-ci.yml) & [../Devops/ci/README.md](../Devops/ci/README.md)):
 
 1. **Lint & typecheck** — ESLint, `tsc --noEmit`.
 2. **Unit tests** — Vitest/Jest.
 3. **Integration tests** — Postgres service container; overlap constraint tests.
 4. **Build** — `next build`; build worker bundle.
 5. **E2E (staging/nightly)** — Playwright on staging.
-6. **Deploy staging** — auto on `main` merge.
+6. **Deploy staging** — auto on `main` merge (GitLab `deploy-staging` job).
 7. **Deploy production** — manual approval or tagged release `v*`.
 
-Artifacts: container image to registry; SBOM optional.
+Artifacts: `.next/` build + container image to GitLab Container Registry (opsional).
 
 Database migrations run as pre-deploy job with rollback plan documented.
 
-Secrets via GitHub Environments (`staging`, `production`).
+Secrets via **GitLab CI/CD Variables** and Environments (`staging`, `production`).
 
 ### 8.5 Branch Management
 
@@ -304,7 +304,7 @@ Test data: seed script for rooms and test users in staging only.
 | TDD v1.1 | [./TDD-Aplikasi-Booking-Ruang-Meeting.md](./TDD-Aplikasi-Booking-Ruang-Meeting.md) |
 | Design (UI/UX) | [./Design-Aplikasi-Booking-Ruang-Meeting.md](./Design-Aplikasi-Booking-Ruang-Meeting.md) |
 | Docs index | [./README.md](./README.md) |
-| CI example | [../Devops/ci/github/ci.yml.example](../Devops/ci/github/ci.yml.example) |
+| GitLab CI | [../.gitlab-ci.yml](../.gitlab-ci.yml) · [../Devops/ci/README.md](../Devops/ci/README.md) |
 
 ---
 

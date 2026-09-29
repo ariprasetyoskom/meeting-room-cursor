@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getDevUserId, setDevUserId } from "@/lib/client-api";
+import { notifyDevAuthReady } from "@/lib/dev-auth-client";
 
 export function DevAuthBanner() {
   const [authMode, setAuthMode] = useState<string | null>(null);
@@ -29,6 +30,7 @@ export function DevAuthBanner() {
         if (cfg.defaultUserId) {
           setDevUserId(cfg.defaultUserId);
           setUserId(cfg.defaultUserId);
+          notifyDevAuthReady();
         }
       })
       .catch(() => undefined);
@@ -58,6 +60,7 @@ export function DevAuthBanner() {
             if (!draft.trim()) return;
             setDevUserId(draft.trim());
             setUserId(draft.trim());
+            notifyDevAuthReady();
           }}
         >
           <label htmlFor="dev-user-id">

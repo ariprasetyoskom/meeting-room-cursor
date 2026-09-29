@@ -8,6 +8,8 @@ import {
   type Room,
 } from "@/lib/client-api";
 import { formatDateId, formatRange, toDateInputValue } from "@/lib/format";
+import { PageHeader } from "./ui/PageHeader";
+import { LoadingBlock } from "./ui/LoadingBlock";
 
 export function AdminBookingsList() {
   const [bookings, setBookings] = useState<BookingRow[]>([]);
@@ -72,14 +74,12 @@ export function AdminBookingsList() {
 
   return (
     <div>
-      <header className="page-header">
-        <div>
-          <h1>Semua booking</h1>
-          <p className="text-muted">Override cancel dengan alasan (F-09).</p>
-        </div>
-      </header>
+      <PageHeader
+        title="Semua booking"
+        description="Lihat semua reservasi; batalkan sebagai admin dengan alasan (F-09)."
+      />
 
-      <div className="toolbar admin-filters">
+      <div className="toolbar">
         <label className="toolbar-item">
           Dari
           <input
@@ -123,7 +123,7 @@ export function AdminBookingsList() {
         </div>
       )}
 
-      {loading && <p className="text-muted">Memuat…</p>}
+      {loading && <LoadingBlock />}
 
       {!loading && (
         <ul className="booking-cards">
@@ -169,16 +169,18 @@ export function AdminBookingsList() {
           <div className="modal" role="dialog">
             <h2>Batalkan booking</h2>
             <p className="text-muted">Alasan wajib untuk audit (D-1 / BR-08).</p>
-            <label className="form-stack">
-              Alasan *
-              <textarea
-                className="input"
-                rows={3}
-                value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
-                required
-              />
-            </label>
+            <div className="form-stack">
+              <label>
+                Alasan *
+                <textarea
+                  className="input"
+                  rows={3}
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  required
+                />
+              </label>
+            </div>
             <div className="modal-actions">
               <button
                 type="button"

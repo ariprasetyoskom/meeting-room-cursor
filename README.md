@@ -11,7 +11,7 @@ D:\Cursor\
 │   └── web\       # Next.js 14 — UI + API MVP
 └── Devops\
     ├── docker\    # Postgres + Redis lokal
-    ├── ci\        # Contoh pipeline (GitHub Actions)
+    ├── ci\        # GitLab CI (lihat .gitlab-ci.yml di root)
     └── infra\     # Terraform / K8s (placeholder)
 ```
 

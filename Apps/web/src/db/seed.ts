@@ -10,10 +10,13 @@ async function main() {
     .insert(users)
     .values({
       email: "employee@example.com",
-      displayName: "Andi Wijaya",
+      displayName: "Ari Prasetyo",
       role: "employee",
     })
-    .onConflictDoNothing({ target: users.email })
+    .onConflictDoUpdate({
+      target: users.email,
+      set: { displayName: "Ari Prasetyo" },
+    })
     .returning();
 
   const [admin] = await db

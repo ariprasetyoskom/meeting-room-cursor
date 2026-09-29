@@ -9,6 +9,8 @@ import {
   type Room,
 } from "@/lib/client-api";
 import { formatDateId, formatRange } from "@/lib/format";
+import { PageHeader } from "./ui/PageHeader";
+import { LoadingBlock } from "./ui/LoadingBlock";
 
 type Tab = "upcoming" | "past";
 
@@ -83,13 +85,16 @@ export function MyBookingsList() {
   }
 
   return (
-    <div className="bookings-page">
-      <header className="page-header">
-        <h1>Booking saya</h1>
-        <Link href="/book" className="btn btn-primary">
-          Booking baru
-        </Link>
-      </header>
+    <div className="page-content bookings-page">
+      <PageHeader
+        title="Booking saya"
+        description="Mendatang dan riwayat reservasi Anda."
+        actions={
+          <Link href="/book" className="btn btn-primary">
+            Booking baru
+          </Link>
+        }
+      />
 
       <div className="tabs" role="tablist">
         <button
@@ -117,7 +122,7 @@ export function MyBookingsList() {
           {error}
         </div>
       )}
-      {loading && <p className="text-muted">Memuat…</p>}
+      {loading && <LoadingBlock />}
 
       {!loading && filtered.length === 0 && (
         <div className="empty-state">
@@ -169,14 +174,16 @@ export function MyBookingsList() {
               Hanya organizer yang dapat membatalkan. Window cutoff 2 jam sebelum
               start (kecuali admin).
             </p>
-            <label>
-              Alasan (opsional)
-              <input
-                className="input"
-                value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
-              />
-            </label>
+            <div className="form-stack">
+              <label>
+                Alasan (opsional)
+                <input
+                  className="input"
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                />
+              </label>
+            </div>
             <div className="modal-actions">
               <button
                 type="button"

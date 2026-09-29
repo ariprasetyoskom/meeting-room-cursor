@@ -3,6 +3,7 @@
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { LoadingBlock } from "@/components/ui/LoadingBlock";
 
 type PublicConfig = {
   authMode: string;
@@ -21,8 +22,8 @@ export default function LoginPage() {
 
   if (!cfg) {
     return (
-      <main className="login-page">
-        <p className="text-muted">Memuat…</p>
+      <main className="login-page page-content">
+        <LoadingBlock />
       </main>
     );
   }

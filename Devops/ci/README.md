@@ -1,40 +1,43 @@
-# CI/CD
+# CI/CD — GitLab
 
-Contoh pipeline continuous integration untuk monorepo **Apps/web**, selaras dengan [Architecture §8.4](../../Docs/Architecture-Aplikasi-Booking-Ruang-Meeting.md).
+Pipeline continuous integration untuk monorepo **Apps/web**, selaras dengan [Architecture §8.4](../../Docs/Architecture-Aplikasi-Booking-Ruang-Meeting.md).
 
-## GitHub Actions
+## File pipeline
 
-File contoh: [github/ci.yml.example](./github/ci.yml.example)
+| Path | Fungsi |
+|------|--------|
+| [../../.gitlab-ci.yml](../../.gitlab-ci.yml) | Pipeline GitLab (aktif saat repo di GitLab) |
+| [gitlab/](./gitlab/) | Pointer referensi ke root |
 
-Salin ke repositori GitHub:
+GitLab hanya mengeksekusi **`.gitlab-ci.yml` di root** repositori.
 
-```text
-.github/workflows/ci.yml
-```
+## Stage pipeline
 
-Sesuaikan path jika root repo bukan monorepo `D:\Cursor`.
+1. **lint** — ESLint + `tsc --noEmit`
+2. **test** — Vitest unit; job integrasi dengan service Postgres 15 + Redis 7 + `db:migrate`
+3. **build** — `next build` (artifact `.next/`)
+4. **deploy** — placeholder deploy staging on branch `main`
 
-## Stage Pipeline
-
-1. **Lint & Typecheck** — ESLint, TypeScript
-2. **Unit tests**
-3. **Integration tests** — Postgres service + exclusion constraint cases
-4. **Build** — Next.js + worker
-5. **Deploy staging** — on `main` (opsional, butuh secrets)
-6. **E2E** — nightly atau pre-release (Playwright)
-
-## Branch Policy
+## Branch policy
 
 Lihat Architecture [§8.5 Branch Management](../../Docs/Architecture-Aplikasi-Booking-Ruang-Meeting.md).
 
-## Secrets (GitHub Environments)
+## Variabel & secrets (GitLab)
 
-| Secret | Usage |
-|--------|--------|
-| `DATABASE_URL` | Integration job / deploy migrate |
-| `AUTH_SECRET` | Build/runtime staging |
-| `CONTAINER_REGISTRY_*` | Push image |
+Set di **Settings → CI/CD → Variables** (protected/masked untuk production):
 
-## QA Gate
+| Variable | Usage |
+|----------|--------|
+| `DATABASE_URL` | Override integrasi / deploy migrate |
+| `AUTH_SECRET` | Runtime staging/prod |
+| `CI_REGISTRY_*` | Push image container (opsional) |
 
-Release ke production memerlukan checklist Architecture [§8.6 QA](../../Docs/Architecture-Aplikasi-Booking-Ruang-Meeting.md) dan UAT sign-off BRD.
+Gunakan **Environments** `staging` / `production` untuk approval manual deploy prod (tag `v*`).
+
+## QA gate
+
+Release production: checklist Architecture [§8.6 QA](../../Docs/Architecture-Aplikasi-Booking-Ruang-Meeting.md) + UAT BRD §13.
+
+## Migrasi dari GitHub Actions
+
+Contoh GitHub Actions lama dihapus; gunakan stage yang sama di `.gitlab-ci.yml`.

@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ApiError, apiFetch, type Room } from "@/lib/client-api";
+import { PageHeader } from "./ui/PageHeader";
+import { LoadingBlock } from "./ui/LoadingBlock";
 
 type AdminRoom = Room & { isActive?: boolean };
 
@@ -118,15 +120,15 @@ export function AdminRoomsManager() {
 
   return (
     <div>
-      <header className="page-header">
-        <div>
-          <h1>Master ruang</h1>
-          <p className="text-muted">CRUD ruang meeting (F-08).</p>
-        </div>
-        <button type="button" className="btn btn-primary" onClick={openCreate}>
-          Tambah ruang
-        </button>
-      </header>
+      <PageHeader
+        title="Master ruang"
+        description="Kelola ruang meeting — tambah, edit, aktif/nonaktif (F-08)."
+        actions={
+          <button type="button" className="btn btn-primary" onClick={openCreate}>
+            Tambah ruang
+          </button>
+        }
+      />
 
       {error && (
         <div className="alert alert-error" role="alert">
@@ -134,11 +136,11 @@ export function AdminRoomsManager() {
         </div>
       )}
 
-      {loading && <p className="text-muted">Memuat…</p>}
+      {loading && <LoadingBlock />}
 
       {!loading && (
-        <div className="admin-table-wrap">
-          <table className="admin-table">
+        <div className="data-table-wrap">
+          <table className="data-table">
             <thead>
               <tr>
                 <th>Kode</th>

@@ -9,12 +9,18 @@ import {
 } from "@/lib/client-api";
 import { BookingModal } from "./BookingModal";
 import { RoomPicker } from "./RoomPicker";
+import { PageHeader } from "./ui/PageHeader";
+import { LoadingBlock } from "./ui/LoadingBlock";
 import {
   OPERATING_HOURS,
   dayBoundsUtc,
   formatDateId,
   toDateInputValue,
 } from "@/lib/format";
+import {
+  DEV_AUTH_READY_EVENT,
+  ensureDevUserId,
+} from "@/lib/dev-auth-client";
 
 type ViewMode = "timeline" | "list";
 
@@ -51,6 +57,7 @@ export function BookingCalendar() {
     setLoading(true);
     setError(null);
     try {
+      await ensureDevUserId();
       const { from, to } = dayBoundsUtc(date);
       const params = new URLSearchParams({
         from: from.toISOString(),
@@ -80,6 +87,12 @@ export function BookingCalendar() {
     load();
   }, [load]);
 
+  useEffect(() => {
+    const onDevAuth = () => load();
+    window.addEventListener(DEV_AUTH_READY_EVENT, onDevAuth);
+    return () => window.removeEventListener(DEV_AUTH_READY_EVENT, onDevAuth);
+  }, [load]);
+
   function bookingsForRoom(roomId: string) {
     return bookings.filter((b) => b.roomId === roomId);
   }
@@ -101,13 +114,11 @@ export function BookingCalendar() {
   }
 
   return (
-    <div className="booking-page">
-      <header className="page-header">
-        <div>
-          <h1>Booking ruang</h1>
-          <p className="text-muted">Pilih tanggal dan slot kosong — target ≤ 2 menit.</p>
-        </div>
-      </header>
+    <div className="page-content booking-page">
+      <PageHeader
+        title="Booking ruang"
+        description="Pilih tanggal dan slot kosong — target ≤ 2 menit."
+      />
 
       {!loading && !error && rooms.length > 0 && (
         <RoomPicker
@@ -167,7 +178,11 @@ export function BookingCalendar() {
         </div>
       )}
 
-      {loading && <p className="text-muted">Memuat…</p>}
+      {loading && (
+        <div className="calendar-loading panel">
+          <LoadingBlock label="Memuat kalender…" />
+        </div>
+      )}
 
       {!loading && !error && rooms.length === 0 && (
         <div className="empty-state">
@@ -186,7 +201,7 @@ export function BookingCalendar() {
                 <h3>{room.name}</h3>
                 <p className="text-muted">
                   Lantai {room.floor ?? "—"} · {room.capacity} orang ·{" "}
-                  {room.amenities.join(", ") || "—"}
+                  {(room.amenities ?? []).join(", ") || "—"}
                 </p>
               </div>
               <button

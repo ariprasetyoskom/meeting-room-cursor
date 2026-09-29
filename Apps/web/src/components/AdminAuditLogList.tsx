@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { ApiError, apiFetch } from "@/lib/client-api";
 import { formatDateId, formatTimeId, toDateInputValue } from "@/lib/format";
+import { PageHeader } from "./ui/PageHeader";
+import { LoadingBlock } from "./ui/LoadingBlock";
 
 type AuditRow = {
   id: string;
@@ -54,16 +56,12 @@ export function AdminAuditLogList() {
 
   return (
     <div>
-      <header className="page-header">
-        <div>
-          <h1>Audit log</h1>
-          <p className="text-muted">
-            Create/cancel booking & perubahan ruang (F-11).
-          </p>
-        </div>
-      </header>
+      <PageHeader
+        title="Audit log"
+        description="Jejak create/cancel booking dan perubahan ruang (F-11)."
+      />
 
-      <div className="toolbar admin-filters">
+      <div className="toolbar">
         <label className="toolbar-item">
           Dari
           <input
@@ -97,11 +95,17 @@ export function AdminAuditLogList() {
         Menampilkan {logs.length} dari {total} entri
       </p>
 
-      {loading && <p className="text-muted">Memuat…</p>}
+      {loading && <LoadingBlock />}
 
-      {!loading && (
-        <div className="admin-table-wrap">
-          <table className="admin-table">
+      {!loading && logs.length === 0 && !error && (
+        <div className="empty-state">
+          <p>Tidak ada entri audit untuk rentang tanggal ini.</p>
+        </div>
+      )}
+
+      {!loading && logs.length > 0 && (
+        <div className="data-table-wrap">
+          <table className="data-table">
             <thead>
               <tr>
                 <th>Waktu</th>

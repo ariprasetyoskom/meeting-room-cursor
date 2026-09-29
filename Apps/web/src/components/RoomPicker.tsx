@@ -12,9 +12,9 @@ export function RoomPicker({ rooms, selectedRoomId, onSelect }: Props) {
   if (rooms.length === 0) return null;
 
   return (
-    <section className="room-picker" aria-label="Pilih ruangan">
+    <section className="room-picker panel" aria-label="Pilih ruangan">
       <div className="room-picker-header">
-        <h2 className="room-picker-title">Pilih ruangan</h2>
+        <h2 className="section-title room-picker-title">Pilih ruangan</h2>
         <span className="text-muted">{rooms.length} ruang tersedia</span>
       </div>
       <div className="room-picker-grid" role="listbox" aria-label="Daftar ruang">

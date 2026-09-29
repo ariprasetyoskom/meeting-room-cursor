@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { AppShell } from "@/components/AppShell";
 import { SessionProvider } from "@/components/SessionProvider";
+import { SessionProfileProvider } from "@/components/SessionProfileProvider";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -29,7 +30,9 @@ export default function RootLayout({
     <html lang="id">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <SessionProvider>
-          <AppShell>{children}</AppShell>
+          <SessionProfileProvider>
+            <AppShell>{children}</AppShell>
+          </SessionProfileProvider>
         </SessionProvider>
       </body>
     </html>

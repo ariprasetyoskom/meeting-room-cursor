@@ -227,7 +227,7 @@ Detail teknis: [TDD v1.1](./TDD-Aplikasi-Booking-Ruang-Meeting.md), [Architectur
 | Queue | Redis **7** + BullMQ — email bilingual async (D-3) |
 | Auth | Auth.js — **OIDC** + mode **dev** lokal |
 | Dev infra | Docker Postgres **5434**, Redis **6379** |
-| Hosting | Container staging/prod; CI/CD GitHub Actions (contoh di `Devops/ci/`) |
+| Hosting | Container staging/prod; **CI/CD GitLab** (`.gitlab-ci.yml`, `Devops/ci/`) |
 
 ---
 

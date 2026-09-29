@@ -31,6 +31,8 @@ export class ApiError extends Error {
   }
 }
 
+const FETCH_TIMEOUT_MS = 20_000;
+
 export async function apiFetch<T>(
   path: string,
   init?: RequestInit,
@@ -42,11 +44,29 @@ export async function apiFetch<T>(
     headers.set("x-dev-user-id", userId);
   }
 
-  const res = await fetch(path, {
-    ...init,
-    headers,
-    credentials: "include",
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+  let res: Response;
+  try {
+    res = await fetch(path, {
+      ...init,
+      headers,
+      credentials: "include",
+      cache: "no-store",
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new Error(
+        "Permintaan timeout. Pastikan `npm run dev` jalan dan database Docker healthy.",
+      );
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
