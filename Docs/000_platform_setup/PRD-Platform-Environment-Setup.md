@@ -184,12 +184,41 @@ Staging deploy trigger target: merge `main` (Architecture §8.4). Production: ap
 
 Setara **Fase 9** development phase; centang setelah Fase 1–4 (minimal) selesai.
 
-- [ ] **PS-01–PS-05** — Fase 1–2 gate terpenuhi.
-- [ ] **P-01, P-02** — `PSET05-stack-task`, `PSET07-stack-task`; health `db: true` (`PSET06-be-task`).
-- [ ] **F-PS-01–F-PS-08** — Fase 2–4 gate (F-PS-09 opsional Fase 6).
-- [ ] UI §9: `/rooms` tanpa "Permintaan gagal"; `/book` **5** ruang (`PSET02-fe-task`, `PSET03-fe-task`).
-- [ ] **P-03** dev auth — `PSET01-auth-task`, `PSET02-auth-task`.
-- [ ] Env vars §6 selaras `.env.example`.
+| Metadata sign-off | |
+|-------------------|---|
+| **Status** | **Lulus (setup lokal minimal)** — Fase 7–8 staging/prod belum sign-off |
+| **Tanggal** | 29 September 2026 |
+| **Referensi repo** | Branch `cursor/meeting-room-web-scaffold`, commit `6b84b9f` |
+
+### 9.1 Checklist wajib (Fase 1–4 + dev auth)
+
+- [x] **PS-01–PS-05** — Fase 1–2 gate terpenuhi.  
+  **Bukti:** Node **20 LTS** + `npm install` di `Apps/web` (PS-01, F-PS-02); monorepo `Docs/`, `Apps/web`, `Devops/` (PS-03); port **3000 / 5434 / 6379** terdokumentasi (PS-04); [`.env.example`](../../Apps/web/.env.example) → `.env.local` gitignored (PS-05); `docker compose up -d` di [Devops/docker](../../Devops/docker/docker-compose.yml) (PS-02).
+
+- [x] **P-01, P-02** — `PSET05-stack-task`, `PSET07-stack-task`; health `db: true` (`PSET06-be-task`).  
+  **Bukti:** PG host **5434→5432** di compose (P-01); `loadAppEnv()` di [`Apps/web/src/db/index.ts`](../../Apps/web/src/db/index.ts) agar `.env.local` menang atas env OS Windows (P-02); `GET /api/health` mengembalikan `status: ok`, `db: true`, `redis: true` saat container healthy ([`api/health/route.ts`](../../Apps/web/src/app/api/health/route.ts)).
+
+- [x] **F-PS-01–F-PS-08** — Fase 2–4 gate.  
+  **Bukti:** Postgres + Redis **healthy** (F-PS-01); `npm run db:migrate` + exclusion/`btree_gist` (F-PS-03); seed **5 ruang MR-A…E** + user demo, `DEV_USER_ID` dari output `db:seed` (F-PS-04); `npm run dev` :3000 (F-PS-05); health OK (F-PS-06); `GET /api/v1/rooms` → 200 + 5 ruang (F-PS-07); UI smoke selaras [design.md](./design.md) — token CSS, Geist, `PageHeader`/`MainNav` (F-PS-08).
+
+- [x] UI §9: `/rooms` tanpa "Permintaan gagal"; `/book` **5** ruang (`PSET02-fe-task`, `PSET03-fe-task`).  
+  **Bukti:** [`RoomDirectory`](../../Apps/web/src/components/RoomDirectory.tsx) + API rooms; [`BookingCalendar`](../../Apps/web/src/components/BookingCalendar.tsx) + [`RoomPicker`](../../Apps/web/src/components/RoomPicker.tsx) + [`SEED_ROOMS`](../../Apps/web/src/data/seed-rooms.ts); timeline **08–18** via `OPERATING_HOURS`; perbaikan load dev auth (`ensureDevUserId`, timeout fetch) commit `6b84b9f`.
+
+- [x] **P-03** dev auth — `PSET01-auth-task`, `PSET02-auth-task`.  
+  **Bukti:** `AUTH_MODE=dev` + `DEV_USER_ID` / banner [`DevAuthBanner`](../../Apps/web/src/components/DevAuthBanner.tsx); `GET /api/v1/me` 200; middleware Auth.js pada rute app/API; [`SessionProfileProvider`](../../Apps/web/src/components/SessionProfileProvider.tsx) + [`dev-auth-client.ts`](../../Apps/web/src/lib/dev-auth-client.ts).
+
+- [x] Env vars §6 selaras `.env.example`.  
+  **Bukti:** Matriks §6.1 ↔ field di [`.env.example`](../../Apps/web/.env.example) (`DATABASE_URL` …5434…, `REDIS_URL`, `AUTH_MODE`, `NEXT_PUBLIC_APP_URL`, policy booking, placeholder OIDC/SMTP).
+
+### 9.2 Opsional (Fase 6 — belum wajib sign-off lokal)
+
+- [ ] **F-PS-09** — worker email penuh.  
+  **Bukti parsial:** `npm run worker:email` + enqueue confirm ada ([`email-worker.ts`](../../Apps/web/src/workers/email-worker.ts)); **SMTP bilingual (D-3) belum** — masih log/dev preview.
+
+### 9.3 Di luar cakupan sign-off lokal (Fase 7–8)
+
+- [ ] **F-PS-S01–S07** — staging/prod (image, secrets GitLab, OIDC staging, deploy, SMTP prod).  
+  **Bukti parsial:** [`.gitlab-ci.yml`](../../.gitlab-ci.yml) lint/test/build lokal di repo; job `deploy-staging` masih placeholder.
 
 ---
 
