@@ -26,6 +26,12 @@ export async function GET(request: NextRequest) {
         "Authentication required.",
       );
     }
-    throw err;
+    console.error("[GET /api/v1/rooms]", err);
+    return jsonError(
+      "INTERNAL_ERROR",
+      "Gagal memuat daftar ruang. Periksa koneksi database (Docker Postgres port 5434).",
+      503,
+      "Failed to load rooms. Check database connectivity.",
+    );
   }
 }

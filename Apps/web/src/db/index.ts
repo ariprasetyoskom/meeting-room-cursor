@@ -1,10 +1,15 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { loadAppEnv } from "./load-env";
 import * as schema from "./schema";
+
+if (process.env.NODE_ENV !== "production") {
+  loadAppEnv();
+}
 
 const connectionString =
   process.env.DATABASE_URL ??
-  "postgresql://booking:booking_dev@localhost:5432/booking_meeting";
+  "postgresql://booking:booking_dev@127.0.0.1:5434/booking_meeting";
 
 const globalForDb = globalThis as unknown as {
   sql: ReturnType<typeof postgres> | undefined;

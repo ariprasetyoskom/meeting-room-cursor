@@ -2,6 +2,12 @@
 
 Indeks dokumen spesifikasi, desain, dan arsitektur — **selaras dengan implementasi** di `Apps/web`.
 
+## Platform setup (000)
+
+| Dokumen | Deskripsi |
+|---------|-----------|
+| [000_platform_setup/](./000_platform_setup/README.md) | **PRD setup environment** + ringkasan arsitektur, tech stack, design |
+
 ## Dokumen Utama
 
 | Dokumen | Versi | Deskripsi |
@@ -25,6 +31,7 @@ Indeks dokumen spesifikasi, desain, dan arsitektur — **selaras dengan implemen
 
 ## Urutan Baca Disarankan
 
+0. **000_platform_setup** — onboarding dev & env (jika setup mesin baru).
 1. **BRD** — konteks bisnis dan acceptance criteria.
 2. **PRD** — scope produk dan keputusan terkunci.
 3. **Design** — layar, copy, dan visual untuk PO/UX/engineering.
