@@ -4,10 +4,10 @@
 | Metadata | |
 |----------|---|
 | **Dokumen** | Architecture-Aplikasi-Booking-Ruang-Meeting |
-| **Versi** | **1.1** |
+| **Versi** | **1.2** |
 | **Tanggal** | 29 September 2026 |
-| **Status** | Baseline architecture |
-| **Dokumen Terkait** | [BRD](./BRD-Aplikasi-Booking-Ruang-Meeting.md) · [PRD](./PRD-Aplikasi-Booking-Ruang-Meeting.md) · [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md) |
+| **Status** | Baseline selaras stack & UI MVP |
+| **Dokumen Terkait** | [BRD](./BRD-Aplikasi-Booking-Ruang-Meeting.md) · [PRD](./PRD-Aplikasi-Booking-Ruang-Meeting.md) · [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md) |
 
 ---
 
@@ -80,12 +80,29 @@ Rel(web, idp, "OAuth/OIDC")
 
 | Komponen | Tanggung jawab |
 |----------|----------------|
-| **Auth Module** | Auth.js, session, role sync |
-| **Booking Service** | Business rules D-1, validation, conflict mapping |
-| **Room Service** | CRUD admin, active filter |
-| **Calendar Query** | Range queries with organizer join |
-| **API Layer** | Route handlers, Zod, error envelope |
-| **Audit Logger** | Append-only audit on mutations |
+| **Auth Module** | Auth.js (OIDC + `AUTH_MODE=dev`), middleware, upsert user |
+| **Booking Service** | Business rules D-1, validation, conflict mapping (`23P01` → 409) |
+| **Room Service** | Active rooms; admin CRUD (API backlog sebagian) |
+| **Repositories (Drizzle)** | `rooms.repository`, `bookings.repository` |
+| **Calendar UI** | `BookingCalendar`, **RoomPicker**, timeline 08–18 WIB |
+| **API Layer** | `/api/v1/*`, Zod, error envelope |
+| **Email Worker** | BullMQ consumer — bilingual templates (D-3) |
+| **Audit Logger** | Append-only audit on mutations (partial MVP) |
+
+UI/UX detail: [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md).
+
+### 3.4 Tech Stack (Single Source of Truth)
+
+| Layer | Implementasi `Apps/web` |
+|-------|-------------------------|
+| App | Next.js **14.2**, React **18**, TypeScript **5** |
+| Data | PostgreSQL **15**, **Drizzle ORM**, exclusion constraint custom SQL |
+| Async | Redis **7**, BullMQ **6** |
+| Auth | next-auth **v5 beta** (Auth.js) |
+| Test | Vitest |
+| UI styling | CSS design tokens (`globals.css`), Geist fonts |
+
+Port dev Postgres: **5434** (host) — lihat [Devops/docker](../Devops/docker/docker-compose.yml).
 
 ---
 
@@ -114,7 +131,7 @@ Worker → render bilingual template → SMTP → log
 
 | Environment | Purpose | Data |
 |-------------|---------|------|
-| **local** | Dev | Docker Postgres + Redis |
+| **local** | Dev | Docker Postgres (**5434**) + Redis **6379** |
 | **staging** | QA/UAT | Anonymized subset |
 | **production** | Live | HA Postgres, Redis managed |
 
@@ -159,6 +176,15 @@ Infra as code placeholder: [../Devops/infra/README.md](../Devops/infra/README.md
 | **Context** | Reduce disputes and ghost cancellations. |
 | **Decision** | Enforce organizer-only + time window in service layer; admin override with reason. |
 | **Consequences** | Support tickets for edge cases; clear UX error messages required. |
+
+### ADR-006: Drizzle ORM + Repository Layer
+
+| | |
+|---|---|
+| **Status** | Accepted |
+| **Context** | Perlu migrasi versioned, type-safe queries, tetap jalankan raw SQL untuk exclusion constraint. |
+| **Decision** | Drizzle schema + drizzle-kit; constraint di `drizzle/custom/`; repositories untuk domain access. |
+| **Consequences** | Tidak pakai Prisma; tim harus review migrasi + custom SQL di PR. |
 
 ### ADR-005: Bilingual Single Email (Product D-3)
 
@@ -275,10 +301,11 @@ Test data: seed script for rooms and test users in staging only.
 |---------|------|
 | BRD | [./BRD-Aplikasi-Booking-Ruang-Meeting.md](./BRD-Aplikasi-Booking-Ruang-Meeting.md) |
 | PRD | [./PRD-Aplikasi-Booking-Ruang-Meeting.md](./PRD-Aplikasi-Booking-Ruang-Meeting.md) |
-| TDD | [./TDD-Aplikasi-Booking-Ruang-Meeting.md](./TDD-Aplikasi-Booking-Ruang-Meeting.md) |
+| TDD v1.1 | [./TDD-Aplikasi-Booking-Ruang-Meeting.md](./TDD-Aplikasi-Booking-Ruang-Meeting.md) |
+| Design (UI/UX) | [./Design-Aplikasi-Booking-Ruang-Meeting.md](./Design-Aplikasi-Booking-Ruang-Meeting.md) |
 | Docs index | [./README.md](./README.md) |
 | CI example | [../Devops/ci/github/ci.yml.example](../Devops/ci/github/ci.yml.example) |
 
 ---
 
-*Akhir dokumen Architecture v1.1.*
+*Akhir dokumen Architecture v1.2.*

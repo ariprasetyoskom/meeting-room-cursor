@@ -4,11 +4,11 @@
 | Metadata | |
 |----------|---|
 | **Dokumen** | BRD-Aplikasi-Booking-Ruang-Meeting |
-| **Versi** | 1.0 |
+| **Versi** | **1.1** |
 | **Tanggal** | 29 September 2026 |
 | **Status** | Draft untuk Review |
 | **Bahasa** | Indonesia |
-| **Dokumen Terkait** | [PRD](./PRD-Aplikasi-Booking-Ruang-Meeting.md) · [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Architecture](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) |
+| **Dokumen Terkait** | [PRD](./PRD-Aplikasi-Booking-Ruang-Meeting.md) · [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Architecture](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) · [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md) |
 
 ---
 
@@ -166,8 +166,8 @@ Solusi ini ditargetkan untuk karyawan internal (employee self-service) dengan pe
 ### 8.1 Journey: Karyawan — Booking Ruang Kosong
 
 1. Login ke aplikasi.
-2. Buka menu **Kalender** atau **Booking Baru**.
-3. Pilih tanggal dan ruang; lihat slot kosong vs terisi (dengan nama organizer pada slot terisi).
+2. Buka menu **Booking** (`/book`).
+3. **Pilih ruangan** (satu dari 5 ruang atau **Semua ruang**); pilih tanggal; lihat slot kosong vs terisi (nama organizer pada slot terisi — D-2).
 4. Isi judul meeting, waktu mulai/selesai.
 5. Submit; sistem validasi bentrok dan aturan BR.
 6. Terima email bilingual konfirmasi.
@@ -213,18 +213,21 @@ AuditLog: id, actor_user_id, entity_type, entity_id, action, payload_json, creat
 
 ---
 
-## 10. Rekomendasi Arsitektur (Ringkas)
+## 10. Arsitektur & Tech Stack (Selaras MVP)
 
-Detail teknis: lihat [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md) dan [Architecture](./Architecture-Aplikasi-Booking-Ruang-Meeting.md).
+Detail teknis: [TDD v1.1](./TDD-Aplikasi-Booking-Ruang-Meeting.md), [Architecture v1.2](./Architecture-Aplikasi-Booking-Ruang-Meeting.md), pengalaman UI: [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md).
 
-| Aspek | Rekomendasi |
-|-------|-------------|
-| Frontend | Next.js (App Router), TypeScript |
-| Backend | API routes / BFF dalam monorepo yang sama |
-| Database | PostgreSQL 15+ dengan **exclusion constraint** anti-overlap |
-| Queue | Redis + BullMQ untuk email async |
-| Auth | Session/JWT sesuai kebijakan IT (OIDC preferred) |
-| Hosting | Container di environment dev/staging/prod; CI/CD GitHub Actions |
+| Aspek | Keputusan baseline |
+|-------|-------------------|
+| Monorepo | `Docs/`, `Apps/web/`, `Devops/` |
+| Frontend | Next.js **14** App Router, React **18**, TypeScript **5** |
+| UI | CSS design tokens + Geist; 5 ruang selectable (`RoomPicker`) |
+| Backend | Route handlers `/api/v1` dalam app yang sama |
+| ORM / DB | **Drizzle ORM** + PostgreSQL **15**, **exclusion constraint** anti-overlap |
+| Queue | Redis **7** + BullMQ — email bilingual async (D-3) |
+| Auth | Auth.js — **OIDC** + mode **dev** lokal |
+| Dev infra | Docker Postgres **5434**, Redis **6379** |
+| Hosting | Container staging/prod; CI/CD GitHub Actions (contoh di `Devops/ci/`) |
 
 ---
 
@@ -291,7 +294,8 @@ Fase 2 direncanakan setelah evaluasi KPI 90 hari post go-live.
 |---------|------|
 | Product Requirements | [./PRD-Aplikasi-Booking-Ruang-Meeting.md](./PRD-Aplikasi-Booking-Ruang-Meeting.md) |
 | Technical Design | [./TDD-Aplikasi-Booking-Ruang-Meeting.md](./TDD-Aplikasi-Booking-Ruang-Meeting.md) |
-| Architecture v1.1 | [./Architecture-Aplikasi-Booking-Ruang-Meeting.md](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) |
+| Architecture v1.2 | [./Architecture-Aplikasi-Booking-Ruang-Meeting.md](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) |
+| Design (UI/UX) | [./Design-Aplikasi-Booking-Ruang-Meeting.md](./Design-Aplikasi-Booking-Ruang-Meeting.md) |
 | Indeks Docs | [./README.md](./README.md) |
 
 ---

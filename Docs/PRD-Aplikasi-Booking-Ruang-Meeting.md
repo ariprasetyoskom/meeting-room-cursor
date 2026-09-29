@@ -4,10 +4,10 @@
 | Metadata | |
 |----------|---|
 | **Dokumen** | PRD-Aplikasi-Booking-Ruang-Meeting |
-| **Versi** | 1.0 |
+| **Versi** | **1.1** |
 | **Tanggal** | 29 September 2026 |
 | **Status** | Approved for MVP build |
-| **Dokumen Terkait** | [BRD](./BRD-Aplikasi-Booking-Ruang-Meeting.md) · [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Architecture](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) |
+| **Dokumen Terkait** | [BRD](./BRD-Aplikasi-Booking-Ruang-Meeting.md) · [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Architecture](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) · [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md) |
 
 ---
 
@@ -70,10 +70,16 @@ Keputusan teknis turunan: lihat [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md).
 
 ## 6. UX & Content
 
-- Bahasa UI utama: **Indonesia**; label datetime format lokal (WIB).
-- Empty states dengan CTA "Booking baru".
-- Error bentrok: pesan "Ruangan sudah dipesan pada waktu ini" + highlight overlap.
-- Cancel denied: jelaskan window 1 jam atau bukan organizer.
+Spesifikasi layar lengkap: [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md).
+
+- Bahasa UI utama: **Indonesia** (`lang="id"`); datetime **WIB**.
+- Nav: **Booking** (`/book`), **Ruang** (`/rooms`), **Booking saya** (`/bookings`).
+- **Pilih ruangan:** grid 5 ruang demo (MR-A … MR-E) + opsi **Semua ruang**; filter timeline.
+- Kalender: view **Timeline** / **Daftar**; slot terisi menampilkan organizer (D-2).
+- Booking: modal dengan dropdown ruang; tanpa optimistic submit.
+- Empty states dengan CTA ke `/book`.
+- Error bentrok: *"Ruangan sudah dipesan pada waktu ini"*.
+- Cancel denied: window **1 jam** (D-1) atau bukan organizer.
 
 ---
 
@@ -121,8 +127,9 @@ Hanya **OQ-4** tetap terbuka di versi dokumen ini.
 |---------|------|
 | Business Requirements | [./BRD-Aplikasi-Booking-Ruang-Meeting.md](./BRD-Aplikasi-Booking-Ruang-Meeting.md) |
 | Technical Design | [./TDD-Aplikasi-Booking-Ruang-Meeting.md](./TDD-Aplikasi-Booking-Ruang-Meeting.md) |
-| Architecture | [./Architecture-Aplikasi-Booking-Ruang-Meeting.md](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) |
+| Architecture v1.2 | [./Architecture-Aplikasi-Booking-Ruang-Meeting.md](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) |
+| Design | [./Design-Aplikasi-Booking-Ruang-Meeting.md](./Design-Aplikasi-Booking-Ruang-Meeting.md) |
 
 ---
 
-*Akhir dokumen PRD.*
+*Akhir dokumen PRD v1.1.*

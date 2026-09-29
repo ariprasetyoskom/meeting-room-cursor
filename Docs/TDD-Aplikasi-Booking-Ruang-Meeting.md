@@ -4,10 +4,10 @@
 | Metadata | |
 |----------|---|
 | **Dokumen** | TDD-Aplikasi-Booking-Ruang-Meeting |
-| **Versi** | 1.0 |
+| **Versi** | **1.1** |
 | **Tanggal** | 29 September 2026 |
-| **Status** | Implementation baseline |
-| **Dokumen Terkait** | [BRD](./BRD-Aplikasi-Booking-Ruang-Meeting.md) · [PRD](./PRD-Aplikasi-Booking-Ruang-Meeting.md) · [Architecture](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) |
+| **Status** | Selaras implementasi `Apps/web` |
+| **Dokumen Terkait** | [BRD](./BRD-Aplikasi-Booking-Ruang-Meeting.md) · [PRD](./PRD-Aplikasi-Booking-Ruang-Meeting.md) · [Architecture](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) · [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md) |
 
 ---
 
@@ -17,36 +17,47 @@ Mendeskripsikan implementasi teknis MVP: stack Next.js + PostgreSQL (exclusion c
 
 ---
 
-## 2. Stack
+## 2. Stack (Baseline Terkunci)
+
+Stack ini **sama** di BRD §10, Architecture §3, dan [Design §3](./Design-Aplikasi-Booking-Ruang-Meeting.md).
 
 | Layer | Pilihan | Versi / Catatan |
 |-------|---------|-----------------|
-| Runtime | Node.js | 20 LTS |
-| Framework | Next.js (App Router) | 14+ |
-| Language | TypeScript | strict |
-| ORM | Drizzle atau Prisma | Pilih satu; contoh SQL raw untuk constraint |
-| Database | PostgreSQL | 15+ |
-| Cache / Queue | Redis | 7 |
-| Job queue | BullMQ | email workers |
-| Email | SMTP / SendGrid API | HTML + text multipart |
-| Auth | NextAuth.js v5 (Auth.js) | OIDC provider |
+| Runtime | Node.js | **20 LTS** |
+| Framework | Next.js (App Router) | **14.2.x** |
+| UI | React | **18** |
+| Language | TypeScript | **5**, `strict` |
+| ORM | **Drizzle ORM** | `drizzle-orm` + **drizzle-kit** migrasi; driver `postgres` (postgres.js) |
+| Database | PostgreSQL | **15** (Alpine di Docker) |
+| Cache / Queue | Redis | **7** |
+| Job queue | BullMQ | Worker terpisah `npm run worker:email` |
+| Validasi API | Zod | Request/response write endpoints |
+| Unit test | Vitest | Policy & validators |
+| Email | SMTP / SendGrid API | HTML bilingual (D-3); dev: log worker |
+| Auth | **Auth.js** (`next-auth` v5 beta) | **OIDC** prod + **`AUTH_MODE=dev`** lokal |
+| Styling | CSS variables | `globals.css` — lihat Design tokens |
 
-Local dev: [../Devops/docker/docker-compose.yml](../Devops/docker/docker-compose.yml).
+**Local dev:** Postgres host **`127.0.0.1:5434`** → container `5432` ([docker-compose](../Devops/docker/docker-compose.yml)); Redis `6379`.
 
 ---
 
-## 3. Struktur Repositori (Planned)
+## 3. Struktur Repositori (Aktual)
 
 ```text
-Apps/
-  web/                 # Next.js monolith (UI + API)
-    src/app/           # routes, RSC pages
-    src/lib/           # db, auth, validators
-    src/workers/       # BullMQ consumer (optional separate process)
-Devops/
-  docker/
-  ci/
-Docs/
+Apps/web/
+  src/app/              # /book, /rooms, /bookings, /login, /api/*
+  src/components/       # AppShell, BookingCalendar, RoomPicker, BookingModal, …
+  src/data/seed-rooms.ts # 5 ruang demo (MR-A … MR-E)
+  src/db/
+    schema.ts           # Drizzle schema
+    repositories/       # rooms, bookings
+    migrate.ts, seed.ts
+  src/lib/              # booking-service, auth, queue, validators
+  src/workers/          # email-worker.ts
+  drizzle/migrations/   # SQL migrasi Drizzle Kit
+  drizzle/custom/       # booking_constraints.sql (exclusion)
+Devops/docker/          # Postgres 5434, Redis 6379
+Docs/                   # BRD, PRD, TDD, Architecture, Design
 ```
 
 Detail workspace: [../Apps/web/README.md](../Apps/web/README.md).
@@ -217,7 +228,7 @@ OpenAPI spec: generate from Zod schemas (`zod-to-openapi`) in repo `Apps/web`.
 | `employee` | Read rooms/calendar; CRUD own bookings; cancel own (restricted) |
 | `admin` | All employee + room admin + cancel any with reason + audit read |
 
-Middleware Next.js: `middleware.ts` protects `/app/*` and `/api/v1/*`.
+Middleware Next.js: `middleware.ts` protects `/book`, `/bookings`, `/rooms`, `/login`, and `/api/v1/*`.
 
 ### 6.3 Security
 
@@ -269,26 +280,33 @@ await emailQueue.add('email.booking.confirm', {
 
 ## 8. Frontend (Next.js)
 
+Spesifikasi layar, tokens, dan komponen: [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md).
+
 ### 8.1 Routes
 
-| Route | Purpose |
-|-------|---------|
-| `/login` | Auth entry |
-| `/rooms` | List |
-| `/rooms/[id]/calendar` | F-04 |
-| `/bookings/new` | F-05 |
-| `/bookings` | F-06 |
-| `/admin/rooms` | F-08 |
-| `/admin/bookings` | F-09 |
+| Route | Status | Purpose |
+|-------|--------|---------|
+| `/book` | ✅ | F-04 timeline/list + F-05 modal booking + **RoomPicker** (5 ruang) |
+| `/rooms` | ✅ | F-02 daftar ruang |
+| `/bookings` | ✅ | F-06 + F-07 cancel |
+| `/login` | ✅ | OIDC entry |
+| `/admin/rooms` | Backlog | F-08 |
+| `/admin/bookings` | Backlog | F-09 |
+
+Middleware melindungi `/book`, `/bookings`, `/rooms`, `/api/v1/*`, `/login`.
 
 ### 8.2 Data Fetching
 
-- Server Components for calendar initial load.
-- Client mutations via `fetch` to API routes; optimistic UI disabled on booking create (wait for 201/409).
+- Halaman kalender: client fetch ke `/api/v1/rooms` dan `/api/v1/bookings`.
+- Mutations via `fetch` ke API; **tanpa optimistic UI** pada create (tunggu 201/409).
 
-### 8.3 Timezone
+### 8.3 Seed data ruang
 
-- Store UTC in DB; display `Asia/Jakarta` via `Intl.DateTimeFormat`.
+`npm run db:seed` upsert **5 ruang** dari `SEED_ROOMS` (kode unik MR-A … MR-E).
+
+### 8.4 Timezone
+
+- Simpan UTC/`timestamptz` di DB; tampilkan **Asia/Jakarta** (`Intl`, helper `formatDateId`).
 
 ---
 
@@ -321,6 +339,8 @@ Cancel flow:
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM` | Mail |
 | `BOOKING_MIN_LEAD_MINUTES` | Default 15 |
 | `BOOKING_CANCEL_WINDOW_HOURS` | Default 1 |
+| `AUTH_MODE` | `dev` \| `oidc` |
+| `DEV_USER_ID` | UUID user seed (mode dev) |
 
 ---
 
@@ -340,7 +360,7 @@ Critical test: two parallel POST same room/time → exactly one 201, one 409.
 
 - Web: Node container running `next start`.
 - Worker: separate container same image, command `node dist/workers/email-worker.js`.
-- Migrations: run on deploy via `drizzle-kit migrate` or Prisma migrate.
+- Migrations: `npm run db:migrate` (Drizzle migrator + custom exclusion SQL).
 
 CI reference: [../Devops/ci/github/ci.yml.example](../Devops/ci/github/ci.yml.example).
 
@@ -352,8 +372,9 @@ CI reference: [../Devops/ci/github/ci.yml.example](../Devops/ci/github/ci.yml.ex
 |---------|------|
 | BRD | [./BRD-Aplikasi-Booking-Ruang-Meeting.md](./BRD-Aplikasi-Booking-Ruang-Meeting.md) |
 | PRD | [./PRD-Aplikasi-Booking-Ruang-Meeting.md](./PRD-Aplikasi-Booking-Ruang-Meeting.md) |
-| Architecture v1.1 | [./Architecture-Aplikasi-Booking-Ruang-Meeting.md](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) |
+| Architecture v1.2 | [./Architecture-Aplikasi-Booking-Ruang-Meeting.md](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) |
+| Design (UI/UX) | [./Design-Aplikasi-Booking-Ruang-Meeting.md](./Design-Aplikasi-Booking-Ruang-Meeting.md) |
 
 ---
 
-*Akhir dokumen TDD.*
+*Akhir dokumen TDD v1.1.*

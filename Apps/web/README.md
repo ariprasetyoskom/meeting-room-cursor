@@ -2,7 +2,7 @@
 
 Next.js 14 (App Router) + Drizzle ORM + PostgreSQL + BullMQ.
 
-Spesifikasi: [../../Docs/TDD-Aplikasi-Booking-Ruang-Meeting.md](../../Docs/TDD-Aplikasi-Booking-Ruang-Meeting.md)
+Spesifikasi: [TDD v1.1](../../Docs/TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Design UI/UX](../../Docs/Design-Aplikasi-Booking-Ruang-Meeting.md)
 
 ## Prasyarat
 
@@ -52,7 +52,7 @@ Dev auth: header `x-dev-user-id` atau env `DEV_USER_ID` dengan `AUTH_MODE=dev`.
 | `npm run db:generate` | Generate migration dari `src/db/schema.ts` (Drizzle Kit) |
 | `npm run db:migrate` | Jalankan migrator Drizzle ORM + constraint SQL |
 | `npm run db:studio` | Drizzle Studio (browse data) |
-| `npm run db:seed` | User demo + ruang contoh |
+| `npm run db:seed` | User demo + **5 ruang** (MR-A … MR-E, lihat `src/data/seed-rooms.ts`) |
 | `npm run test` | Unit tests (Vitest) |
 | `npm run worker:email` | Consumer email bilingual |
 

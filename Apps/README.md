@@ -6,10 +6,10 @@ Folder aplikasi untuk **Booking Ruang Meeting**.
 
 ```text
 Apps/
-  web/          # Next.js 14 — UI + /api/v1 (scaffold MVP)
+  web/          # Next.js 14 — UI + /api/v1 (MVP)
 ```
 
-Desain teknis lengkap: [../Docs/TDD-Aplikasi-Booking-Ruang-Meeting.md](../Docs/TDD-Aplikasi-Booking-Ruang-Meeting.md).
+Dokumen: [TDD](../Docs/TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Design](../Docs/Design-Aplikasi-Booking-Ruang-Meeting.md) · [Architecture](../Docs/Architecture-Aplikasi-Booking-Ruang-Meeting.md).
 
 ## Prasyarat Dev
 

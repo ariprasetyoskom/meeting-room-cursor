@@ -6,9 +6,9 @@ Monorepo workspace untuk dokumentasi, aplikasi web, dan DevOps terkait **Aplikas
 
 ```text
 D:\Cursor\
-├── Docs\          # BRD, PRD, TDD, Architecture
+├── Docs\          # BRD, PRD, TDD, Architecture, Design
 ├── Apps\
-│   └── web\       # Aplikasi Next.js (planned)
+│   └── web\       # Next.js 14 — UI + API MVP
 └── Devops\
     ├── docker\    # Postgres + Redis lokal
     ├── ci\        # Contoh pipeline (GitHub Actions)
@@ -17,7 +17,7 @@ D:\Cursor\
 
 | Folder | Isi |
 |--------|-----|
-| [**Docs/**](./Docs/README.md) | BRD, PRD, TDD, Architecture (spesifikasi lengkap) |
+| [**Docs/**](./Docs/README.md) | BRD, PRD, TDD, Architecture, Design (selaras stack & UI) |
 | [**Apps/**](./Apps/README.md) | Kode aplikasi (Next.js monorepo — `web/`) |
 | [**Devops/**](./Devops/README.md) | Docker lokal, CI contoh, placeholder infra |
 
@@ -35,5 +35,5 @@ D:\Cursor\
 
 ## Status
 
-- Dokumentasi: baseline v1.0 / Architecture v1.1.
-- Aplikasi `Apps/web`: **scaffold MVP** — API + DB + worker; UI timeline menyusul.
+- Dokumentasi: BRD/PRD/TDD **v1.1**, Architecture **v1.2**, Design **v1.0** — lihat [Docs/README.md](./Docs/README.md).
+- Aplikasi `Apps/web`: **MVP berjalan** — Drizzle, API, OIDC/dev auth, UI `/book` (RoomPicker 5 ruang), `/rooms`, `/bookings`; admin UI & E2E menyusul.
