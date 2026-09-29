@@ -60,3 +60,20 @@ export class AuthRequiredError extends Error {
     this.name = "AuthRequiredError";
   }
 }
+
+export async function requireAdmin(
+  request?: NextRequest,
+): Promise<SessionUser> {
+  const user = await requireSessionUser(request);
+  if (user.role !== "admin") {
+    throw new AdminRequiredError();
+  }
+  return user;
+}
+
+export class AdminRequiredError extends Error {
+  constructor() {
+    super("Admin access required");
+    this.name = "AdminRequiredError";
+  }
+}

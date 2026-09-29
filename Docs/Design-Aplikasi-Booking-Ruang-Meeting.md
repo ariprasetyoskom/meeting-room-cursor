@@ -78,8 +78,9 @@ Auth: `UserMenu`; mode dev menampilkan `DevAuthBanner` (header `x-dev-user-id`).
 
 | Route | Fitur | Status |
 |-------|-------|--------|
-| `/admin/rooms` | F-08 | Backlog |
-| `/admin/bookings` | F-09 | Backlog |
+| `/admin/rooms` | F-08 | ✅ |
+| `/admin/bookings` | F-09 | ✅ |
+| `/admin/audit` | F-11 | ✅ |
 
 PRD F-03 detail ruang terpenuhi sebagian via kartu di `/rooms` dan room picker.
 
@@ -179,7 +180,7 @@ Entry OIDC (`AUTH_MODE=oidc`); redirect ke IdP per TDD §6.
 | App shell, `/book`, `/rooms`, `/bookings` | ✅ Implemented |
 | Room picker 5 ruang + filter timeline | ✅ Implemented |
 | OIDC + dev auth | ✅ Implemented |
-| Admin UI F-08–F-09 | ⏳ Backlog |
+| Admin UI F-08–F-09, audit F-11 | ✅ |
 | Playwright E2E | ⏳ Backlog |
 | Foto ruang (OQ-3) | ⏳ Optional |
 

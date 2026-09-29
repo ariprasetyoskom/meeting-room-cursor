@@ -54,12 +54,22 @@ async function main() {
     employeeRow = rows[0];
   }
 
+  let adminRow = admin;
+  if (!adminRow) {
+    const rows = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, "admin@example.com"))
+      .limit(1);
+    adminRow = rows[0];
+  }
+
   console.log("Seed complete.");
   if (employeeRow) {
     console.log(`DEV_USER_ID=${employeeRow.id}`);
   }
-  if (admin) {
-    console.log(`Admin user id: ${admin.id}`);
+  if (adminRow) {
+    console.log(`ADMIN_DEV_USER_ID=${adminRow.id}`);
   }
 
   await sql.end();

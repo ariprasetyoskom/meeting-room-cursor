@@ -41,7 +41,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
     if (err instanceof PolicyError) {
-      const status = err.code === "FORBIDDEN" ? 403 : 400;
+      const status =
+        err.code === "FORBIDDEN"
+          ? 403
+          : err.code === "NOT_FOUND"
+            ? 404
+            : 400;
       return jsonError(err.code, err.message, status, err.messageEn);
     }
     throw err;

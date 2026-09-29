@@ -63,11 +63,15 @@ export function BookingModal({
     setLoading(true);
     setError(null);
     setConflicts([]);
+    const submitRoom =
+      rooms.find((r) => r.id === roomId) ?? room;
+    if (!submitRoom) return;
+
     try {
       await apiFetch("/api/v1/bookings", {
         method: "POST",
         body: JSON.stringify({
-          roomId: activeRoom.id,
+          roomId: submitRoom.id,
           title,
           description: description || undefined,
           startAt: toOffsetIso(date, start),

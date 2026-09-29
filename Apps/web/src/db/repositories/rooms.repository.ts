@@ -28,3 +28,35 @@ export async function findActiveRoomById(roomId: string): Promise<Room | null> {
   });
   return row ?? null;
 }
+
+export async function findRoomById(roomId: string): Promise<Room | null> {
+  const row = await db.query.rooms.findFirst({
+    where: eq(rooms.id, roomId),
+  });
+  return row ?? null;
+}
+
+export async function listAllRooms(): Promise<Room[]> {
+  return db.query.rooms.findMany({
+    orderBy: (t, { asc }) => [asc(t.name)],
+  });
+}
+
+export async function insertRoom(
+  values: typeof rooms.$inferInsert,
+): Promise<Room> {
+  const [created] = await db.insert(rooms).values(values).returning();
+  return created;
+}
+
+export async function updateRoomById(
+  roomId: string,
+  values: Partial<typeof rooms.$inferInsert>,
+): Promise<Room | null> {
+  const [updated] = await db
+    .update(rooms)
+    .set({ ...values, updatedAt: new Date() })
+    .where(eq(rooms.id, roomId))
+    .returning();
+  return updated ?? null;
+}

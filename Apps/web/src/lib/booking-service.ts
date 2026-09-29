@@ -98,9 +98,17 @@ export async function cancelBooking(
     );
   }
 
+  if (actor.role === "admin" && !reason?.trim()) {
+    throw new PolicyError(
+      "REASON_REQUIRED",
+      "Alasan wajib untuk pembatalan oleh admin.",
+      "Cancel reason is required for admin cancellation.",
+    );
+  }
+
   assertCanCancel(booking.startAt, actor, booking.organizerUserId);
 
-  const updated = await cancelBookingRow(bookingId, actor.id, reason);
+  const updated = await cancelBookingRow(bookingId, actor.id, reason?.trim());
 
   await writeAuditLog({
     actorUserId: actor.id,

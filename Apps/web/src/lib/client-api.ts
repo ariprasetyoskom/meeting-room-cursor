@@ -68,6 +68,7 @@ export type Room = {
   floor: string | null;
   capacity: number;
   amenities: string[];
+  isActive?: boolean;
 };
 
 export type BookingRow = {

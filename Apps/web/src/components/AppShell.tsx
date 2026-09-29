@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdminNav } from "./AdminNav";
 import { DevAuthBanner } from "./DevAuthBanner";
 import { UserMenu } from "./UserMenu";
 
@@ -22,6 +23,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 {item.label}
               </Link>
             ))}
+            <AdminNav />
           </nav>
           <UserMenu />
         </div>

@@ -290,8 +290,9 @@ Spesifikasi layar, tokens, dan komponen: [Design](./Design-Aplikasi-Booking-Ruan
 | `/rooms` | ✅ | F-02 daftar ruang |
 | `/bookings` | ✅ | F-06 + F-07 cancel |
 | `/login` | ✅ | OIDC entry |
-| `/admin/rooms` | Backlog | F-08 |
-| `/admin/bookings` | Backlog | F-09 |
+| `/admin/rooms` | ✅ | F-08 CRUD ruang |
+| `/admin/bookings` | ✅ | F-09 semua booking + cancel admin |
+| `/admin/audit` | ✅ | F-11 audit log |
 
 Middleware melindungi `/book`, `/bookings`, `/rooms`, `/api/v1/*`, `/login`.
 

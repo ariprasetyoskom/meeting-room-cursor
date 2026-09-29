@@ -28,5 +28,6 @@ MVP menggunakan **single app** di `web/` (monolith Next.js). Worker email BullMQ
 - [x] Worker email bilingual (log / SMTP placeholder)
 - [x] Auth.js OIDC (`AUTH_MODE=oidc`)
 - [x] UI kalender + booking flows (PRD F-02–F-07 MVP)
+- [x] Admin UI F-08–F-09 + audit F-11 (`/admin/*`)
 
 Detail per-app: [web/README.md](./web/README.md).

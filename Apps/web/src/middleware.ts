@@ -8,6 +8,7 @@ export const config = {
     "/book/:path*",
     "/bookings/:path*",
     "/rooms/:path*",
+    "/admin/:path*",
     "/api/v1/:path*",
     "/login",
   ],

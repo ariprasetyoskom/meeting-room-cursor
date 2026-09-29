@@ -78,8 +78,17 @@ Redirect URI di IdP: `{NEXT_PUBLIC_APP_URL}/api/auth/callback/oidc`
 
 Setelah ubah `.env.local`, restart `npm run dev`.
 
+## Admin (F-08–F-09, F-11)
+
+Set `DEV_USER_ID` ke **`ADMIN_DEV_USER_ID`** dari output `npm run db:seed` (user `admin@example.com`).
+
+| Route | Fungsi |
+|-------|--------|
+| `/admin/rooms` | CRUD / aktif-nonaktif ruang |
+| `/admin/bookings` | Semua booking + cancel admin (alasan wajib) |
+| `/admin/audit` | Audit log booking & ruang |
+
 ## Berikutnya
 
 - SMTP pengiriman email nyata
 - Playwright E2E (dev + OIDC staging)
-- Admin UI (F-08–F-09)
