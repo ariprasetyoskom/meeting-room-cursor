@@ -6,7 +6,7 @@
 | **Dokumen** | PRD-GitHub-Project-Scheduler |
 | **Versi** | **1.0** |
 | **Tanggal** | 30 September 2026 |
-| **Status** | **Draft → implementasi sebagian** (script + workflow ada; secret & notifikasi belum) |
+| **Status** | **v1.0 siap deploy** — `run-project-scheduler.mjs` + workflow; butuh secret `GH_PROJECT_PAT` |
 | **Bahasa** | Indonesia |
 | **Dokumen Terkait** | [GITHUB-PROJECT.md](./GITHUB-PROJECT.md) · [PLAN-MVP-Delivery](./PLAN-MVP-Delivery.md) · [PRD aplikasi](./PRD-Aplikasi-Booking-Ruang-Meeting.md) · [Architecture §8.4 CI](../Architecture-Aplikasi-Booking-Ruang-Meeting.md) |
 
@@ -72,14 +72,15 @@ GitHub Projects **tidak** menyediakan cron internal; scheduler hidup di **GitHub
 | **F-SCH-05** | Deteksi stale WIP | Kartu In Progress > N hari → warning di laporan | **Could** v1.1 |
 | **F-SCH-06** | Notifikasi Slack/email | Kirim ringkasan In Progress | **Could** v1.1 |
 | **F-SCH-07** | Task Scheduler Windows | Runbook dev tanpa Actions | **Should** (dokumen) |
+| **F-SCH-08** | Admin UI on/off | `/admin/scheduler` — variable `PROJECT_SCHEDULER_ENABLED` | **Must** v1.0 |
 
 ### 5.1 Status implementasi (30 Sep 2026)
 
 | ID | Status | Bukti |
 |----|--------|-------|
-| F-SCH-01 | **Selesai** | `Devops/scripts/report-project-in-progress.mjs` |
-| F-SCH-02 | **Sebagian** | `.github/workflows/project-board-check.yml`; **belum** verifikasi prod tanpa `GH_PROJECT_PAT` |
-| F-SCH-03 | **Sebagian** | Step opsional di workflow; `sync-project-status.mjs` |
+| F-SCH-01 | **Selesai** | `run-project-scheduler.mjs` (+ wrapper `report-project-in-progress.mjs`) |
+| F-SCH-02 | **Selesai** | `.github/workflows/project-board-check.yml` + validasi secret |
+| F-SCH-03 | **Selesai** | `--sync` / `workflow_dispatch` / `PROJECT_SYNC_ON_SCHEDULE` |
 | F-SCH-04 | **Selesai** | `GITHUB-PROJECT.md` |
 | F-SCH-05–06 | **Belum** | — |
 | F-SCH-07 | **Selesai** | Runbook § Scheduler B di `GITHUB-PROJECT.md` |
@@ -138,9 +139,11 @@ flowchart LR
 
 | Komponen | Path |
 |----------|------|
+| Entry point | `Devops/scripts/run-project-scheduler.mjs` |
 | Workflow | `.github/workflows/project-board-check.yml` |
-| Laporan | `Devops/scripts/report-project-in-progress.mjs` |
-| Sync | `Devops/scripts/sync-project-status.mjs` |
+| Sync manual | `Devops/scripts/sync-project-status.mjs` |
+| Windows | `Devops/scripts/run-project-scheduler.ps1` |
+| Lib | `Devops/scripts/lib/*` |
 | Runbook | `Docs/GITHUB-PROJECT.md` |
 
 ---
@@ -155,6 +158,8 @@ flowchart LR
 | `PROJECT_SYNC_ON_SCHEDULE` | Repo Variable | Tidak | `true` aktifkan sync di cron |
 | `PROJECT_SYNC_DELAY_MS` | Workflow env | Tidak | Default `600`–`800` |
 | `GITHUB_REPO` | Script env | Tidak | Default `ariprasetyoskom/meeting-room-cursor` |
+| `GH_SCHEDULER_ADMIN_TOKEN` | Server `.env` | Ya (UI admin) | PAT: repo + Actions variables read/write |
+| `PROJECT_SCHEDULER_ENABLED` | Repo variable | Tidak | `false` = matikan cron (UI toggle) |
 
 ---
 

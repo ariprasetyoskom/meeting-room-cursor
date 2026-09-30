@@ -91,6 +91,10 @@ GitHub **tidak** punya cron bawaan untuk Project; gunakan salah satu:
 
 ### A) GitHub Actions (disarankan, jalan tanpa laptop)
 
+Entry point: `node Devops/scripts/run-project-scheduler.mjs` (lihat [PRD scheduler](./PRD-GitHub-Project-Scheduler.md)).
+
+**UI admin:** `/admin/scheduler` — toggle ON/OFF (`PROJECT_SCHEDULER_ENABLED`) + auto-sync; butuh `GH_SCHEDULER_ADMIN_TOKEN` di server.
+
 Workflow: [`.github/workflows/project-board-check.yml`](../.github/workflows/project-board-check.yml)
 
 1. Buat **classic PAT** → scope **`project`** (read cukup untuk laporan; write jika sync).  
@@ -123,8 +127,10 @@ Bukan scheduler server — cocok untuk sesi dev singkat, bukan monitoring 24/7.
 ### Script laporan
 
 ```bash
-node Devops/scripts/report-project-in-progress.mjs
-node Devops/scripts/report-project-in-progress.mjs --json
+node Devops/scripts/run-project-scheduler.mjs
+node Devops/scripts/run-project-scheduler.mjs --json
+node Devops/scripts/run-project-scheduler.mjs --sync
+.\Devops\scripts\run-project-scheduler.ps1 -Sync
 ```
 
 ---

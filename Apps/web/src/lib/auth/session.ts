@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { auth, isOidcEnabled } from "@/auth";
 import { db } from "@/db";
 import { users } from "@/db/schema";
+import { isAdminPortalHost } from "@/lib/portal-shared";
 
 export type SessionUser = {
   id: string;
@@ -15,8 +16,11 @@ export async function getSessionUser(
   request?: NextRequest,
 ): Promise<SessionUser | null> {
   if (!isOidcEnabled()) {
-    const devUserId =
-      request?.headers.get("x-dev-user-id") ?? process.env.DEV_USER_ID;
+    const host = request?.headers.get("host");
+    const envFallback = isAdminPortalHost(host)
+      ? (process.env.ADMIN_DEV_USER_ID ?? process.env.DEV_USER_ID)
+      : process.env.DEV_USER_ID;
+    const devUserId = request?.headers.get("x-dev-user-id") ?? envFallback;
     if (!devUserId) return null;
     const rows = await db
       .select()

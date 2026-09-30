@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { appPortalHref } from "@/lib/portal-client";
 
 const links = [
   { href: "/book", label: "Booking", match: (p: string) => p === "/book" || p === "/" },
@@ -23,7 +24,7 @@ export function MainNav() {
         return (
           <Link
             key={item.href}
-            href={item.href}
+            href={appPortalHref(item.href)}
             className={`app-nav-link ${active ? "active" : ""}`}
             aria-current={active ? "page" : undefined}
           >

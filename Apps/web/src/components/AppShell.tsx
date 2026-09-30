@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { isAdminPortalClient } from "@/lib/portal-client";
 import { AdminNav } from "./AdminNav";
 import { BrandLogo } from "./BrandLogo";
 import { DevAuthBanner } from "./DevAuthBanner";
@@ -6,11 +9,16 @@ import { MainNav } from "./MainNav";
 import { UserMenu } from "./UserMenu";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
+  const homeHref = isAdminPortalClient() ? "/admin/rooms" : "/book";
+  const homeLabel = isAdminPortalClient()
+    ? "Ruang Meeting — admin"
+    : "Ruang Meeting — beranda";
+
   return (
     <div className="app-shell">
       <header className="app-header">
         <div className="app-header-inner">
-          <Link href="/book" className="app-brand" aria-label="Ruang Meeting — beranda">
+          <Link href={homeHref} className="app-brand" aria-label={homeLabel}>
             <BrandLogo />
             <span className="app-brand-text">
               <span className="app-brand-name">Ruang Meeting</span>

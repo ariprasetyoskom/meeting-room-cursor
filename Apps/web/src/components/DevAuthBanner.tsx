@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getDevUserId, setDevUserId } from "@/lib/client-api";
-import { notifyDevAuthReady } from "@/lib/dev-auth-client";
+import { ensureDevUserId, notifyDevAuthReady } from "@/lib/dev-auth-client";
 
 export function DevAuthBanner() {
   const [authMode, setAuthMode] = useState<string | null>(null);
@@ -19,21 +19,9 @@ export function DevAuthBanner() {
 
   useEffect(() => {
     if (authMode !== "dev") return;
-    const existing = getDevUserId();
-    if (existing) {
-      setUserId(existing);
-      return;
-    }
-    fetch("/api/dev/config")
-      .then((r) => r.json())
-      .then((cfg: { defaultUserId?: string | null }) => {
-        if (cfg.defaultUserId) {
-          setDevUserId(cfg.defaultUserId);
-          setUserId(cfg.defaultUserId);
-          notifyDevAuthReady();
-        }
-      })
-      .catch(() => undefined);
+    void ensureDevUserId().then(() => {
+      setUserId(getDevUserId());
+    });
   }, [authMode]);
 
   if (authMode !== "dev") return null;

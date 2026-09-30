@@ -27,7 +27,15 @@ npm run db:seed
 npm run dev
 ```
 
-Terminal kedua (opsional, butuh REDIS_URL):
+Terminal kedua — **portal admin** (port **3001**, sesi dev terpisah dari `:3000`):
+
+```bash
+npm run dev:admin
+```
+
+Set `DEV_USER_ID` / `ADMIN_DEV_USER_ID` di `.env.local` dari output `npm run db:seed`. Buka admin di [http://localhost:3001/admin/rooms](http://localhost:3001/admin/rooms) — akses `/admin/*` di `:3000` akan redirect ke `:3001`.
+
+Terminal ketiga (opsional, butuh REDIS_URL):
 
 ```bash
 npm run worker:email
@@ -80,7 +88,7 @@ Setelah ubah `.env.local`, restart `npm run dev`.
 
 ## Admin (F-08–F-09, F-11)
 
-Set `DEV_USER_ID` ke **`ADMIN_DEV_USER_ID`** dari output `npm run db:seed` (user `admin@example.com`).
+Dengan **`npm run dev:admin`**, set **`ADMIN_DEV_USER_ID`** (user `admin@example.com`); portal `:3000` pakai **`DEV_USER_ID`** karyawan.
 
 | Route | Fungsi |
 |-------|--------|

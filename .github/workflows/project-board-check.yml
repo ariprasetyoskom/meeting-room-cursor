@@ -1,45 +1,63 @@
-# Cek berkala kartu Kanban "In Progress" (Project #1).
-# Butuh secret GH_PROJECT_PAT: classic PAT dengan scope `project` + `read:org` (jika perlu).
+# Scheduler Kanban — PRD-GitHub-Project-Scheduler (F-SCH-02)
+# Secret: GH_PROJECT_PAT (classic PAT, scope project)
 
 name: Project board check
 
 on:
   schedule:
-    # Setiap 15 menit (UTC). Sesuaikan jika ingin jam kerja WIB saja.
     - cron: "*/15 * * * *"
   workflow_dispatch:
+    inputs:
+      sync:
+        description: Selaraskan issue closed → Done
+        type: boolean
+        default: false
 
 concurrency:
   group: project-board-check
   cancel-in-progress: false
 
 jobs:
-  in-progress:
+  scheduler:
+    if: ${{ vars.PROJECT_SCHEDULER_ENABLED != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    env:
+      PROJECT_OWNER: ariprasetyoskom
+      PROJECT_NUMBER: "1"
+      GITHUB_REPO: ariprasetyoskom/meeting-room-cursor
+      PROJECT_SYNC_DELAY_MS: "800"
     steps:
       - uses: actions/checkout@v4
+
+      - name: Validate GH_PROJECT_PAT
+        run: |
+          if [ -z "${{ secrets.GH_PROJECT_PAT }}" ]; then
+            echo "::error::Secret GH_PROJECT_PAT belum diset (Settings → Secrets → Actions)."
+            exit 1
+          fi
 
       - name: Install GitHub CLI
         run: type gh || (sudo apt-get update && sudo apt-get install -y gh)
 
-      - name: Report In Progress cards
+      - name: Run project scheduler
         env:
           GH_TOKEN: ${{ secrets.GH_PROJECT_PAT }}
-          PROJECT_OWNER: ariprasetyoskom
-          PROJECT_NUMBER: "1"
         run: |
-          node Devops/scripts/report-project-in-progress.mjs | tee report.txt
-          echo "## Project In Progress" >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-          cat report.txt >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          SYNC="${{ github.event.inputs.sync }}"
+          if [ "$SYNC" != "true" ] && [ "${{ vars.PROJECT_SYNC_ON_SCHEDULE }}" = "true" ]; then
+            SYNC="true"
+          fi
+          ARGS=""
+          if [ "$SYNC" = "true" ]; then
+            ARGS="--sync"
+          fi
+          node Devops/scripts/run-project-scheduler.mjs $ARGS | tee scheduler-report.txt
 
-      - name: Optional sync closed issues to Done
-        if: vars.PROJECT_SYNC_ON_SCHEDULE == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GH_PROJECT_PAT }}
-          PROJECT_OWNER: ariprasetyoskom
-          PROJECT_NUMBER: "1"
-          PROJECT_SYNC_DELAY_MS: "800"
-        run: node Devops/scripts/sync-project-status.mjs
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-scheduler-report
+          path: scheduler-report.txt
+          if-no-files-found: ignore

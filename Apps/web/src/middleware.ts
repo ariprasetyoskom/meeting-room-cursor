@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import { authConfig } from "./auth.config";
+import { resolvePortalRedirect } from "@/lib/portal";
 
 const authSecret =
   process.env.AUTH_SECRET ??
@@ -7,7 +8,12 @@ const authSecret =
     ? undefined
     : "dev-auth-secret-min-32-chars-long!!");
 
-export default NextAuth({ ...authConfig, secret: authSecret }).auth;
+const { auth } = NextAuth({ ...authConfig, secret: authSecret });
+
+export default auth((request) => {
+  const portalRedirect = resolvePortalRedirect(request);
+  if (portalRedirect) return portalRedirect;
+});
 
 export const config = {
   matcher: [
@@ -17,5 +23,6 @@ export const config = {
     "/admin/:path*",
     "/api/v1/:path*",
     "/login",
+    "/",
   ],
 };
