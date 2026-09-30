@@ -16,7 +16,7 @@ Indeks dokumen spesifikasi, desain, dan arsitektur — **selaras dengan implemen
 | [PRD-Aplikasi-Booking-Ruang-Meeting.md](./PRD-Aplikasi-Booking-Ruang-Meeting.md) | **1.2** | Produk: D-1–D-3, F-01–F-12, status impl. §4.1, UX §6 |
 | [TDD-Aplikasi-Booking-Ruang-Meeting.md](./TDD-Aplikasi-Booking-Ruang-Meeting.md) | **1.1** | Tech stack terkunci (Drizzle, Next 14), API, DB, env |
 | [Architecture-Aplikasi-Booking-Ruang-Meeting.md](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) | **1.3** | C4, komponen/rute §3.3, ADR, GitHub Actions CI/CD, QA |
-| [Design-Aplikasi-Booking-Ruang-Meeting.md](./Design-Aplikasi-Booking-Ruang-Meeting.md) | **1.0** | UI/UX, tokens, layar `/book` + RoomPicker 5 ruang |
+| [Design-Aplikasi-Booking-Ruang-Meeting.md](./Design-Aplikasi-Booking-Ruang-Meeting.md) | **1.1** | UI/UX, app shell + logo, tokens, `/book` + admin |
 
 ## Selaraskan Stack (Referensi Cepat)
 
@@ -37,6 +37,20 @@ Indeks dokumen spesifikasi, desain, dan arsitektur — **selaras dengan implemen
 3. **Design** — layar, copy, dan visual untuk PO/UX/engineering.
 4. **TDD** — implementasi teknis untuk engineering.
 5. **Architecture** — operasi, pipeline, ADR jangka panjang.
+
+## Agentic — generator dokumen
+
+Skill + template (`{{placeholder}}`) untuk menyusun ulang dokumen selaras proyek:
+
+| Skill | Output |
+|-------|--------|
+| [../Agentic/README.md](../Agentic/README.md) | Indeks |
+| `brd-booking-meeting` | BRD produk |
+| `platform-arsitektur` | `000_platform_setup/arsitektur.md` |
+| `platform-design` | `000_platform_setup/design.md` |
+| `platform-techstack` | `000_platform_setup/techstack.md` |
+
+Salinan Cursor: [../.cursor/skills/](../.cursor/skills/).
 
 ## Lokasi Kode & DevOps
 

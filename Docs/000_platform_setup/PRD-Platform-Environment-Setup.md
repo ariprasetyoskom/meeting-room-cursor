@@ -9,7 +9,7 @@
 | **Tanggal** | 29 September 2026 |
 | **Status** | Approved for engineering |
 | **Bahasa** | Indonesia |
-| **Dokumen Terkait** | [Fase development (PSET)](./PRD_platform_setup_development_phase.md) · [arsitektur](./arsitektur.md) · [techstack](./techstack.md) · [design](./design.md) · [Architecture v1.2](../Architecture-Aplikasi-Booking-Ruang-Meeting.md) · [TDD v1.1](../TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Design v1.0](../Design-Aplikasi-Booking-Ruang-Meeting.md) |
+| **Dokumen Terkait** | [Fase development (PSET)](./PRD_platform_setup_development_phase.md) · [arsitektur](./arsitektur.md) · [techstack](./techstack.md) · [design](./design.md) · [Agentic](../../Agentic/README.md) · [Architecture v1.3](../Architecture-Aplikasi-Booking-Ruang-Meeting.md) · [TDD v1.1](../TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Design v1.1](../Design-Aplikasi-Booking-Ruang-Meeting.md) · [BRD v1.2](../BRD-Aplikasi-Booking-Ruang-Meeting.md) · [PRD v1.2](../PRD-Aplikasi-Booking-Ruang-Meeting.md) |
 
 ---
 

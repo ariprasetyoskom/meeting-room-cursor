@@ -1,12 +1,17 @@
 # Design — Verifikasi Environment Lokal
 
-Ringkasan untuk **smoke test UI** setelah setup. Source of truth: [Design v1.0](../Design-Aplikasi-Booking-Ruang-Meeting.md).
+Ringkasan untuk **smoke test UI** setelah setup. Source of truth: [Design v1.1](../Design-Aplikasi-Booking-Ruang-Meeting.md).
 
 ## Prasyarat visual
 
 - Dev server: `http://localhost:3000`
 - `GET /api/health` → `db: true`, `redis: true`
 - Seed: **5 ruang** aktif (MR-A … MR-E)
+
+## App shell (smoke)
+
+- Header sticky: logo `BrandLogo`, brand *Ruang Meeting*, nav pill (Booking / Ruang / Booking saya).
+- Font Geist (variabel di `<html>`); favicon `app/icon.svg`.
 
 ## Checklist layar (post-setup)
 

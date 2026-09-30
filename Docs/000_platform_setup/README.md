@@ -12,14 +12,16 @@ Dokumen seri **platform setup** untuk proyek Booking Ruang Meeting: persiapan li
 | [techstack.md](./techstack.md) | Ringkasan tech stack & tooling (→ TDD) |
 | [design.md](./design.md) | Ringkasan verifikasi UI lokal (→ Design) |
 
+Ringkasan `arsitektur.md`, `design.md`, `techstack.md` dapat di-regenerate dengan skill [Agentic](../../Agentic/README.md) (`platform-*`).
+
 ## Dokumen induk (source of truth)
 
 | Topik | Path |
 |-------|------|
-| Architecture v1.2 | [../Architecture-Aplikasi-Booking-Ruang-Meeting.md](../Architecture-Aplikasi-Booking-Ruang-Meeting.md) |
+| Architecture v1.3 | [../Architecture-Aplikasi-Booking-Ruang-Meeting.md](../Architecture-Aplikasi-Booking-Ruang-Meeting.md) |
 | TDD / tech stack v1.1 | [../TDD-Aplikasi-Booking-Ruang-Meeting.md](../TDD-Aplikasi-Booking-Ruang-Meeting.md) |
-| Design UI/UX v1.0 | [../Design-Aplikasi-Booking-Ruang-Meeting.md](../Design-Aplikasi-Booking-Ruang-Meeting.md) |
-| BRD / PRD produk | [../BRD-Aplikasi-Booking-Ruang-Meeting.md](../BRD-Aplikasi-Booking-Ruang-Meeting.md) · [../PRD-Aplikasi-Booking-Ruang-Meeting.md](../PRD-Aplikasi-Booking-Ruang-Meeting.md) |
+| Design UI/UX v1.1 | [../Design-Aplikasi-Booking-Ruang-Meeting.md](../Design-Aplikasi-Booking-Ruang-Meeting.md) |
+| BRD v1.2 / PRD v1.2 | [../BRD-Aplikasi-Booking-Ruang-Meeting.md](../BRD-Aplikasi-Booking-Ruang-Meeting.md) · [../PRD-Aplikasi-Booking-Ruang-Meeting.md](../PRD-Aplikasi-Booking-Ruang-Meeting.md) |
 
 ## Urutan eksekusi (developer baru)
 

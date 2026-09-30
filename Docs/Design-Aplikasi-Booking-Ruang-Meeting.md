@@ -4,10 +4,10 @@
 | Metadata | |
 |----------|---|
 | **Dokumen** | Design-Aplikasi-Booking-Ruang-Meeting |
-| **Versi** | **1.0** |
-| **Tanggal** | 29 September 2026 |
-| **Status** | Baseline selaras implementasi `Apps/web` |
-| **Dokumen Terkait** | [BRD](./BRD-Aplikasi-Booking-Ruang-Meeting.md) · [PRD](./PRD-Aplikasi-Booking-Ruang-Meeting.md) · [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Architecture](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) |
+| **Versi** | **1.1** |
+| **Tanggal** | 30 September 2026 |
+| **Status** | Selaras implementasi `Apps/web` — PRD v1.2, Architecture v1.3 |
+| **Dokumen Terkait** | [BRD v1.2](./BRD-Aplikasi-Booking-Ruang-Meeting.md) · [PRD v1.2](./PRD-Aplikasi-Booking-Ruang-Meeting.md) · [TDD v1.1](./TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Architecture v1.3](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) |
 
 ---
 
@@ -37,7 +37,7 @@ Mendeskripsikan pengalaman pengguna, struktur layar, pola interaksi, dan sistem 
 | Styling | **CSS Modules global** (`globals.css`) dengan **design tokens** CSS variables; tanpa utility framework |
 | Tipografi | **Geist Sans** (judul/nav/body), Geist Mono (opsional kode) via `next/font/local` |
 | Tema | Light default; **dark mode** otomatis via `prefers-color-scheme` |
-| Ikon | Tidak wajib MVP; teks + warna slot (hijau/merah) untuk status |
+| Ikon / brand | Logo SVG `BrandLogo` + favicon `app/icon.svg`; slot status tetap warna hijau/merah |
 
 Detail stack lengkap: [TDD §2](./TDD-Aplikasi-Booking-Ruang-Meeting.md).
 
@@ -64,7 +64,7 @@ Definisi di `Apps/web/src/app/globals.css`:
 
 ### 5.1 App shell
 
-Komponen: `AppShell` — header sticky, brand **Ruang Meeting**, nav utama:
+Komponen: `AppShell` — header **sticky** + backdrop blur, brand **Ruang Meeting** dengan `BrandLogo`, tagline *Booking internal*, nav **segmented pill** (`MainNav`, `AdminNav`):
 
 | Route | Label nav | Fungsi (PRD) |
 |-------|-----------|--------------|
@@ -72,17 +72,19 @@ Komponen: `AppShell` — header sticky, brand **Ruang Meeting**, nav utama:
 | `/rooms` | Ruang | F-02 daftar ruang |
 | `/bookings` | Booking saya | F-06 upcoming/history + F-07 cancel |
 
-Auth: `UserMenu`; mode dev menampilkan `DevAuthBanner` (header `x-dev-user-id`).
+Auth: `UserMenu` + `SessionProfileProvider`; mode dev: `DevAuthBanner` (`DEV_USER_ID` / header).
 
-### 5.2 Halaman yang direncanakan (belum UI)
+Layout bersama: `PageHeader`, `LoadingBlock` (`components/ui/`).
+
+### 5.2 Admin (role `admin`)
 
 | Route | Fitur | Status |
 |-------|-------|--------|
-| `/admin/rooms` | F-08 | ✅ |
-| `/admin/bookings` | F-09 | ✅ |
-| `/admin/audit` | F-11 | ✅ |
+| `/admin/rooms` | F-08 CRUD / aktif-nonaktif | ✅ |
+| `/admin/bookings` | F-09 semua booking + cancel alasan | ✅ |
+| `/admin/audit` | F-11 audit log + filter tanggal | ✅ |
 
-PRD F-03 detail ruang terpenuhi sebagian via kartu di `/rooms` dan room picker.
+PRD F-03 detail ruang terpenuhi sebagian via kartu di `/rooms` dan room picker (halaman detail dedicated belum).
 
 ---
 
@@ -170,6 +172,7 @@ Entry OIDC (`AUTH_MODE=oidc`); redirect ke IdP per TDD §6.
 | Modal + validasi | F-05, BR-01–04 |
 | Cancel rules | D-1, F-07, BR-03 |
 | Bahasa ID + WIB | PRD §6, BRD NFR localization |
+| Brand logo + header modern | PRD §6, `BrandLogo` / `icon.svg` |
 
 ---
 
@@ -177,10 +180,12 @@ Entry OIDC (`AUTH_MODE=oidc`); redirect ke IdP per TDD §6.
 
 | Area | Status |
 |------|--------|
-| App shell, `/book`, `/rooms`, `/bookings` | ✅ Implemented |
+| App shell (logo, sticky header, nav pill) | ✅ Implemented |
+| `/book`, `/rooms`, `/bookings` | ✅ Implemented |
 | Room picker 5 ruang + filter timeline | ✅ Implemented |
-| OIDC + dev auth | ✅ Implemented |
+| OIDC + dev auth | ✅ Implemented (staging UAT belum) |
 | Admin UI F-08–F-09, audit F-11 | ✅ |
+| Kalender week view (F-04) | ⏳ Backlog |
 | Playwright E2E | ⏳ Backlog |
 | Foto ruang (OQ-3) | ⏳ Optional |
 
@@ -195,7 +200,8 @@ Entry OIDC (`AUTH_MODE=oidc`); redirect ke IdP per TDD §6.
 | TDD (stack & API) | [./TDD-Aplikasi-Booking-Ruang-Meeting.md](./TDD-Aplikasi-Booking-Ruang-Meeting.md) |
 | Architecture | [./Architecture-Aplikasi-Booking-Ruang-Meeting.md](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) |
 | Kode UI | [../Apps/web/src/components/](../Apps/web/src/components/) |
+| Agentic (regenerate ringkasan setup) | [../Agentic/README.md](../Agentic/README.md) |
 
 ---
 
-*Akhir dokumen Design.*
+*Akhir dokumen Design v1.1.*

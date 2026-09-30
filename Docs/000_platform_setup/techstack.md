@@ -41,7 +41,12 @@ Ringkasan untuk **platform setup**. Source of truth: [TDD v1.1 §2](../TDD-Aplik
 Apps/web/          # aplikasi
 Devops/docker/     # compose Postgres + Redis
 Docs/              # spesifikasi
+Agentic/           # skill + template dokumen (salinan .cursor/skills)
 ```
+
+## CI
+
+- GitHub Actions: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) — lint, test, build.
 
 ## Catatan Windows
 

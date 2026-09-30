@@ -1,6 +1,6 @@
 # Arsitektur — Konteks Setup Environment
 
-Ringkasan untuk **platform setup**. Detail lengkap: [Architecture v1.2](../Architecture-Aplikasi-Booking-Ruang-Meeting.md).
+Ringkasan untuk **platform setup**. Detail lengkap: [Architecture v1.3](../Architecture-Aplikasi-Booking-Ruang-Meeting.md).
 
 ## Container (MVP)
 

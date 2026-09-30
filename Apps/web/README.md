@@ -2,7 +2,7 @@
 
 Next.js 14 (App Router) + Drizzle ORM + PostgreSQL + BullMQ.
 
-Spesifikasi: [TDD v1.1](../../Docs/TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Design UI/UX](../../Docs/Design-Aplikasi-Booking-Ruang-Meeting.md)
+Spesifikasi: [TDD v1.1](../../Docs/TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Design v1.1](../../Docs/Design-Aplikasi-Booking-Ruang-Meeting.md) · [PRD §4.1](../../Docs/PRD-Aplikasi-Booking-Ruang-Meeting.md)
 
 ## Prasyarat
 

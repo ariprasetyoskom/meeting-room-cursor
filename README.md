@@ -7,6 +7,7 @@ Monorepo workspace untuk dokumentasi, aplikasi web, dan DevOps terkait **Aplikas
 ```text
 D:\Cursor\
 ├── Docs\          # BRD, PRD, TDD, Architecture, Design
+├── Agentic\       # Skill + template generator dokumen (→ .cursor/skills)
 ├── Apps\
 │   └── web\       # Next.js 14 — UI + API MVP
 └── Devops\
@@ -18,6 +19,7 @@ D:\Cursor\
 | Folder | Isi |
 |--------|-----|
 | [**Docs/**](./Docs/README.md) | BRD, PRD, TDD, Architecture, Design (selaras stack & UI) |
+| [**Agentic/**](./Agentic/README.md) | Skill agent untuk BRD & ringkasan platform setup |
 | [**Apps/**](./Apps/README.md) | Kode aplikasi (Next.js monorepo — `web/`) |
 | [**Devops/**](./Devops/README.md) | Docker lokal, CI contoh, placeholder infra |
 
@@ -35,5 +37,6 @@ D:\Cursor\
 
 ## Status
 
-- Dokumentasi: BRD/PRD/TDD **v1.1**, Architecture **v1.2**, Design **v1.0** — lihat [Docs/README.md](./Docs/README.md).
-- Aplikasi `Apps/web`: **MVP berjalan** — Drizzle, API, OIDC/dev auth, UI `/book` (RoomPicker 5 ruang), `/rooms`, `/bookings`; admin UI & E2E menyusul.
+- Dokumentasi: BRD/PRD **v1.2**, Architecture **v1.3**, TDD **v1.1**, Design **v1.1** — [Docs/README.md](./Docs/README.md).
+- Repo GitHub: [meeting-room-cursor](https://github.com/ariprasetyoskom/meeting-room-cursor) · CI GitHub Actions.
+- Aplikasi `Apps/web`: MVP core + admin (F-08–F-11); backlog: email SMTP penuh, week view, E2E.
