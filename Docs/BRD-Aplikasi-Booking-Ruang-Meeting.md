@@ -8,7 +8,7 @@
 | **Tanggal** | 30 September 2026 |
 | **Status** | MVP lokal feature-complete — delivery staging/prod: [PLAN-MVP-Delivery](./PLAN-MVP-Delivery.md) |
 | **Bahasa** | Indonesia |
-| **Dokumen Terkait** | [PRD v1.3](./PRD-Aplikasi-Booking-Ruang-Meeting.md) · [PLAN](./PLAN-MVP-Delivery.md) · [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Architecture](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) · [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md) |
+| **Dokumen Terkait** | [PRD v1.4 §4.3](./PRD-Aplikasi-Booking-Ruang-Meeting.md) · [PLAN](./PLAN-MVP-Delivery.md) · [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Architecture](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) · [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md) |
 
 ---
 
@@ -263,7 +263,7 @@ Fase 2 direncanakan setelah evaluasi KPI 90 hari post go-live.
 
 ## 13. Acceptance Criteria (MVP)
 
-Status **30 Sep 2026** — selaras [PRD §4.1](./PRD-Aplikasi-Booking-Ruang-Meeting.md) dan platform sign-off lokal [§9](./000_platform_setup/PRD-Platform-Environment-Setup.md).
+Status **30 Sep 2026** — selaras [PRD §4.1–§4.3](./PRD-Aplikasi-Booking-Ruang-Meeting.md) dan platform sign-off lokal [§9](./000_platform_setup/PRD-Platform-Environment-Setup.md).
 
 - [x] Tidak mungkin membuat dua booking confirmed overlap untuk ruang yang sama (bukti test + constraint DB).  
   **Bukti:** exclusion `btree_gist` + `booking-policy.test.ts`; API 409 `ROOM_CONFLICT`.

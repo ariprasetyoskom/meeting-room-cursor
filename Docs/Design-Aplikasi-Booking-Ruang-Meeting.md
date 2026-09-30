@@ -6,7 +6,7 @@
 | **Dokumen** | Design-Aplikasi-Booking-Ruang-Meeting |
 | **Versi** | **1.1** |
 | **Tanggal** | 30 September 2026 |
-| **Status** | Selaras implementasi `Apps/web` — PRD v1.2, Architecture v1.3 |
+| **Status** | Selaras implementasi `Apps/web` — PRD v1.4, Architecture v1.3 |
 | **Dokumen Terkait** | [BRD v1.2](./BRD-Aplikasi-Booking-Ruang-Meeting.md) · [PRD v1.2](./PRD-Aplikasi-Booking-Ruang-Meeting.md) · [TDD v1.1](./TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Architecture v1.3](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) |
 
 ---

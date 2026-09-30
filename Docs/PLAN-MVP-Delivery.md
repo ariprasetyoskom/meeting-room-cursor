@@ -7,7 +7,7 @@
 | **Versi** | **1.0** |
 | **Tanggal** | 30 September 2026 |
 | **Status** | Aktif — PO & engineering |
-| **Dokumen Terkait** | [PRD v1.3](./PRD-Aplikasi-Booking-Ruang-Meeting.md) · [BRD §13](./BRD-Aplikasi-Booking-Ruang-Meeting.md) · [Architecture §8.6 QA](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) · [RELEASE-NOTES](./RELEASE-NOTES.md) |
+| **Dokumen Terkait** | [PRD v1.4 §4.3](./PRD-Aplikasi-Booking-Ruang-Meeting.md) · [BRD §13](./BRD-Aplikasi-Booking-Ruang-Meeting.md) · [Architecture §8.6 QA](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) · [RELEASE-NOTES](./RELEASE-NOTES.md) |
 
 ---
 
@@ -21,19 +21,21 @@ Implementasi **inti MVP** (booking, admin, audit, kalender Hari/Minggu) sudah ad
 
 ## 2. Posisi fitur (PRD F-01 – F-12)
 
+Ringkasan delivery — **matriks lengkap per fitur (backlog, gate, UX):** [PRD §4.3](./PRD-Aplikasi-Booking-Ruang-Meeting.md).
+
 | ID | Fitur | Status impl. | Prioritas penutupan | Gelombang |
 |----|-------|--------------|---------------------|-----------|
 | F-01 | Login & session | Sebagian (dev + OIDC code) | **Must** — UAT IdP staging | W2 |
-| F-02 | Daftar ruang | Selesai | — | — |
-| F-03 | Detail ruang | Sebagian | **Should** — halaman `/rooms/[id]`; foto OQ-3 optional | W3 |
-| F-04 | Kalender ruang | Selesai | — | — |
-| F-05 | Buat booking | Selesai | — | — |
-| F-06 | Booking saya | Selesai | — | — |
-| F-07 | Cancel booking | Selesai | — | — |
-| F-08 | Admin ruang | Selesai | — | — |
-| F-09 | Admin bookings | Selesai | — | — |
-| F-10 | Email notifications | Sebagian (queue/worker) | **Must** — SMTP + template D-3 + reminder | W1 |
-| F-11 | Audit trail | Selesai | — | — |
+| F-02 | Daftar ruang | Selesai | UX Should (UI-07) | — |
+| F-03 | Detail ruang | Sebagian | **Should** — `/rooms/[code]`; foto OQ-3 optional | W3 |
+| F-04 | Kalender ruang | Selesai | UX Should (UI-04–05) | — |
+| F-05 | Buat booking | Selesai (enqueue tidak 500 jika Redis down, `b2ef14c`) | UX Should (UI-06) | — |
+| F-06 | Booking saya | Selesai | UX Should (UI-07) | — |
+| F-07 | Cancel booking | Selesai | Email cancel → W1 / F-10 | W1 (notif) |
+| F-08 | Admin ruang | Selesai | UX Should (UI-08) | — |
+| F-09 | Admin bookings | Selesai | UX Should (UI-08) | — |
+| F-10 | Email notifications | Sebagian (queue; enqueue aman) | **Must** — SMTP + D-3 + reminder + Redis | W1 |
+| F-11 | Audit trail | Selesai | UX Should (UI-08) | — |
 | F-12 | Export CSV | Belum | **Could** — post v1.0.0 | W4+ |
 
 **BRD §13 acceptance:** 6/8 item engineering ✅; **email bilingual** dan **KPI instrumentation** ⏳.
