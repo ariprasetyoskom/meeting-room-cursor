@@ -581,6 +581,91 @@ textarea.input {
   border: 1px solid var(--danger-border);
 }
 
+.alert-success {
+  background: var(--success-bg);
+  color: var(--success);
+  border: 1px solid var(--success-border);
+}
+
+.alert-warning {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+  border: 1px solid var(--warning-border);
+}
+
+.alert-info {
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--primary) 35%, var(--border));
+}
+
+.alert-title {
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+}
+
+.alert > :last-child {
+  margin-bottom: 0;
+}
+
+.card {
+  padding: 1rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.card-lg {
+  padding: 1.5rem 1.75rem;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+}
+
+.field-label {
+  font-weight: 500;
+}
+
+.field-required {
+  color: var(--danger);
+  margin-left: 0.2rem;
+}
+
+.field-hint {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
 .conflict-list {
   margin-top: 0.5rem;
   padding-left: 1.25rem;

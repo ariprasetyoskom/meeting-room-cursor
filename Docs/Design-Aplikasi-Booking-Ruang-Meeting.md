@@ -86,6 +86,18 @@ Auth: `UserMenu` + `SessionProfileProvider`; mode dev: `DevAuthBanner` (`DEV_USE
 
 Layout bersama: `PageHeader`, `LoadingBlock` (`components/ui/`).
 
+Kit UI (`components/ui`, import dari `./ui`) — wrapper tipis di atas class global, jadi class lama tetap sah:
+
+| Komponen | Class | Catatan |
+|----------|-------|---------|
+| `Button` | `.btn` + `btn-{primary,secondary,ghost,danger,danger-outline}`, `.btn-sm`, `.btn-link` | `loading` → disabled + `aria-busy`; `buttonClass()` untuk `<Link>` |
+| `Input` / `Select` / `Textarea` | `.input`, `.input-sm`, `.input-narrow` | `invalid` → `aria-invalid` + border danger |
+| `Field` | `.field` | `<label>` pembungkus; `required` → `*` (aria-hidden); `hint` |
+| `Card` | `.card`, `.card-lg` | `title` / `actions` opsional; `as` section/article/li |
+| `Alert` | `.alert-{error,success,warning,info}` | `error` → `role="alert"`, lainnya `role="status"` |
+
+Adopsi pertama: `BookingModal`. Layar lain dimigrasi bertahap di UI-04–UI-08.
+
 ### 5.2 Admin (role `admin`)
 
 | Route | Fitur | Status |

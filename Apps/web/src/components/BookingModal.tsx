@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ApiError, apiFetch } from "@/lib/client-api";
 import type { Room } from "@/lib/client-api";
 import { formatDateId } from "@/lib/format";
+import { Alert, Button, Field, Input, Select, Textarea } from "./ui";
 
 type Props = {
   open: boolean;
@@ -109,10 +110,8 @@ export function BookingModal({
         <p className="text-muted">{formatDateId(`${date}T12:00:00+07:00`)}</p>
         <form onSubmit={handleSubmit} className="form-stack">
           {rooms.length > 1 && (
-            <label>
-              Ruangan *
-              <select
-                className="input"
+            <Field label="Ruangan" required>
+              <Select
                 value={roomId}
                 onChange={(e) => setRoomId(e.target.value)}
                 required
@@ -122,25 +121,21 @@ export function BookingModal({
                     {r.name} ({r.capacity} orang)
                   </option>
                 ))}
-              </select>
-            </label>
+              </Select>
+            </Field>
           )}
-          <label>
-            Judul meeting *
-            <input
-              className="input"
+          <Field label="Judul meeting" required hint="3–120 karakter">
+            <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               minLength={3}
               maxLength={120}
               required
             />
-          </label>
+          </Field>
           <div className="form-row">
-            <label>
-              Mulai (jam)
-              <select
-                className="input"
+            <Field label="Mulai (jam)">
+              <Select
                 value={start}
                 onChange={(e) => setStart(Number(e.target.value))}
               >
@@ -149,12 +144,10 @@ export function BookingModal({
                     {String(h).padStart(2, "0")}:00
                   </option>
                 ))}
-              </select>
-            </label>
-            <label>
-              Selesai (jam)
-              <select
-                className="input"
+              </Select>
+            </Field>
+            <Field label="Selesai (jam)">
+              <Select
                 value={end}
                 onChange={(e) => setEnd(Number(e.target.value))}
               >
@@ -163,21 +156,19 @@ export function BookingModal({
                     {String(h).padStart(2, "0")}:00
                   </option>
                 ))}
-              </select>
-            </label>
+              </Select>
+            </Field>
           </div>
-          <label>
-            Deskripsi
-            <textarea
-              className="input"
+          <Field label="Deskripsi">
+            <Textarea
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               maxLength={500}
             />
-          </label>
+          </Field>
           {error && (
-            <div className="alert alert-error" role="alert">
+            <Alert variant="error">
               {error}
               {conflicts.length > 0 && (
                 <ul className="conflict-list">
@@ -194,20 +185,15 @@ export function BookingModal({
                   ))}
                 </ul>
               )}
-            </div>
+            </Alert>
           )}
           <div className="modal-actions">
-            <button
-              type="button"
-              className="btn btn-ghost"
-              onClick={onClose}
-              disabled={loading}
-            >
+            <Button variant="ghost" onClick={onClose} disabled={loading}>
               Batal
-            </button>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
+            </Button>
+            <Button type="submit" loading={loading}>
               {loading ? "Menyimpan…" : "Konfirmasi booking"}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
