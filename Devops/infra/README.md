@@ -15,7 +15,7 @@ Folder ini reserved untuk **Infrastructure as Code** dan manifest deployment pro
 
 - Container & deployment view: [../../Docs/Architecture-Aplikasi-Booking-Ruang-Meeting.md](../../Docs/Architecture-Aplikasi-Booking-Ruang-Meeting.md) §3.2, §6
 - Observability: same document §8.3
-- CI/CD deploy stages: [../../.gitlab-ci.yml](../../.gitlab-ci.yml) · [../ci/README.md](../ci/README.md)
+- CI/CD deploy stages: [../../.github/workflows/ci.yml](../../.github/workflows/ci.yml) · [../ci/README.md](../ci/README.md)
 
 ## Local Parity
 

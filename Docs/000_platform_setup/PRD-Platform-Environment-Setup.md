@@ -170,10 +170,10 @@ Detail per task: [PRD_platform_setup_development_phase.md](./PRD_platform_setup_
 |----|-------|------|-----------|---------------------|
 | **F-PS-S01** | Container image | 8 | `PSET01-ops-task` | `next build` sukses; image web + worker terdokumentasi |
 | **F-PS-S02** | Pre-deploy migrate | 8 | `PSET02-ops-task` | Job migrasi sebelum traffic (Architecture §8.4) |
-| **F-PS-S03** | Secrets | 8 | `PSET03-ops-task` | GitLab CI/CD Variables / vault; tidak di repo |
+| **F-PS-S03** | Secrets | 8 | `PSET03-ops-task` | GitHub Actions secrets / vault; tidak di repo |
 | **F-PS-S04** | OIDC | 5, 8 | `PSET03-auth-task`, `PSET04-auth-task`, `PSET04-ops-task` | Redirect URI terdaftar; login `/login` sukses |
 | **F-PS-S05** | Health probes | 8 | `PSET05-ops-task` | K8s/LB pakai `/api/health` |
-| **F-PS-S06** | CI | 7 | `PSET01-ci-task` … `PSET04-ci-task` | Lint, test, build hijau ([.gitlab-ci.yml](../../.gitlab-ci.yml)) |
+| **F-PS-S06** | CI | 7 | `PSET01-ci-task` … `PSET04-ci-task` | Lint, test, build hijau ([.github/workflows/ci.yml](../../.github/workflows/ci.yml)) |
 | **F-PS-S07** | SMTP | 8 | `PSET06-ops-task` | Email worker bilingual (D-3) di staging |
 
 Staging deploy trigger target: merge `main` (Architecture §8.4). Production: approval / tag `v*`.
@@ -217,8 +217,8 @@ Setara **Fase 9** development phase; centang setelah Fase 1–4 (minimal) selesa
 
 ### 9.3 Di luar cakupan sign-off lokal (Fase 7–8)
 
-- [ ] **F-PS-S01–S07** — staging/prod (image, secrets GitLab, OIDC staging, deploy, SMTP prod).  
-  **Bukti parsial:** [`.gitlab-ci.yml`](../../.gitlab-ci.yml) lint/test/build lokal di repo; job `deploy-staging` masih placeholder.
+- [ ] **F-PS-S01–S07** — staging/prod (image, secrets GitHub, OIDC staging, deploy, SMTP prod).  
+  **Bukti parsial:** [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) lint/test/build di repo; job `deploy-staging` masih placeholder; remote GitHub perlu push untuk pipeline hijau.
 
 ---
 

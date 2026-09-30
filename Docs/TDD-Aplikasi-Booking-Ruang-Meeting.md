@@ -363,7 +363,7 @@ Critical test: two parallel POST same room/time → exactly one 201, one 409.
 - Worker: separate container same image, command `node dist/workers/email-worker.js`.
 - Migrations: `npm run db:migrate` (Drizzle migrator + custom exclusion SQL).
 
-CI reference: [../.gitlab-ci.yml](../.gitlab-ci.yml) (GitLab CI).
+CI reference: [../.github/workflows/ci.yml](../.github/workflows/ci.yml) (GitHub Actions).
 
 ---
 

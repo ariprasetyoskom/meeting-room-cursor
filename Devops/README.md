@@ -7,7 +7,7 @@ Operasional development, CI/CD, dan infrastruktur untuk **Booking Ruang Meeting*
 | Path | Purpose |
 |------|---------|
 | [docker/](./docker/README.md) | Postgres 15 + Redis 7 untuk development lokal |
-| [ci/](./ci/README.md) | Pipeline **GitLab CI** (`.gitlab-ci.yml`) |
+| [ci/](./ci/README.md) | Pipeline **GitHub Actions** (`.github/workflows/ci.yml`) |
 | [infra/](./infra/README.md) | Placeholder Terraform / Kubernetes |
 
 ## Arsitektur Referensi
@@ -23,4 +23,4 @@ Operasional development, CI/CD, dan infrastruktur untuk **Booking Ruang Meeting*
 | staging | merge to `main` (CI) |
 | production | approved release tag |
 
-Secrets tidak disimpan di repo — gunakan **GitLab CI/CD Variables** / vault produksi.
+Secrets tidak disimpan di repo — gunakan **GitHub Actions secrets / Environments** / vault produksi.

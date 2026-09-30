@@ -178,7 +178,7 @@
 | **PSET01-ci-task** | F-PS-S06 | Lint | `npm run lint` | Zero blocking error |
 | **PSET02-ci-task** | F-PS-S06 | Unit test | `npm run test` | Vitest hijau |
 | **PSET03-ci-task** | F-PS-S01 | Production build | `npm run build` | Next build sukses |
-| **PSET04-ci-task** | F-PS-S06 | Pipeline | Adaptasi [.gitlab-ci.yml](../../.gitlab-ci.yml) | CI lint/test/build |
+| **PSET04-ci-task** | F-PS-S06 | Pipeline | Adaptasi [.github/workflows/ci.yml](../../.github/workflows/ci.yml) | CI lint/test/build |
 
 **Gate keluar:** **F-PS-S06** siap.
 
@@ -192,7 +192,7 @@
 |---------|---------|---------|------------------|---------------------|
 | **PSET01-ops-task** | F-PS-S01 | Image | Image web + CMD worker | Build & runbook |
 | **PSET02-ops-task** | F-PS-S02 | Migrate job | Pre-deploy `db:migrate` | Job terdokumentasi |
-| **PSET03-ops-task** | F-PS-S03 | Secrets | GitLab CI/CD Variables / vault | Tidak di git |
+| **PSET03-ops-task** | F-PS-S03 | Secrets | GitHub Actions secrets / vault | Tidak di git |
 | **PSET04-ops-task** | F-PS-S04 | OIDC prod | Redirect prod; smoke login | `/login` OK |
 | **PSET05-ops-task** | F-PS-S05 | Probes | LB/K8s → `/api/health` | Probe configured |
 | **PSET06-ops-task** | F-PS-S07 | SMTP | `SMTP_*`, worker staging | Email bilingual |

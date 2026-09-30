@@ -42,4 +42,4 @@ Indeks dokumen spesifikasi, desain, dan arsitektur — **selaras dengan implemen
 
 - Aplikasi: [../Apps/web/README.md](../Apps/web/README.md)
 - Docker lokal: [../Devops/docker/README.md](../Devops/docker/README.md)
-- GitLab CI: [../.gitlab-ci.yml](../.gitlab-ci.yml) · [../Devops/ci/README.md](../Devops/ci/README.md)
+- GitHub Actions CI: [../.github/workflows/ci.yml](../.github/workflows/ci.yml) · [../Devops/ci/README.md](../Devops/ci/README.md)

@@ -1,0 +1,12 @@
+# Salinan referensi — pipeline aktif: .github/workflows/ci.yml
+# GitHub Actions mengeksekusi workflow di .github/workflows/ saat repo di GitHub.
+
+name: CI
+
+on:
+  push:
+    branches: [main, "cursor/**"]
+  pull_request:
+
+# Lihat file lengkap di repository root:
+#   .github/workflows/ci.yml

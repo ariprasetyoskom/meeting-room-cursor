@@ -1,4 +1,4 @@
-# CI/CD — GitLab
+# CI/CD — GitHub Actions
 
 Pipeline continuous integration untuk monorepo **Apps/web**, selaras dengan [Architecture §8.4](../../Docs/Architecture-Aplikasi-Booking-Ruang-Meeting.md).
 
@@ -6,38 +6,44 @@ Pipeline continuous integration untuk monorepo **Apps/web**, selaras dengan [Arc
 
 | Path | Fungsi |
 |------|--------|
-| [../../.gitlab-ci.yml](../../.gitlab-ci.yml) | Pipeline GitLab (aktif saat repo di GitLab) |
-| [gitlab/](./gitlab/) | Pointer referensi ke root |
+| [../../.github/workflows/ci.yml](../../.github/workflows/ci.yml) | Workflow GitHub Actions (aktif saat repo di GitHub) |
+| [github/ci.yml.example](./github/ci.yml.example) | Pointer referensi |
 
-GitLab hanya mengeksekusi **`.gitlab-ci.yml` di root** repositori.
+GitHub mengeksekusi workflow di **`.github/workflows/*.yml`**.
 
-## Stage pipeline
+## Jobs pipeline
 
 1. **lint** — ESLint + `tsc --noEmit`
-2. **test** — Vitest unit; job integrasi dengan service Postgres 15 + Redis 7 + `db:migrate`
-3. **build** — `next build` (artifact `.next/`)
-4. **deploy** — placeholder deploy staging on branch `main`
+2. **unit-test** — Vitest
+3. **integration-test** — Postgres 15 + Redis 7 service containers + `db:migrate` + `npm test`
+4. **build** — `next build`
+5. **deploy-staging** — placeholder on push to `main` (GitHub Environment `staging`)
 
 ## Branch policy
 
 Lihat Architecture [§8.5 Branch Management](../../Docs/Architecture-Aplikasi-Booking-Ruang-Meeting.md).
 
-## Variabel & secrets (GitLab)
+## Variabel & secrets (GitHub)
 
-Set di **Settings → CI/CD → Variables** (protected/masked untuk production):
+Set di **Settings → Secrets and variables → Actions**; untuk deploy gunakan **Environments** `staging` / `production`:
 
-| Variable | Usage |
-|----------|--------|
-| `DATABASE_URL` | Override integrasi / deploy migrate |
+| Secret / variable | Usage |
+|-------------------|--------|
+| `DATABASE_URL` | Deploy migrate / integrasi |
 | `AUTH_SECRET` | Runtime staging/prod |
-| `CI_REGISTRY_*` | Push image container (opsional) |
 
-Gunakan **Environments** `staging` / `production` untuk approval manual deploy prod (tag `v*`).
+Release production: approval manual atau tag `v*` (Architecture §8.4).
 
 ## QA gate
 
 Release production: checklist Architecture [§8.6 QA](../../Docs/Architecture-Aplikasi-Booking-Ruang-Meeting.md) + UAT BRD §13.
 
-## Migrasi dari GitHub Actions
+## Hubungkan repo ke GitHub
 
-Contoh GitHub Actions lama dihapus; gunakan stage yang sama di `.gitlab-ci.yml`.
+```powershell
+# Buat repo kosong di github.com, lalu:
+git remote add origin https://github.com/<user>/<repo>.git
+git push -u origin cursor/meeting-room-web-scaffold
+```
+
+Atau dengan [GitHub CLI](https://cli.github.com/): `gh auth login` lalu `gh repo create <nama> --private --source=. --remote=origin --push`.
