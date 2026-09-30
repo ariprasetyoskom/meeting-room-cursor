@@ -97,7 +97,11 @@ jobs:
           cache: npm
           cache-dependency-path: Apps/web/package-lock.json
       - run: npm ci
-      - run: npm run build
+      - name: Production build (no live DB/Redis required)
+        run: npm run build
+        env:
+          REDIS_URL: ""
+          DATABASE_URL: postgresql://build:build@127.0.0.1:1/nodb
 
   deploy-staging:
     runs-on: ubuntu-latest
