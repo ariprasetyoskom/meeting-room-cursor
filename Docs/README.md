@@ -54,6 +54,12 @@ Sumber halaman: [Devops/github-wiki/](../Devops/github-wiki/README.md) — publi
 5. **TDD** — implementasi teknis untuk engineering.
 6. **Architecture** — operasi, pipeline, ADR jangka panjang.
 
+## Orkestrasi manusia dan AI
+
+| Dokumen | Versi | Deskripsi |
+|---------|-------|-----------|
+| [PRD-Orkestrasi-Manusia-AI.md](./PRD-Orkestrasi-Manusia-AI.md) | **1.3** | Runner per task: dokumen agent (rencana, verdict) terpisah dari dokumen development (hasil, bukti) |
+
 ## Agentic — generator dokumen
 
 Skill + template (`{{placeholder}}`) untuk menyusun ulang dokumen selaras proyek:
@@ -65,6 +71,7 @@ Skill + template (`{{placeholder}}`) untuk menyusun ulang dokumen selaras proyek
 | `platform-arsitektur` | `000_platform_setup/arsitektur.md` |
 | `platform-design` | `000_platform_setup/design.md` |
 | `platform-techstack` | `000_platform_setup/techstack.md` |
+| `devops-agent` | Dokumen agent dan dokumen development untuk kanonik infra, ci, ops, worker |
 
 Salinan Cursor: [../.cursor/skills/](../.cursor/skills/).
 
