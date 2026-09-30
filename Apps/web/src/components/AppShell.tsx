@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AdminNav } from "./AdminNav";
+import { BrandLogo } from "./BrandLogo";
 import { DevAuthBanner } from "./DevAuthBanner";
 import { MainNav } from "./MainNav";
 import { UserMenu } from "./UserMenu";
@@ -8,15 +9,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <Link href="/book" className="app-brand">
-          Ruang Meeting
-        </Link>
-        <div className="app-header-end">
-          <nav className="app-nav" aria-label="Utama">
-            <MainNav />
-            <AdminNav />
-          </nav>
-          <UserMenu />
+        <div className="app-header-inner">
+          <Link href="/book" className="app-brand" aria-label="Ruang Meeting — beranda">
+            <BrandLogo />
+            <span className="app-brand-text">
+              <span className="app-brand-name">Ruang Meeting</span>
+              <span className="app-brand-tagline">Booking internal</span>
+            </span>
+          </Link>
+          <div className="app-header-end">
+            <nav className="app-nav" aria-label="Utama">
+              <MainNav />
+              <AdminNav />
+            </nav>
+            <UserMenu />
+          </div>
         </div>
       </header>
       <DevAuthBanner />

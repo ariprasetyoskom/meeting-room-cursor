@@ -27,8 +27,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="id" className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body>
         <SessionProvider>
           <SessionProfileProvider>
             <AppShell>{children}</AppShell>
