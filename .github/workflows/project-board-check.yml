@@ -1,0 +1,45 @@
+# Cek berkala kartu Kanban "In Progress" (Project #1).
+# Butuh secret GH_PROJECT_PAT: classic PAT dengan scope `project` + `read:org` (jika perlu).
+
+name: Project board check
+
+on:
+  schedule:
+    # Setiap 15 menit (UTC). Sesuaikan jika ingin jam kerja WIB saja.
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: project-board-check
+  cancel-in-progress: false
+
+jobs:
+  in-progress:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install GitHub CLI
+        run: type gh || (sudo apt-get update && sudo apt-get install -y gh)
+
+      - name: Report In Progress cards
+        env:
+          GH_TOKEN: ${{ secrets.GH_PROJECT_PAT }}
+          PROJECT_OWNER: ariprasetyoskom
+          PROJECT_NUMBER: "1"
+        run: |
+          node Devops/scripts/report-project-in-progress.mjs | tee report.txt
+          echo "## Project In Progress" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cat report.txt >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Optional sync closed issues to Done
+        if: vars.PROJECT_SYNC_ON_SCHEDULE == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PROJECT_PAT }}
+          PROJECT_OWNER: ariprasetyoskom
+          PROJECT_NUMBER: "1"
+          PROJECT_SYNC_DELAY_MS: "800"
+        run: node Devops/scripts/sync-project-status.mjs

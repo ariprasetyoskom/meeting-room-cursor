@@ -5,7 +5,7 @@
 | **Board** | [Project #1 — meeting-room-cursor](https://github.com/users/ariprasetyoskom/projects/1) |
 | **Repo** | [ariprasetyoskom/meeting-room-cursor](https://github.com/ariprasetyoskom/meeting-room-cursor) |
 
-Kanban ini selaras dengan dokumen delivery di repo.
+Kanban ini selaras dengan dokumen delivery di repo. Spesifikasi scheduler: [PRD-GitHub-Project-Scheduler.md](./PRD-GitHub-Project-Scheduler.md).
 
 ## Kolom Status (Kanban)
 
@@ -84,6 +84,48 @@ node Devops/scripts/sync-project-status.mjs --fix-reopened
 Env opsional: `PROJECT_OWNER` (default `@me`), `PROJECT_NUMBER` (`1`), `PROJECT_SYNC_DELAY_MS` (default `600`).
 
 Prasyarat: `gh auth login` dengan scope **`project`**.
+
+## Scheduler — cek In Progress setiap 15 menit
+
+GitHub **tidak** punya cron bawaan untuk Project; gunakan salah satu:
+
+### A) GitHub Actions (disarankan, jalan tanpa laptop)
+
+Workflow: [`.github/workflows/project-board-check.yml`](../.github/workflows/project-board-check.yml)
+
+1. Buat **classic PAT** → scope **`project`** (read cukup untuk laporan; write jika sync).  
+2. Repo → **Settings → Secrets → Actions** → `GH_PROJECT_PAT`.  
+3. Workflow jalan tiap **15 menit** (`cron: */15 * * * *` UTC); hasil di **Summary** run Actions.  
+4. Opsional: repo **Variable** `PROJECT_SYNC_ON_SCHEDULE` = `true` agar sekalian jalankan `sync-project-status.mjs`.
+
+Manual trigger: **Actions → Project board check → Run workflow**.
+
+### B) Windows Task Scheduler (lokal)
+
+```powershell
+$repo = "D:\Cursor"
+$action = New-ScheduledTaskAction -Execute "node.exe" `
+  -Argument "Devops\scripts\report-project-in-progress.mjs" `
+  -WorkingDirectory $repo
+$trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) `
+  -RepetitionInterval (New-TimeSpan -Minutes 15) `
+  -RepetitionDuration ([TimeSpan]::MaxValue)
+Register-ScheduledTask -TaskName "MeetingRoom-ProjectInProgress" `
+  -Action $action -Trigger $trigger -Description "GitHub Project In Progress"
+```
+
+Prasyarat: `gh auth login` sudah jalan untuk user yang menjalankan task.
+
+### C) Cursor `/loop 15m` (hanya saat chat/IDE aktif)
+
+Bukan scheduler server — cocok untuk sesi dev singkat, bukan monitoring 24/7.
+
+### Script laporan
+
+```bash
+node Devops/scripts/report-project-in-progress.mjs
+node Devops/scripts/report-project-in-progress.mjs --json
+```
 
 ---
 
