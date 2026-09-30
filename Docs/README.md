@@ -12,10 +12,10 @@ Indeks dokumen spesifikasi, desain, dan arsitektur — **selaras dengan implemen
 
 | Dokumen | Versi | Deskripsi |
 |---------|-------|-----------|
-| [BRD-Aplikasi-Booking-Ruang-Meeting.md](./BRD-Aplikasi-Booking-Ruang-Meeting.md) | **1.1** | Business requirements: KPI, BR/FR/NFR, stack ringkas §10 |
-| [PRD-Aplikasi-Booking-Ruang-Meeting.md](./PRD-Aplikasi-Booking-Ruang-Meeting.md) | **1.1** | Produk: D-1–D-3, F-01–F-12, UX §6 |
+| [BRD-Aplikasi-Booking-Ruang-Meeting.md](./BRD-Aplikasi-Booking-Ruang-Meeting.md) | **1.2** | Business requirements: KPI, BR/FR/NFR, acceptance §13 + GitHub |
+| [PRD-Aplikasi-Booking-Ruang-Meeting.md](./PRD-Aplikasi-Booking-Ruang-Meeting.md) | **1.2** | Produk: D-1–D-3, F-01–F-12, status impl. §4.1, UX §6 |
 | [TDD-Aplikasi-Booking-Ruang-Meeting.md](./TDD-Aplikasi-Booking-Ruang-Meeting.md) | **1.1** | Tech stack terkunci (Drizzle, Next 14), API, DB, env |
-| [Architecture-Aplikasi-Booking-Ruang-Meeting.md](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) | **1.2** | C4, ADR-001–006, CI/CD, observability, QA |
+| [Architecture-Aplikasi-Booking-Ruang-Meeting.md](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) | **1.3** | C4, komponen/rute §3.3, ADR, GitHub Actions CI/CD, QA |
 | [Design-Aplikasi-Booking-Ruang-Meeting.md](./Design-Aplikasi-Booking-Ruang-Meeting.md) | **1.0** | UI/UX, tokens, layar `/book` + RoomPicker 5 ruang |
 
 ## Selaraskan Stack (Referensi Cepat)
@@ -26,7 +26,7 @@ Indeks dokumen spesifikasi, desain, dan arsitektur — **selaras dengan implemen
 | Drizzle + Postgres 15 | §10 | §2–4 | §3.4, ADR-006 | — |
 | Redis + BullMQ | §10 | §2, §7 | ADR-003 | — |
 | Auth.js OIDC + dev | §10 | §6 | §3.3 | §5 |
-| UI `/book`, 5 ruang | §8.1 | §8 | §3.3 | §6 |
+| UI shell, `/book`, 5 ruang, admin | §8.1 | §8 | §3.3 | §5–§7 |
 | Docker PG **5434** | §10 | §2 | §6 | — |
 
 ## Urutan Baca Disarankan

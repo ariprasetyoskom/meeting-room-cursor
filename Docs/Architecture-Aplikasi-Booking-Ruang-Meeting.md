@@ -4,9 +4,9 @@
 | Metadata | |
 |----------|---|
 | **Dokumen** | Architecture-Aplikasi-Booking-Ruang-Meeting |
-| **Versi** | **1.2** |
-| **Tanggal** | 29 September 2026 |
-| **Status** | Baseline selaras stack & UI MVP |
+| **Versi** | **1.3** |
+| **Tanggal** | 30 September 2026 |
+| **Status** | Selaras implementasi MVP — PRD v1.2, BRD v1.2 |
 | **Dokumen Terkait** | [BRD](./BRD-Aplikasi-Booking-Ruang-Meeting.md) · [PRD](./PRD-Aplikasi-Booking-Ruang-Meeting.md) · [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md) |
 
 ---
@@ -14,6 +14,8 @@
 ## 1. Introduction
 
 Dokumen ini mendeskripsikan arsitektur sistem booking ruang meeting untuk MVP: context C4, container, komponen utama, keputusan arsitektur (ADR), observability, CI/CD, branch management, dan QA — selaras dengan [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md).
+
+**Repositori:** [github.com/ariprasetyoskom/meeting-room-cursor](https://github.com/ariprasetyoskom/meeting-room-cursor) · branch pengembangan `cursor/meeting-room-web-scaffold`.
 
 ---
 
@@ -80,16 +82,26 @@ Rel(web, idp, "OAuth/OIDC")
 
 | Komponen | Tanggung jawab |
 |----------|----------------|
-| **Auth Module** | Auth.js (OIDC + `AUTH_MODE=dev`), middleware, upsert user |
-| **Booking Service** | Business rules D-1, validation, conflict mapping (`23P01` → 409) |
-| **Room Service** | Active rooms; admin CRUD (API backlog sebagian) |
-| **Repositories (Drizzle)** | `rooms.repository`, `bookings.repository` |
-| **Calendar UI** | `BookingCalendar`, **RoomPicker**, timeline 08–18 WIB |
-| **API Layer** | `/api/v1/*`, Zod, error envelope |
-| **Email Worker** | BullMQ consumer — bilingual templates (D-3) |
-| **Audit Logger** | Append-only audit on mutations (partial MVP) |
+| **Auth Module** | Auth.js (OIDC + `AUTH_MODE=dev`), middleware, `SessionProfileProvider`, `dev-auth-client` |
+| **Booking Service** | Business rules D-1, validation, conflict mapping (`23P01` → 409), enqueue email |
+| **Room Service** | Active rooms; **admin CRUD** + activate/deactivate |
+| **Repositories (Drizzle)** | `rooms`, `bookings`, `audit` repositories |
+| **Presentation shell** | `AppShell`, `BrandLogo`, `MainNav`, `AdminNav`, `UserMenu`, `PageHeader` |
+| **Calendar UI** | `BookingCalendar`, `RoomPicker`, `BookingModal` — timeline/list **harian** 08–18 WIB |
+| **Admin UI** | `AdminRoomsManager`, `AdminBookingsList`, `AdminAuditLogList` (F-08–F-11) |
+| **API Layer** | `/api/v1/*`, `/api/health`, Zod, error envelope |
+| **Email Worker** | BullMQ consumer — **SMTP + bilingual (D-3) backlog** |
+| **Audit Logger** | Append-only audit on booking/room mutations; admin read API |
 
-UI/UX detail: [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md).
+UI/UX detail: [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md) · status fitur: [PRD §4.1](./PRD-Aplikasi-Booking-Ruang-Meeting.md).
+
+### 3.3.1 Rute aplikasi (MVP)
+
+| Area | Route | API utama |
+|------|-------|-----------|
+| Employee | `/book`, `/rooms`, `/bookings`, `/login` | `GET/POST /api/v1/bookings`, `GET /api/v1/rooms`, `GET /api/v1/me` |
+| Admin | `/admin/rooms`, `/admin/bookings`, `/admin/audit` | `/api/v1/admin/rooms`, `.../bookings`, `.../audit-logs` |
+| Ops | — | `GET /api/health` |
 
 ### 3.4 Tech Stack (Single Source of Truth)
 
@@ -248,7 +260,7 @@ Secrets via **GitHub Actions secrets** and Environments (`staging`, `production`
 |--------|---------|-------|
 | `main` | Production-ready | Protected; require PR + 1 review + green CI |
 | `develop` | Integration (optional) | Deploy to staging if used |
-| `feature/*` | Feature work | Branch from `main`; squash merge |
+| `feature/*`, `cursor/*` | Feature work | Branch from `main`; CI on push; squash merge |
 | `fix/*` | Bugfixes | Same as feature |
 | `release/*` | Release prep | Version bump, changelog |
 
@@ -308,4 +320,4 @@ Test data: seed script for rooms and test users in staging only.
 
 ---
 
-*Akhir dokumen Architecture v1.2.*
+*Akhir dokumen Architecture v1.3.*

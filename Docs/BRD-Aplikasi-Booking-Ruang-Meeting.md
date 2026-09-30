@@ -4,9 +4,9 @@
 | Metadata | |
 |----------|---|
 | **Dokumen** | BRD-Aplikasi-Booking-Ruang-Meeting |
-| **Versi** | **1.1** |
-| **Tanggal** | 29 September 2026 |
-| **Status** | Draft untuk Review |
+| **Versi** | **1.2** |
+| **Tanggal** | 30 September 2026 |
+| **Status** | Selaras implementasi MVP — engineering snapshot (PRD v1.2, Architecture v1.3) |
 | **Bahasa** | Indonesia |
 | **Dokumen Terkait** | [PRD](./PRD-Aplikasi-Booking-Ruang-Meeting.md) · [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Architecture](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) · [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md) |
 
@@ -215,19 +215,20 @@ AuditLog: id, actor_user_id, entity_type, entity_id, action, payload_json, creat
 
 ## 10. Arsitektur & Tech Stack (Selaras MVP)
 
-Detail teknis: [TDD v1.1](./TDD-Aplikasi-Booking-Ruang-Meeting.md), [Architecture v1.2](./Architecture-Aplikasi-Booking-Ruang-Meeting.md), pengalaman UI: [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md).
+Detail teknis: [TDD v1.1](./TDD-Aplikasi-Booking-Ruang-Meeting.md), [Architecture v1.3](./Architecture-Aplikasi-Booking-Ruang-Meeting.md), pengalaman UI: [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md).
 
 | Aspek | Keputusan baseline |
 |-------|-------------------|
 | Monorepo | `Docs/`, `Apps/web/`, `Devops/` |
 | Frontend | Next.js **14** App Router, React **18**, TypeScript **5** |
-| UI | CSS design tokens + Geist; 5 ruang selectable (`RoomPicker`) |
+| UI | CSS tokens + Geist; shell modern (`BrandLogo`, sticky header); 5 ruang (`RoomPicker`) |
 | Backend | Route handlers `/api/v1` dalam app yang sama |
 | ORM / DB | **Drizzle ORM** + PostgreSQL **15**, **exclusion constraint** anti-overlap |
 | Queue | Redis **7** + BullMQ — email bilingual async (D-3) |
 | Auth | Auth.js — **OIDC** + mode **dev** lokal |
 | Dev infra | Docker Postgres **5434**, Redis **6379** |
 | Hosting | Container staging/prod; **CI/CD GitHub Actions** (`.github/workflows/`, `Devops/ci/`) |
+| Source control | GitHub [meeting-room-cursor](https://github.com/ariprasetyoskom/meeting-room-cursor); branch aktif `cursor/meeting-room-web-scaffold` |
 
 ---
 
@@ -260,14 +261,26 @@ Fase 2 direncanakan setelah evaluasi KPI 90 hari post go-live.
 
 ## 13. Acceptance Criteria (MVP)
 
-- [ ] Tidak mungkin membuat dua booking confirmed overlap untuk ruang yang sama (bukti test + constraint DB).
-- [ ] Non-organizer tidak dapat cancel booking user lain (kecuali admin dengan alasan).
-- [ ] Cancel organizer diblokir < 1 jam sebelum start (pesan error jelas).
-- [ ] Kalender menampilkan nama organizer pada setiap slot terisi.
-- [ ] Email create/cancel/reminder memuat blok teks ID dan EN.
-- [ ] Admin dapat nonaktifkan ruang; ruang tidak muncul di flow booking karyawan.
-- [ ] Audit log tercatat untuk create/cancel dan perubahan ruang.
-- [ ] KPI instrumentation (minimal event analytics) terpasang untuk adopsi dan durasi booking.
+Status **30 Sep 2026** — selaras [PRD §4.1](./PRD-Aplikasi-Booking-Ruang-Meeting.md) dan platform sign-off lokal [§9](./000_platform_setup/PRD-Platform-Environment-Setup.md).
+
+- [x] Tidak mungkin membuat dua booking confirmed overlap untuk ruang yang sama (bukti test + constraint DB).  
+  **Bukti:** exclusion `btree_gist` + `booking-policy.test.ts`; API 409 `ROOM_CONFLICT`.
+- [x] Non-organizer tidak dapat cancel booking user lain (kecuali admin dengan alasan).  
+  **Bukti:** `cancelBooking` + `requireAdmin` / alasan wajib admin.
+- [x] Cancel organizer diblokir < 1 jam sebelum start (pesan error jelas).  
+  **Bukti:** `assertCanCancel` (D-1), copy Design §8.
+- [x] Kalender menampilkan nama organizer pada setiap slot terisi.  
+  **Bukti:** `BookingCalendar` timeline (D-2).
+- [ ] Email create/cancel/reminder memuat blok teks ID dan EN.  
+  **Gap:** queue + worker log; SMTP & template bilingual (D-3) belum prod.
+- [x] Admin dapat nonaktifkan ruang; ruang tidak muncul di flow booking karyawan.  
+  **Bukti:** `findActiveRooms`, admin PATCH deactivate, F-08 UI.
+- [x] Audit log tercatat untuk create/cancel dan perubahan ruang.  
+  **Bukti:** `writeAuditLog`, `/admin/audit`, F-11.
+- [ ] KPI instrumentation (minimal event analytics) terpasang untuk adopsi dan durasi booking.  
+  **Gap:** event funnel PRD §7 belum di-wire.
+
+**Belum UAT formal:** BRD §16 sign-off stakeholder; QA Architecture §8.6.
 
 ---
 
@@ -294,7 +307,7 @@ Fase 2 direncanakan setelah evaluasi KPI 90 hari post go-live.
 |---------|------|
 | Product Requirements | [./PRD-Aplikasi-Booking-Ruang-Meeting.md](./PRD-Aplikasi-Booking-Ruang-Meeting.md) |
 | Technical Design | [./TDD-Aplikasi-Booking-Ruang-Meeting.md](./TDD-Aplikasi-Booking-Ruang-Meeting.md) |
-| Architecture v1.2 | [./Architecture-Aplikasi-Booking-Ruang-Meeting.md](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) |
+| Architecture v1.3 | [./Architecture-Aplikasi-Booking-Ruang-Meeting.md](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) |
 | Design (UI/UX) | [./Design-Aplikasi-Booking-Ruang-Meeting.md](./Design-Aplikasi-Booking-Ruang-Meeting.md) |
 | Indeks Docs | [./README.md](./README.md) |
 
@@ -326,4 +339,4 @@ Fase 2 direncanakan setelah evaluasi KPI 90 hari post go-live.
 
 ---
 
-*Akhir dokumen BRD.*
+*Akhir dokumen BRD v1.2.*

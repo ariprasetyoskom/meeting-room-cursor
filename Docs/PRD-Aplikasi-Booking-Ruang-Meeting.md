@@ -4,9 +4,9 @@
 | Metadata | |
 |----------|---|
 | **Dokumen** | PRD-Aplikasi-Booking-Ruang-Meeting |
-| **Versi** | **1.1** |
-| **Tanggal** | 29 September 2026 |
-| **Status** | Approved for MVP build |
+| **Versi** | **1.2** |
+| **Tanggal** | 30 September 2026 |
+| **Status** | MVP in development — selaras `Apps/web` & [Architecture v1.3](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) |
 | **Dokumen Terkait** | [BRD](./BRD-Aplikasi-Booking-Ruang-Meeting.md) · [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Architecture](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) · [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md) |
 
 ---
@@ -56,6 +56,25 @@ Keputusan teknis turunan: lihat [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md).
 | **F-11** | Audit trail | View log admin untuk booking/room changes | Yes | MVP: table + filter date |
 | **F-12** | Export CSV | Admin export bookings by date range | Could | Post-MVP jika capacity |
 
+### 4.1 Status implementasi (snapshot engineering)
+
+| ID | Status | Bukti / gap |
+|----|--------|-------------|
+| **F-01** | **Sebagian** | `AUTH_MODE=dev` + OIDC (Auth.js); logout SSO; staging IdP belum UAT |
+| **F-02** | **Selesai** | `/rooms`, `RoomDirectory`, filter kapasitas |
+| **F-03** | **Sebagian** | Kartu ruang + picker; halaman detail dedicated & foto (OQ-3) belum |
+| **F-04** | **Sebagian** | Timeline harian 08–18 + daftar; **week view** PRD belum |
+| **F-05** | **Selesai** | `BookingModal`, POST `/api/v1/bookings`, policy BR-01–04 |
+| **F-06** | **Selesai** | `/bookings`, `MyBookingsList` |
+| **F-07** | **Selesai** | Cancel organizer + window D-1; modal/konfirmasi |
+| **F-08** | **Selesai** | `/admin/rooms`, CRUD + activate/deactivate |
+| **F-09** | **Selesai** | `/admin/bookings`, admin cancel + alasan (BR-08) |
+| **F-10** | **Sebagian** | BullMQ enqueue + `worker:email`; **SMTP + bilingual + reminder** belum prod |
+| **F-11** | **Selesai** | `/admin/audit`, filter tanggal |
+| **F-12** | **Belum** | Post-MVP |
+
+Repo: [github.com/ariprasetyoskom/meeting-room-cursor](https://github.com/ariprasetyoskom/meeting-room-cursor) (branch `cursor/meeting-room-web-scaffold`). Setup lokal: [000_platform_setup §9](./000_platform_setup/PRD-Platform-Environment-Setup.md).
+
 ---
 
 ## 5. Out of Scope (MVP)
@@ -72,10 +91,11 @@ Keputusan teknis turunan: lihat [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md).
 
 Spesifikasi layar lengkap: [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md).
 
-- Bahasa UI utama: **Indonesia** (`lang="id"`); datetime **WIB**.
-- Nav: **Booking** (`/book`), **Ruang** (`/rooms`), **Booking saya** (`/bookings`).
-- **Pilih ruangan:** grid 5 ruang demo (MR-A … MR-E) + opsi **Semua ruang**; filter timeline.
-- Kalender: view **Timeline** / **Daftar**; slot terisi menampilkan organizer (D-2).
+- Bahasa UI utama: **Indonesia** (`lang="id"`); datetime **WIB**; tipografi **Geist Sans** (`layout.tsx` variabel di `<html>`).
+- **App shell:** header sticky + blur, **logo** (`BrandLogo`) + brand *Ruang Meeting* / tagline *Booking internal*; nav segmented pill (`MainNav`, `AdminNav`); profil `UserMenu` + `SessionProfileProvider`; dev: `DevAuthBanner`. Detail: [Design §5](./Design-Aplikasi-Booking-Ruang-Meeting.md).
+- Nav: **Booking** (`/book`), **Ruang** (`/rooms`), **Booking saya** (`/bookings`); admin (role): `/admin/rooms`, `/admin/bookings`, `/admin/audit`.
+- **Pilih ruangan:** grid 5 ruang demo (MR-A … MR-E) + opsi **Semua ruang**; filter kapasitas + timeline.
+- Kalender: view **Timeline** / **Daftar** (harian); slot terisi menampilkan organizer (D-2); week view = backlog F-04.
 - Booking: modal dengan dropdown ruang; tanpa optimistic submit.
 - Empty states dengan CTA ke `/book`.
 - Error bentrok: *"Ruangan sudah dipesan pada waktu ini"*.
@@ -115,9 +135,10 @@ Hanya **OQ-4** tetap terbuka di versi dokumen ini.
 
 ## 10. Release Criteria
 
-- Semua fitur F-01–F-11 lulus QA checklist Architecture §8.6.
-- D-1, D-2, D-3 verified in UAT sign-off.
+- Semua fitur **F-01–F-11** lulus QA checklist Architecture §8.6 (saat ini: inti booking/admin **implementasi ada**; **F-10 penuh**, **F-04 week**, OIDC staging, UAT belum).
+- **D-1**, **D-2** verified di dev/UAT; **D-3** menunggu SMTP + template bilingual.
 - Zero P1 bugs; load test 100 concurrent users on staging.
+- CI **GitHub Actions** hijau di `main` / release candidate ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)).
 
 ---
 
@@ -127,9 +148,9 @@ Hanya **OQ-4** tetap terbuka di versi dokumen ini.
 |---------|------|
 | Business Requirements | [./BRD-Aplikasi-Booking-Ruang-Meeting.md](./BRD-Aplikasi-Booking-Ruang-Meeting.md) |
 | Technical Design | [./TDD-Aplikasi-Booking-Ruang-Meeting.md](./TDD-Aplikasi-Booking-Ruang-Meeting.md) |
-| Architecture v1.2 | [./Architecture-Aplikasi-Booking-Ruang-Meeting.md](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) |
+| Architecture v1.3 | [./Architecture-Aplikasi-Booking-Ruang-Meeting.md](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) |
 | Design | [./Design-Aplikasi-Booking-Ruang-Meeting.md](./Design-Aplikasi-Booking-Ruang-Meeting.md) |
 
 ---
 
-*Akhir dokumen PRD v1.1.*
+*Akhir dokumen PRD v1.2.*
