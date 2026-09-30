@@ -13,16 +13,22 @@ import { PageHeader } from "./ui/PageHeader";
 import { LoadingBlock } from "./ui/LoadingBlock";
 import {
   OPERATING_HOURS,
+  addDaysToDateInput,
   dayBoundsUtc,
   formatDateId,
+  formatDayMonthShort,
+  formatWeekdayShort,
   toDateInputValue,
+  weekBoundsUtc,
+  weekDayDates,
+  weekStartMonday,
 } from "@/lib/format";
 import {
   DEV_AUTH_READY_EVENT,
   ensureDevUserId,
 } from "@/lib/dev-auth-client";
 
-type ViewMode = "timeline" | "list";
+type ViewMode = "timeline" | "week" | "list";
 
 export function BookingCalendar() {
   const [date, setDate] = useState(() => toDateInputValue(new Date()));
@@ -58,7 +64,8 @@ export function BookingCalendar() {
     setError(null);
     try {
       await ensureDevUserId();
-      const { from, to } = dayBoundsUtc(date);
+      const { from, to } =
+        view === "week" ? weekBoundsUtc(date) : dayBoundsUtc(date);
       const params = new URLSearchParams({
         from: from.toISOString(),
         to: to.toISOString(),
@@ -81,7 +88,7 @@ export function BookingCalendar() {
     } finally {
       setLoading(false);
     }
-  }, [date, minCapacity]);
+  }, [date, minCapacity, view]);
 
   useEffect(() => {
     load();
@@ -93,13 +100,29 @@ export function BookingCalendar() {
     return () => window.removeEventListener(DEV_AUTH_READY_EVENT, onDevAuth);
   }, [load]);
 
+  useEffect(() => {
+    if (view === "week" && !selectedRoomId && rooms.length > 0) {
+      setSelectedRoomId(rooms[0].id);
+    }
+  }, [view, selectedRoomId, rooms]);
+
+  const weekMonday = useMemo(() => weekStartMonday(date), [date]);
+  const weekDays = useMemo(() => weekDayDates(weekMonday), [weekMonday]);
+
+  const weekRoom = useMemo(() => {
+    if (selectedRoomId) {
+      return rooms.find((r) => r.id === selectedRoomId) ?? null;
+    }
+    return rooms[0] ?? null;
+  }, [rooms, selectedRoomId]);
+
   function bookingsForRoom(roomId: string) {
     return bookings.filter((b) => b.roomId === roomId);
   }
 
-  function bookingAtSlot(roomId: string, hour: number) {
+  function bookingAtSlot(roomId: string, dayYmd: string, hour: number) {
     const slotStart = new Date(
-      `${date}T${String(hour).padStart(2, "0")}:00:00+07:00`,
+      `${dayYmd}T${String(hour).padStart(2, "0")}:00:00+07:00`,
     );
     const slotEnd = new Date(slotStart.getTime() + 60 * 60 * 1000);
     return bookingsForRoom(roomId).find((b) => {
@@ -109,8 +132,13 @@ export function BookingCalendar() {
     });
   }
 
-  function openBook(room: Room, hour: number) {
+  function openBook(room: Room, dayYmd: string, hour: number) {
+    setDate(dayYmd);
     setModal({ room, startHour: hour, endHour: Math.min(hour + 1, 22) });
+  }
+
+  function shiftWeek(deltaDays: number) {
+    setDate(addDaysToDateInput(date, deltaDays));
   }
 
   return (
@@ -130,7 +158,7 @@ export function BookingCalendar() {
 
       <div className="toolbar">
         <label className="toolbar-item">
-          Tanggal
+          {view === "week" ? "Minggu (tanggal acuan)" : "Tanggal"}
           <input
             type="date"
             className="input"
@@ -138,6 +166,31 @@ export function BookingCalendar() {
             onChange={(e) => setDate(e.target.value)}
           />
         </label>
+        {view === "week" && (
+          <div className="toolbar-item week-nav">
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => shiftWeek(-7)}
+            >
+              ← Minggu lalu
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => setDate(toDateInputValue(new Date()))}
+            >
+              Minggu ini
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => shiftWeek(7)}
+            >
+              Minggu depan →
+            </button>
+          </div>
+        )}
         <label className="toolbar-item">
           Min. kapasitas
           <input
@@ -155,7 +208,14 @@ export function BookingCalendar() {
             className={view === "timeline" ? "active" : ""}
             onClick={() => setView("timeline")}
           >
-            Timeline
+            Hari
+          </button>
+          <button
+            type="button"
+            className={view === "week" ? "active" : ""}
+            onClick={() => setView("week")}
+          >
+            Minggu
           </button>
           <button
             type="button"
@@ -170,7 +230,17 @@ export function BookingCalendar() {
         </button>
       </div>
 
-      <p className="text-muted date-label">{formatDateId(`${date}T12:00:00+07:00`)}</p>
+      <p className="text-muted date-label">
+        {view === "week"
+          ? `Minggu ${formatDayMonthShort(weekMonday)} – ${formatDayMonthShort(weekDays[6])} ${new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", year: "numeric" }).format(new Date(`${weekDays[6]}T12:00:00+07:00`))}`
+          : formatDateId(`${date}T12:00:00+07:00`)}
+      </p>
+      {view === "week" && weekRoom && (
+        <p className="text-muted week-room-label">
+          Tampilan minggu: <strong>{weekRoom.name}</strong> — pilih kartu ruang di atas
+          untuk ganti.
+        </p>
+      )}
 
       {error && (
         <div className="alert alert-error" role="alert">
@@ -207,13 +277,63 @@ export function BookingCalendar() {
               <button
                 type="button"
                 className="btn btn-primary"
-                onClick={() => openBook(room, 9)}
+                onClick={() => openBook(room, date, 9)}
               >
                 Pesan ruang
               </button>
             </li>
           ))}
         </ul>
+      )}
+
+      {!loading && view === "week" && weekRoom && (
+        <div className="timeline-wrap week-wrap">
+          <table className="timeline-table week-table">
+            <thead>
+              <tr>
+                <th>Jam</th>
+                {weekDays.map((dayYmd) => (
+                  <th key={dayYmd} className="week-day-head">
+                    <span>{formatWeekdayShort(dayYmd)}</span>
+                    <small>{formatDayMonthShort(dayYmd)}</small>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {hours.map((h) => (
+                <tr key={h}>
+                  <th scope="row" className="timeline-hour">
+                    {String(h).padStart(2, "0")}
+                  </th>
+                  {weekDays.map((dayYmd) => {
+                    const occupied = bookingAtSlot(weekRoom.id, dayYmd, h);
+                    if (occupied) {
+                      return (
+                        <td key={dayYmd} className="slot slot-busy">
+                          <span className="slot-title" title={occupied.title}>
+                            {occupied.title}
+                          </span>
+                          <span className="slot-organizer">{occupied.organizerName}</span>
+                        </td>
+                      );
+                    }
+                    return (
+                      <td key={dayYmd}>
+                        <button
+                          type="button"
+                          className="slot slot-free"
+                          aria-label={`Booking ${weekRoom.name} ${dayYmd} jam ${h}`}
+                          onClick={() => openBook(weekRoom, dayYmd, h)}
+                        />
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {!loading && view === "timeline" && visibleRooms.length > 0 && (
@@ -235,7 +355,7 @@ export function BookingCalendar() {
                     <small>{room.capacity} pax</small>
                   </th>
                   {hours.map((h) => {
-                    const occupied = bookingAtSlot(room.id, h);
+                    const occupied = bookingAtSlot(room.id, date, h);
                     if (occupied) {
                       return (
                         <td key={h} className="slot slot-busy">
@@ -252,7 +372,7 @@ export function BookingCalendar() {
                           type="button"
                           className="slot slot-free"
                           aria-label={`Booking ${room.name} jam ${h}`}
-                          onClick={() => openBook(room, h)}
+                          onClick={() => openBook(room, date, h)}
                         />
                       </td>
                     );

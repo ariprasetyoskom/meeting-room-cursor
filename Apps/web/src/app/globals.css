@@ -578,6 +578,39 @@ textarea.input {
   min-width: 720px;
 }
 
+.week-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: flex-end;
+}
+
+.week-room-label {
+  margin: -0.25rem 0 0.75rem;
+  font-size: 0.875rem;
+}
+
+.week-wrap {
+  overflow-x: auto;
+}
+
+.week-table .week-day-head {
+  min-width: 5.5rem;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.week-table .week-day-head small {
+  display: block;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.week-table .timeline-hour {
+  white-space: nowrap;
+  width: 2.5rem;
+}
+
 .timeline-table th,
 .timeline-table td {
   border: 1px solid var(--border);

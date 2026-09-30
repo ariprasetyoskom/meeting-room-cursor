@@ -17,7 +17,7 @@ Ringkasan untuk **smoke test UI** setelah setup. Source of truth: [Design v1.1](
 
 | Route | Verifikasi |
 |-------|------------|
-| `/book` | Room picker 5 kartu + **Semua ruang**; timeline 08–18 WIB |
+| `/book` | Room picker 5 kartu; tampilan **Hari** / **Minggu** / Daftar; jam 07–21 WIB |
 | `/rooms` | Daftar ruang tanpa error "Permintaan gagal" |
 | `/bookings` | List booking user (boleh kosong) |
 | `/login` | Tampil saat `AUTH_MODE=oidc` |

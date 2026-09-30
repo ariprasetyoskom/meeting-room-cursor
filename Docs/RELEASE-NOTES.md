@@ -20,7 +20,7 @@ Rilis ini men deliver **MVP internal** aplikasi booking ruang meeting: monorepo 
 
 | Area | ID PRD | Isi rilis |
 |------|--------|-----------|
-| Booking | F-04, F-05 | Kalender harian (timeline/list 08–18 WIB), picker **5 ruang** (MR-A…E), modal buat booking, anti-bentrok server |
+| Booking | F-04, F-05 | Kalender **Hari** + **Minggu** (7 hari per ruang) + daftar; picker **5 ruang**; modal booking; anti-bentrok |
 | Ruang | F-02 | Daftar ruang + filter kapasitas |
 | Booking saya | F-06, F-07 | List booking, cancel organizer (window D-1) |
 | Admin | F-08, F-09, F-11 | CRUD ruang, semua booking + cancel dengan alasan, audit log |
@@ -82,7 +82,7 @@ npm run dev
 
 | Item | Catatan |
 |------|---------|
-| F-04 week view | Belum di UI (hanya harian) |
+| F-04 minggu multi-ruang sekaligus | Minggu = satu ruang per grid (pilih kartu ruang) |
 | F-10 email | SMTP + template bilingual ID/EN belum prod |
 | F-12 export CSV | Post-MVP |
 | OIDC staging UAT | Belum sign-off IdP |

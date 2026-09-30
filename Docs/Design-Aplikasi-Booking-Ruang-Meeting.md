@@ -109,8 +109,9 @@ Komponen: `RoomPicker` — grid kartu selectable:
 ### 6.2 Toolbar kalender
 
 - Pemilih **tanggal** (input date).
-- Toggle **Timeline** vs **Daftar** (list view ringkas per ruang).
-- Jam operasi: 08:00–18:00 WIB (konstanta client).
+- Toggle **Hari** (timeline) vs **Minggu** (grid jam × 7 hari, satu ruang) vs **Daftar**.
+- Navigasi minggu: minggu lalu / minggu ini / minggu depan.
+- Jam operasi: 07:00–21:00 WIB (`OPERATING_HOURS` di client).
 
 ### 6.3 Timeline (F-04)
 
@@ -185,7 +186,7 @@ Entry OIDC (`AUTH_MODE=oidc`); redirect ke IdP per TDD §6.
 | Room picker 5 ruang + filter timeline | ✅ Implemented |
 | OIDC + dev auth | ✅ Implemented (staging UAT belum) |
 | Admin UI F-08–F-09, audit F-11 | ✅ |
-| Kalender week view (F-04) | ⏳ Backlog |
+| Kalender week view (F-04) | ✅ Minggu — 7 kolom hari, per ruang |
 | Playwright E2E | ⏳ Backlog |
 | Foto ruang (OQ-3) | ⏳ Optional |
 

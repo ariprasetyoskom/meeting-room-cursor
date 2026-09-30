@@ -20,6 +20,8 @@ export const sql =
   postgres(connectionString, {
     max: 10,
     prepare: false,
+    connect_timeout: 5,
+    idle_timeout: 20,
   });
 
 if (process.env.NODE_ENV !== "production") {

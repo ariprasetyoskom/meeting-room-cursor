@@ -63,7 +63,7 @@ Keputusan teknis turunan: lihat [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md).
 | **F-01** | **Sebagian** | `AUTH_MODE=dev` + OIDC (Auth.js); logout SSO; staging IdP belum UAT |
 | **F-02** | **Selesai** | `/rooms`, `RoomDirectory`, filter kapasitas |
 | **F-03** | **Sebagian** | Kartu ruang + picker; halaman detail dedicated & foto (OQ-3) belum |
-| **F-04** | **Sebagian** | Timeline harian 08–18 + daftar; **week view** PRD belum |
+| **F-04** | **Selesai** | Timeline **Hari** + **Minggu** (7 hari, per ruang) 07–21 WIB; slot + organizer (D-2); daftar ruang |
 | **F-05** | **Selesai** | `BookingModal`, POST `/api/v1/bookings`, policy BR-01–04 |
 | **F-06** | **Selesai** | `/bookings`, `MyBookingsList` |
 | **F-07** | **Selesai** | Cancel organizer + window D-1; modal/konfirmasi |
@@ -95,7 +95,7 @@ Spesifikasi layar lengkap: [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md).
 - **App shell:** header sticky + blur, **logo** (`BrandLogo`) + brand *Ruang Meeting* / tagline *Booking internal*; nav segmented pill (`MainNav`, `AdminNav`); profil `UserMenu` + `SessionProfileProvider`; dev: `DevAuthBanner`. Detail: [Design §5](./Design-Aplikasi-Booking-Ruang-Meeting.md).
 - Nav: **Booking** (`/book`), **Ruang** (`/rooms`), **Booking saya** (`/bookings`); admin (role): `/admin/rooms`, `/admin/bookings`, `/admin/audit`.
 - **Pilih ruangan:** grid 5 ruang demo (MR-A … MR-E) + opsi **Semua ruang**; filter kapasitas + timeline.
-- Kalender: view **Timeline** / **Daftar** (harian); slot terisi menampilkan organizer (D-2); week view = backlog F-04.
+- Kalender: view **Hari** (timeline multi-ruang) / **Minggu** (grid 7 hari, satu ruang terpilih) / **Daftar**; slot terisi + organizer (D-2).
 - Booking: modal dengan dropdown ruang; tanpa optimistic submit.
 - Empty states dengan CTA ke `/book`.
 - Error bentrok: *"Ruangan sudah dipesan pada waktu ini"*.
@@ -135,7 +135,7 @@ Hanya **OQ-4** tetap terbuka di versi dokumen ini.
 
 ## 10. Release Criteria
 
-- Semua fitur **F-01–F-11** lulus QA checklist Architecture §8.6 (saat ini: inti booking/admin **implementasi ada**; **F-10 penuh**, **F-04 week**, OIDC staging, UAT belum).
+- Semua fitur **F-01–F-11** lulus QA checklist Architecture §8.6 (saat ini: inti booking/admin + **F-04 Minggu** **implementasi ada**; **F-10 penuh**, OIDC staging, UAT belum).
 - **D-1**, **D-2** verified di dev/UAT; **D-3** menunggu SMTP + template bilingual.
 - Zero P1 bugs; load test 100 concurrent users on staging.
 - CI **GitHub Actions** hijau di `main` / release candidate ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)).

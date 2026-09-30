@@ -45,6 +45,57 @@ export function dayBoundsUtc(dateInput: string): { from: Date; to: Date } {
   return { from, to };
 }
 
+/** Shift calendar date (Jakarta) by N days; returns YYYY-MM-DD */
+export function addDaysToDateInput(dateInput: string, days: number): string {
+  const ms = new Date(`${dateInput}T12:00:00+07:00`).getTime();
+  return toDateInputValue(new Date(ms + days * 86_400_000));
+}
+
+/** Monday YYYY-MM-DD (week starts Monday) for the week containing dateInput */
+export function weekStartMonday(dateInput: string): string {
+  let current = dateInput;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(`${current}T12:00:00+07:00`);
+    const weekday = new Intl.DateTimeFormat("en-US", {
+      timeZone: TZ,
+      weekday: "short",
+    }).format(d);
+    if (weekday === "Mon") return current;
+    current = addDaysToDateInput(current, -1);
+  }
+  return dateInput;
+}
+
+export function weekDayDates(mondayYmd: string): string[] {
+  return Array.from({ length: 7 }, (_, i) => addDaysToDateInput(mondayYmd, i));
+}
+
+export function weekBoundsUtc(anchorDateInput: string): { from: Date; to: Date } {
+  const monday = weekStartMonday(anchorDateInput);
+  const sunday = addDaysToDateInput(monday, 6);
+  return {
+    from: new Date(`${monday}T00:00:00+07:00`),
+    to: new Date(`${sunday}T23:59:59.999+07:00`),
+  };
+}
+
+export function formatWeekdayShort(dateInput: string): string {
+  const d = new Date(`${dateInput}T12:00:00+07:00`);
+  return new Intl.DateTimeFormat("id-ID", {
+    timeZone: TZ,
+    weekday: "short",
+  }).format(d);
+}
+
+export function formatDayMonthShort(dateInput: string): string {
+  const d = new Date(`${dateInput}T12:00:00+07:00`);
+  return new Intl.DateTimeFormat("id-ID", {
+    timeZone: TZ,
+    day: "numeric",
+    month: "short",
+  }).format(d);
+}
+
 export const OPERATING_HOURS = {
   start: 7,
   end: 22,

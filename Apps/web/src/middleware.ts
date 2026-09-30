@@ -1,7 +1,13 @@
 import NextAuth from "next-auth";
 import { authConfig } from "./auth.config";
 
-export default NextAuth(authConfig).auth;
+const authSecret =
+  process.env.AUTH_SECRET ??
+  (process.env.NODE_ENV === "production"
+    ? undefined
+    : "dev-auth-secret-min-32-chars-long!!");
+
+export default NextAuth({ ...authConfig, secret: authSecret }).auth;
 
 export const config = {
   matcher: [
