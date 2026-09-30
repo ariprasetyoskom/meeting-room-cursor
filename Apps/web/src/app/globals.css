@@ -30,6 +30,8 @@
 
   --slot-free: #dcfce7;
   --slot-free-border: #86efac;
+  --slot-past: #e2e8f0;
+  --slot-past-border: #cbd5e1;
   --slot-busy: #fee2e2;
   --slot-busy-border: #f87171;
 
@@ -76,6 +78,8 @@
 
     --slot-free: rgb(16 185 129 / 14%);
     --slot-free-border: rgb(52 211 153 / 35%);
+    --slot-past: rgb(148 163 184 / 18%);
+    --slot-past-border: rgb(148 163 184 / 28%);
     --slot-busy: rgb(239 68 68 / 22%);
     --slot-busy-border: #f87171;
 
@@ -788,8 +792,21 @@ textarea.input {
   border-radius: 4px;
 }
 
-.slot-free:hover {
+.slot-free:hover:not(:disabled) {
   outline: 2px solid var(--primary);
+}
+
+.slot-free.slot-past,
+.slot-free:disabled {
+  background: var(--slot-past);
+  border-color: var(--slot-past-border);
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.slot-free.slot-past:hover,
+.slot-free:disabled:hover {
+  outline: none;
 }
 
 .slot-busy {

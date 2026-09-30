@@ -100,3 +100,19 @@ export const OPERATING_HOURS = {
   start: 7,
   end: 22,
 } as const;
+
+/** Awal slot booking (jam penuh) dalam zona WIB. */
+export function bookingSlotStart(dayYmd: string, hour: number): Date {
+  return new Date(
+    `${dayYmd}T${String(hour).padStart(2, "0")}:00:00+07:00`,
+  );
+}
+
+/** True jika jam slot sudah dimulai atau lewat (tidak bisa dipilih). */
+export function isBookingSlotPast(
+  dayYmd: string,
+  hour: number,
+  now: Date = new Date(),
+): boolean {
+  return now.getTime() >= bookingSlotStart(dayYmd, hour).getTime();
+}

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   addDaysToDateInput,
+  isBookingSlotPast,
   weekBoundsUtc,
   weekDayDates,
   weekStartMonday,
@@ -33,5 +34,14 @@ describe("week calendar helpers", () => {
 
   it("addDaysToDateInput crosses month boundary", () => {
     expect(addDaysToDateInput("2026-09-30", 1)).toBe("2026-10-01");
+  });
+
+  it("isBookingSlotPast uses WIB slot start", () => {
+    const now = new Date("2026-09-30T14:05:00+07:00");
+    expect(isBookingSlotPast("2026-09-30", 13, now)).toBe(true);
+    expect(isBookingSlotPast("2026-09-30", 14, now)).toBe(true);
+    expect(isBookingSlotPast("2026-09-30", 15, now)).toBe(false);
+    expect(isBookingSlotPast("2026-10-01", 7, now)).toBe(false);
+    expect(isBookingSlotPast("2026-09-29", 22, now)).toBe(true);
   });
 });

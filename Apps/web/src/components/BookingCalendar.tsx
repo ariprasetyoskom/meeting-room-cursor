@@ -22,6 +22,7 @@ import {
   weekBoundsUtc,
   weekDayDates,
   weekStartMonday,
+  isBookingSlotPast,
 } from "@/lib/format";
 import {
   DEV_AUTH_READY_EVENT,
@@ -44,6 +45,7 @@ export function BookingCalendar() {
     startHour: number;
     endHour: number;
   } | null>(null);
+  const [now, setNow] = useState(() => new Date());
 
   const visibleRooms = useMemo(() => {
     if (!selectedRoomId) return rooms;
@@ -93,6 +95,11 @@ export function BookingCalendar() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => {
     const onDevAuth = () => load();
@@ -318,12 +325,15 @@ export function BookingCalendar() {
                         </td>
                       );
                     }
+                    const past = isBookingSlotPast(dayYmd, h, now);
                     return (
                       <td key={dayYmd}>
                         <button
                           type="button"
-                          className="slot slot-free"
+                          className={`slot slot-free${past ? " slot-past" : ""}`}
+                          disabled={past}
                           aria-label={`Booking ${weekRoom.name} ${dayYmd} jam ${h}`}
+                          aria-disabled={past}
                           onClick={() => openBook(weekRoom, dayYmd, h)}
                         />
                       </td>
@@ -366,12 +376,15 @@ export function BookingCalendar() {
                         </td>
                       );
                     }
+                    const past = isBookingSlotPast(date, h, now);
                     return (
                       <td key={h}>
                         <button
                           type="button"
-                          className="slot slot-free"
+                          className={`slot slot-free${past ? " slot-past" : ""}`}
+                          disabled={past}
                           aria-label={`Booking ${room.name} jam ${h}`}
+                          aria-disabled={past}
                           onClick={() => openBook(room, date, h)}
                         />
                       </td>
