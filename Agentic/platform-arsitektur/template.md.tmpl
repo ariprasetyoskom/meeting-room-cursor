@@ -1,0 +1,43 @@
+# Arsitektur — Konteks Setup Environment
+
+Ringkasan untuk **platform setup**. Detail lengkap: [Architecture v{{ARCH_VERSION}}](../Architecture-Aplikasi-Booking-Ruang-Meeting.md).
+
+## Container (MVP)
+
+| Container / proses | Teknologi | Setup lokal |
+|--------------------|-----------|-------------|
+| Web app | {{WEB_STACK}} | `{{WEB_APP_PATH}}` — `npm run dev` / `next start` |
+| Email worker | {{WORKER_STACK}} | `{{WORKER_SCRIPT}}` (opsional dev) |
+| PostgreSQL 15 | DB utama + {{DB_CONSTRAINT_NOTE}} | Docker **host {{PG_HOST_PORT}}** |
+| Redis 7 | Queue + rate limit | Docker **{{REDIS_PORT}}** |
+| IdP (prod) | OIDC | `AUTH_MODE=oidc` + `OIDC_*` |
+
+## Environment logical (Architecture §6)
+
+| Environment | Data | Catatan setup |
+|-------------|------|----------------|
+| **local** | Docker PG + Redis | `.env.local`, dev auth |
+| **staging** | {{STAGING_DATA}} | Secrets via {{STAGING_SECRETS}} |
+| **production** | {{PROD_DATA}} | {{PROD_DEPLOY_NOTE}} |
+
+## ADR relevan setup
+
+| ADR | Implikasi environment |
+|-----|------------------------|
+| ADR-001 {{ADR_001_TITLE}} | {{ADR_001_ENV_IMPLICATION}} |
+| ADR-003 {{ADR_003_TITLE}} | `REDIS_URL` wajib jika worker/email/rate limit |
+| ADR-006 {{ADR_006_TITLE}} | `npm run db:migrate` + SQL custom |
+| {{ADR_EXTRA_ROW}} | |
+
+## Health & observability
+
+- Endpoint: `GET /api/health` → `{ status, db, redis }` (Architecture §8.3).
+- Lokal: `status: ok` dan `db: true` sebelum UAT UI.
+- {{OBSERVABILITY_EXTRA}}
+
+## Keamanan
+
+- TLS di ingress (non-local).
+- Secrets tidak di git; `.env.local` gitignored.
+- DB user app tanpa SUPERUSER.
+- {{SECURITY_EXTRA}}

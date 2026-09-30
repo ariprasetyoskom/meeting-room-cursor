@@ -1,0 +1,52 @@
+# Tech Stack — Konteks Setup Environment
+
+Ringkasan untuk **platform setup**. Source of truth: [TDD v{{TDD_VERSION}} §2](../TDD-Aplikasi-Booking-Ruang-Meeting.md).
+
+## Runtime & aplikasi
+
+| Komponen | Versi / alat |
+|----------|----------------|
+| Node.js | **{{NODE_VERSION}} LTS** |
+| Package manager | {{PACKAGE_MANAGER}} |
+| Framework | Next.js **{{NEXT_VERSION}}** App Router |
+| UI | React **{{REACT_VERSION}}**, TypeScript **{{TS_VERSION}}** |
+| ORM | **{{ORM_NAME}}** + {{ORM_TOOLKIT}} |
+| DB driver | {{DB_DRIVER}} |
+| Validasi | {{VALIDATION_LIB}} |
+| Test | {{TEST_RUNNER}} (`npm run test`) |
+| Auth | {{AUTH_LIB}} |
+
+## Data & async
+
+| Layanan | Image / port lokal |
+|---------|-------------------|
+| PostgreSQL 15 | `postgres:15-alpine`, **127.0.0.1:{{PG_HOST_PORT}}** |
+| Redis 7 | `redis:7-alpine`, **{{REDIS_PORT}}** |
+| BullMQ | Worker: `{{WORKER_SCRIPT}}` |
+
+## Scripts wajib ({{WEB_APP_DIR}})
+
+| Script | Fungsi |
+|--------|--------|
+| `npm run db:migrate` | Migrasi + {{MIGRATE_EXTRA}} |
+| `npm run db:seed` | {{SEED_DESCRIPTION}} |
+| `npm run dev` | Dev server **:{{DEV_PORT}}** |
+| `npm run build` / `start` | Production-like lokal |
+| `npm run lint` | ESLint |
+| `npm run worker:email` | Consumer email |
+
+## Struktur repo (setup)
+
+```text
+{{REPO_TREE}}
+```
+
+## CI (opsional)
+
+- Pipeline: {{CI_LOCATION}}
+- Stage: {{CI_STAGES}}
+
+## Catatan {{OS_NOTES_TITLE}}
+
+- {{OS_NOTE_1}}
+- {{OS_NOTE_2}}

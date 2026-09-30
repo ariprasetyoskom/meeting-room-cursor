@@ -1,0 +1,42 @@
+# Design — Verifikasi Environment Lokal
+
+Ringkasan untuk **smoke test UI** setelah setup. Source of truth: [Design v{{DESIGN_FULL_VERSION}}](../Design-Aplikasi-Booking-Ruang-Meeting.md).
+
+## Prasyarat visual
+
+- Dev server: `{{DEV_URL}}`
+- `GET /api/health` → `db: true`, `redis: true`
+- Seed: **{{ROOM_COUNT}}** ruang aktif ({{ROOM_CODES}})
+
+## Checklist layar (post-setup)
+
+| Route | Verifikasi |
+|-------|------------|
+| `/book` | Room picker {{ROOM_COUNT}} kartu + **Semua ruang**; timeline {{OPERATING_HOURS}} |
+| `/rooms` | Daftar ruang tanpa error "{{ROOMS_ERROR_MESSAGE}}" |
+| `/bookings` | List booking user (boleh kosong) |
+| `/login` | Tampil saat `AUTH_MODE=oidc` |
+| {{ADMIN_ROUTE}} | {{ADMIN_VERIFY}} |
+
+## App shell (jika ada)
+
+- Brand: {{BRAND_TITLE}} · logo {{BRAND_LOGO_COMPONENT}}
+- Nav: {{NAV_LABELS}}
+- Dev banner: {{DEV_BANNER_NOTE}}
+
+## Auth mode dev
+
+- `AUTH_MODE=dev` (default): {{DEV_AUTH_BEHAVIOR}}
+- Header opsional: `x-dev-user-id` / localStorage.
+
+## Auth mode OIDC (staging-like)
+
+- `AUTH_MODE=oidc`, `AUTH_SECRET` (≥32 char), `OIDC_*` terisi.
+- Redirect URI IdP: `{NEXT_PUBLIC_APP_URL}/api/auth/callback/oidc`
+
+## Tokens & tema
+
+- CSS variables di `{{GLOBALS_CSS_PATH}}`
+- Font {{FONT_FAMILY}}; dark mode {{DARK_MODE_BEHAVIOR}}
+
+Kegagalan load data UI hampir selalu indikasi **environment/backend** — cek health dan DATABASE_URL sebelum debug desain.

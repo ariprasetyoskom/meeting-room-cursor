@@ -1,0 +1,268 @@
+# Business Requirements Document (BRD)
+# {{PRODUCT_TITLE}}
+
+| Metadata | |
+|----------|---|
+| **Dokumen** | BRD-{{PRODUCT_SLUG}} |
+| **Versi** | **{{DOC_VERSION}}** |
+| **Tanggal** | {{DOC_DATE}} |
+| **Status** | {{DOC_STATUS}} |
+| **Bahasa** | Indonesia |
+| **Dokumen Terkait** | {{RELATED_DOCS_LINKS}} |
+
+---
+
+## 1. Executive Summary
+
+{{EXECUTIVE_SUMMARY_PARAGRAPH}}
+
+Solusi ditargetkan untuk {{PRIMARY_USERS}}. MVP fokus pada {{MVP_FOCUS}}; fase berikutnya: {{PHASE2_HIGHLIGHTS}}.
+
+**Manfaat bisnis utama:**
+
+- {{BENEFIT_1}}
+- {{BENEFIT_2}}
+- {{BENEFIT_3}}
+- {{BENEFIT_4}}
+
+---
+
+## 2. KPI & Metrik Sukses
+
+| KPI | Definisi | Target MVP (90 hari) | Pemilik |
+|-----|----------|----------------------|---------|
+| **Adopsi aktif** | {{KPI_ADOPTION_DEF}} | {{KPI_ADOPTION_TARGET}} | {{KPI_ADOPTION_OWNER}} |
+| **Double booking** | Insiden bentrok ruang terkonfirmasi sistem | 0 | IT / Facilities |
+| **Waktu booking** | Median login → konfirmasi | {{KPI_BOOKING_TIME_TARGET}} | Product |
+| **Tingkat pembatalan** | Cancel / total booking | {{KPI_CANCEL_RATE}} | Facilities |
+| **Kepuasan pengguna** | CSAT pasca-MVP | {{KPI_CSAT_TARGET}} | Product |
+| **Uptime layanan** | Availability jam kerja | {{KPI_UPTIME_TARGET}} | IT Operations |
+
+---
+
+## 3. Ruang Lingkup
+
+### 3.1 MVP (Fase 1)
+
+{{MVP_SCOPE_BULLETS}}
+
+### 3.2 Fase 2 (Out of Scope MVP)
+
+{{PHASE2_OUT_OF_SCOPE_BULLETS}}
+
+---
+
+## 4. Stakeholder
+
+| Stakeholder | Peran | Minat | Engagement |
+|-------------|-------|-------|------------|
+| **Karyawan (End User)** | Pemesan ruang | Booking cepat, lihat kosong | UAT, beta |
+| **Facilities / Workplace** | Pemilik proses ruang | Utilisasi, kebijakan cancel | BR sign-off, UAT |
+| **IT Security** | Governance | SSO, data privacy | Review arsitektur |
+| **IT Operations** | Hosting & SLA | Monitoring, backup | Runbook |
+| **Product Owner** | Prioritas backlog | MVP on-time | Daily dengan tim dev |
+| **Engineering Lead** | Delivery | Feasibility teknis | TDD & Architecture |
+| {{STAKEHOLDER_EXTRA_ROW}} | | | |
+
+---
+
+## 5. Aturan Bisnis (Business Rules)
+
+| ID | Aturan | Prioritas |
+|----|--------|-----------|
+| **BR-01** | Satu ruang tidak boleh dua booking overlap (`[start, end)`). | Must |
+| **BR-02** | Booking hanya masa depan; lead time minimal {{MIN_LEAD_MINUTES}} menit. | Must |
+| **BR-03** | Cancel hanya organizer, ≥ {{CANCEL_WINDOW_HOURS}} jam sebelum start (admin override + alasan). | Must |
+| **BR-04** | Durasi min {{MIN_DURATION_MIN}} menit, max {{MAX_DURATION_HOURS}} jam. | Must |
+| **BR-05** | Ruang nonaktif tidak di picker booking. | Must |
+| **BR-06** | Nama organizer tampil di kalender bersama. | Must |
+| **BR-07** | Email notifikasi bilingual ID+EN dalam satu message. | Must |
+| **BR-08** | Admin dapat cancel kapan saja dengan alasan (audit). | Should |
+| {{BR_EXTRA_ROWS}} | | |
+
+---
+
+## 6. Functional Requirements (FR)
+
+### 6.1 Autentikasi & Profil
+
+| FR ID | Deskripsi | Prioritas | BR Ref |
+|-------|-----------|-----------|--------|
+| FR-01 | Login via mekanisme auth IT | Must | — |
+| FR-02 | Profil display name untuk organizer | Must | BR-06 |
+| FR-03 | Role employee vs admin | Must | — |
+
+### 6.2 Master Ruang
+
+| FR ID | Deskripsi | Prioritas | BR Ref |
+|-------|-----------|-----------|--------|
+| FR-04 | Admin CRUD / nonaktifkan ruang | Must | BR-05 |
+| FR-05 | Atribut ruang: kode, nama, lokasi, kapasitas, fasilitas | Must | — |
+| FR-06 | Daftar ruang aktif + filter | Must | — |
+
+### 6.3 Booking
+
+| FR ID | Deskripsi | Prioritas | BR Ref |
+|-------|-----------|-----------|--------|
+| FR-07 | Buat booking (ruang, judul, start, end) | Must | BR-01–04 |
+| FR-08 | Tolak bentrok, pesan jelas | Must | BR-01 |
+| FR-09 | Booking sendiri upcoming/history | Must | — |
+| FR-10 | Cancel organizer (BR-03) | Must | BR-03 |
+| FR-11 | Kalender slot + nama organizer | Must | BR-06 |
+| FR-12 | Admin lihat semua booking + override cancel | Should | BR-08 |
+
+### 6.4 Notifikasi
+
+| FR ID | Deskripsi | Prioritas | BR Ref |
+|-------|-----------|-----------|--------|
+| FR-13 | Email konfirmasi create | Must | BR-07 |
+| FR-14 | Email reminder (offset configurable) | Should | BR-07 |
+| FR-15 | Email cancel | Must | BR-07 |
+
+### 6.5 Audit & Reporting
+
+| FR ID | Deskripsi | Prioritas | BR Ref |
+|-------|-----------|-----------|--------|
+| FR-16 | Audit log mutasi booking/ruang | Must | — |
+| FR-17 | Export CSV (admin) | Could | — |
+
+---
+
+## 7. Non-Functional Requirements (NFR)
+
+| Kategori | Requirement |
+|----------|-------------|
+| **Performance** | {{NFR_PERFORMANCE}} |
+| **Availability** | {{NFR_AVAILABILITY}} |
+| **Security** | {{NFR_SECURITY}} |
+| **Privacy** | {{NFR_PRIVACY}} |
+| **Accessibility** | {{NFR_A11Y}} |
+| **Localization** | UI {{UI_LOCALE}}; email bilingual ID+EN. |
+| **Scalability** | {{NFR_SCALABILITY}} |
+| **Maintainability** | {{NFR_MAINTAINABILITY}} |
+
+---
+
+## 8. User Journeys
+
+### 8.1 {{JOURNEY_1_TITLE}}
+
+{{JOURNEY_1_STEPS}}
+
+### 8.2 {{JOURNEY_2_TITLE}}
+
+{{JOURNEY_2_STEPS}}
+
+### 8.3 {{JOURNEY_3_TITLE}}
+
+{{JOURNEY_3_STEPS}}
+
+---
+
+## 9. Model Data Konseptual
+
+```text
+{{CONCEPTUAL_DATA_MODEL}}
+```
+
+**Constraint bisnis kritis:** {{CRITICAL_DB_CONSTRAINT}}
+
+---
+
+## 10. Arsitektur & Tech Stack (Selaras MVP)
+
+Detail: {{TDD_LINK}} · {{ARCHITECTURE_LINK}} · {{DESIGN_LINK}}.
+
+| Aspek | Keputusan baseline |
+|-------|-------------------|
+| Monorepo | {{MONOREPO_LAYOUT}} |
+| Frontend | {{FRONTEND_STACK}} |
+| Backend | {{BACKEND_PATTERN}} |
+| ORM / DB | {{DATA_STACK}} |
+| Queue | {{ASYNC_STACK}} |
+| Auth | {{AUTH_STACK}} |
+| Dev infra | {{DEV_INFRA}} |
+| Hosting / CI | {{HOSTING_CI}} |
+| Source control | {{SOURCE_CONTROL}} |
+
+---
+
+## 11. Timeline Indikatif
+
+| Fase | Durasi | Deliverable |
+|------|--------|-------------|
+| Discovery & sign-off BRD/PRD | {{PHASE_DISCOVERY_WEEKS}} | Dokumen approved |
+| Design & spike | {{PHASE_SPIKE_WEEKS}} | TDD, migration POC |
+| Sprint core | {{PHASE_CORE_WEEKS}} | MVP core staging |
+| Sprint hardening | {{PHASE_HARDENING_WEEKS}} | Email, admin, audit |
+| UAT & go-live | {{PHASE_UAT_WEEKS}} | Production |
+| **Total MVP** | **{{TOTAL_MVP_WEEKS}}** | — |
+
+---
+
+## 12. Risiko
+
+| Risiko | Dampak | Mitigasi |
+|--------|--------|----------|
+| {{RISK_1}} | {{RISK_1_IMPACT}} | {{RISK_1_MITIGATION}} |
+| {{RISK_2}} | {{RISK_2_IMPACT}} | {{RISK_2_MITIGATION}} |
+| Scope creep Fase 2 | Overrun | Change control PO |
+
+---
+
+## 13. Acceptance Criteria (MVP)
+
+- [ ] {{AC_1}}
+- [ ] {{AC_2}}
+- [ ] {{AC_3}}
+- [ ] {{AC_4}}
+- [ ] {{AC_5}}
+- [ ] {{AC_6}}
+- [ ] {{AC_7}}
+- [ ] {{AC_8}}
+
+---
+
+## 14. User Stories (Backlog Referensi)
+
+| ID | Story | Acceptance hint |
+|----|-------|-----------------|
+| US-01 | {{US_01}} | {{US_01_HINT}} |
+| US-02 | {{US_02}} | {{US_02_HINT}} |
+
+---
+
+## 15. Dokumen Terkait
+
+| Dokumen | Path |
+|---------|------|
+| PRD | {{PRD_PATH}} |
+| TDD | {{TDD_PATH}} |
+| Architecture | {{ARCH_PATH}} |
+| Design | {{DESIGN_PATH}} |
+
+---
+
+## 16. Sign-off
+
+| Nama | Jabatan | Tanggal | Tanda |
+|------|---------|---------|-------|
+| | Product Owner | | |
+| | Facilities Lead | | |
+| | IT Representative | | |
+| | Engineering Lead | | |
+
+---
+
+## 17. Glosarium
+
+| Istilah | Definisi |
+|---------|----------|
+| **Booking** | Reservasi ruang untuk interval waktu. |
+| **Organizer** | User pembuat booking; pemilik kebijakan cancel. |
+| **MVP** | Minimum Viable Product — cakupan Fase 1. |
+| {{GLOSSARY_EXTRA}} | |
+
+---
+
+*Akhir dokumen BRD v{{DOC_VERSION}}.*
