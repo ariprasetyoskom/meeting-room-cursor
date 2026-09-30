@@ -4,10 +4,10 @@
 | Metadata | |
 |----------|---|
 | **Dokumen** | PRD-Aplikasi-Booking-Ruang-Meeting |
-| **Versi** | **1.2** |
+| **Versi** | **1.3** |
 | **Tanggal** | 30 September 2026 |
-| **Status** | MVP in development — selaras `Apps/web` & [Architecture v1.3](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) |
-| **Dokumen Terkait** | [BRD](./BRD-Aplikasi-Booking-Ruang-Meeting.md) · [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Architecture](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) · [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md) |
+| **Status** | MVP feature-complete lokal — delivery ke staging/prod: [PLAN-MVP-Delivery](./PLAN-MVP-Delivery.md) |
+| **Dokumen Terkait** | [BRD](./BRD-Aplikasi-Booking-Ruang-Meeting.md) · [PLAN](./PLAN-MVP-Delivery.md) · [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Architecture](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) · [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md) |
 
 ---
 
@@ -74,6 +74,20 @@ Keputusan teknis turunan: lihat [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md).
 | **F-12** | **Belum** | Post-MVP |
 
 Repo: [github.com/ariprasetyoskom/meeting-room-cursor](https://github.com/ariprasetyoskom/meeting-room-cursor) (branch `cursor/meeting-room-web-scaffold`). Setup lokal: [000_platform_setup §9](./000_platform_setup/PRD-Platform-Environment-Setup.md).
+
+### 4.2 Perencanaan release (ringkas)
+
+Detail sprint, gelombang, dan backlog: **[PLAN-MVP-Delivery v1.0](./PLAN-MVP-Delivery.md)**.
+
+| Gelombang | Fokus | Target |
+|-----------|-------|--------|
+| **W0** | Inti MVP + F-04 Minggu | ✅ Selesai (lokal) |
+| **W1** | F-10 email bilingual + Redis ([ticket](./PLAN-Wave-1-Email.md)) | Sprint S4 |
+| **W2** | F-01 OIDC staging + deploy | Sprint S5 |
+| **W3** | QA §8.6, E2E, KPI §7, RC v1.0.0 | Sprint S6 |
+| **W4+** | F-12, enhancement, Fase 2 | Post go-live |
+
+**Must sebelum v1.0.0:** PLN-001 … PLN-005 (lihat PLAN §5).
 
 ---
 
@@ -147,10 +161,12 @@ Hanya **OQ-4** tetap terbuka di versi dokumen ini.
 | Dokumen | Path |
 |---------|------|
 | Business Requirements | [./BRD-Aplikasi-Booking-Ruang-Meeting.md](./BRD-Aplikasi-Booking-Ruang-Meeting.md) |
+| **Rencana delivery MVP** | [./PLAN-MVP-Delivery.md](./PLAN-MVP-Delivery.md) |
 | Technical Design | [./TDD-Aplikasi-Booking-Ruang-Meeting.md](./TDD-Aplikasi-Booking-Ruang-Meeting.md) |
 | Architecture v1.3 | [./Architecture-Aplikasi-Booking-Ruang-Meeting.md](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) |
 | Design v1.1 | [./Design-Aplikasi-Booking-Ruang-Meeting.md](./Design-Aplikasi-Booking-Ruang-Meeting.md) |
+| Release notes | [./RELEASE-NOTES.md](./RELEASE-NOTES.md) |
 
 ---
 
-*Akhir dokumen PRD v1.2.*
+*Akhir dokumen PRD v1.3.*

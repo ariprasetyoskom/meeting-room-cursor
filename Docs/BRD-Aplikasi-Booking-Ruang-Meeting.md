@@ -6,9 +6,9 @@
 | **Dokumen** | BRD-Aplikasi-Booking-Ruang-Meeting |
 | **Versi** | **1.2** |
 | **Tanggal** | 30 September 2026 |
-| **Status** | Selaras implementasi MVP — engineering snapshot (PRD v1.2, Architecture v1.3) |
+| **Status** | MVP lokal feature-complete — delivery staging/prod: [PLAN-MVP-Delivery](./PLAN-MVP-Delivery.md) |
 | **Bahasa** | Indonesia |
-| **Dokumen Terkait** | [PRD](./PRD-Aplikasi-Booking-Ruang-Meeting.md) · [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Architecture](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) · [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md) |
+| **Dokumen Terkait** | [PRD v1.3](./PRD-Aplikasi-Booking-Ruang-Meeting.md) · [PLAN](./PLAN-MVP-Delivery.md) · [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Architecture](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) · [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md) |
 
 ---
 
@@ -245,6 +245,8 @@ Detail teknis: [TDD v1.1](./TDD-Aplikasi-Booking-Ruang-Meeting.md), [Architectur
 
 Fase 2 direncanakan setelah evaluasi KPI 90 hari post go-live.
 
+**Detail sprint S4–S7 dan gelombang W1–W3:** [PLAN-MVP-Delivery §4–§6](./PLAN-MVP-Delivery.md).
+
 ---
 
 ## 12. Risiko
@@ -280,7 +282,7 @@ Status **30 Sep 2026** — selaras [PRD §4.1](./PRD-Aplikasi-Booking-Ruang-Meet
 - [ ] KPI instrumentation (minimal event analytics) terpasang untuk adopsi dan durasi booking.  
   **Gap:** event funnel PRD §7 belum di-wire.
 
-**Belum UAT formal:** BRD §16 sign-off stakeholder; QA Architecture §8.6.
+**Belum UAT formal:** BRD §16 sign-off stakeholder; QA Architecture §8.6 — rencana eksekusi [PLAN §4 Wave 3](./PLAN-MVP-Delivery.md).
 
 ---
 
@@ -306,6 +308,7 @@ Status **30 Sep 2026** — selaras [PRD §4.1](./PRD-Aplikasi-Booking-Ruang-Meet
 | Dokumen | Path |
 |---------|------|
 | Product Requirements | [./PRD-Aplikasi-Booking-Ruang-Meeting.md](./PRD-Aplikasi-Booking-Ruang-Meeting.md) |
+| Rencana delivery MVP | [./PLAN-MVP-Delivery.md](./PLAN-MVP-Delivery.md) |
 | Technical Design | [./TDD-Aplikasi-Booking-Ruang-Meeting.md](./TDD-Aplikasi-Booking-Ruang-Meeting.md) |
 | Architecture v1.3 | [./Architecture-Aplikasi-Booking-Ruang-Meeting.md](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) |
 | Design v1.1 (UI/UX) | [./Design-Aplikasi-Booking-Ruang-Meeting.md](./Design-Aplikasi-Booking-Ruang-Meeting.md) |

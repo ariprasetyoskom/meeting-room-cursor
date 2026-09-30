@@ -1,0 +1,30 @@
+Issue ID,Summary,Epic,Story Points,Depends On,Labels,Acceptance
+W1-R-01,Doc REDIS_URL 127.0.0.1 + troubleshooting Windows,W1-04,1,,wave1-redis,".env.example README; catatan ECONNABORTED"
+W1-R-02,Health: redis ping connect explicit / timeout 2s,W1-04,2,,wave1-redis,"/api/health redis true saat container healthy"
+W1-R-03,Opsional family 4 ioredis connection.ts,W1-04,2,W1-R-01,wave1-redis,Tes lokal Windows + Linux CI
+W1-R-04,CI/doc: health tidak wajib redis hijau di build,W1-04,1,W1-R-02,wave1-redis,Selaras a00a735 pattern
+W1-M-01,nodemailer + lib/mail/transport.ts,W1-01,2,,wave1-smtp,Throw jelas jika SMTP partial config
+W1-M-02,sendMail helper + log messageId,W1-01,2,W1-M-01,wave1-smtp,Unit test mock transport
+W1-M-03,Env EMAIL_FROM SMTP di .env.example + README Ops,W1-01,1,W1-M-01,wave1-smtp,Tabel env selaras TDD section 9
+W1-M-04,Wire worker SMTP sendMail (ganti stub),W1-01,2,W1-M-02;W1-T-01,wave1-smtp,Booking + worker -> email Mailhog
+W1-T-01,Template confirm bilingual ke lib/email/templates,W1-02,2,,wave1-template,Struktur TDD 7.1 id + hr + en
+W1-T-02,Template cancel (organizer + admin copy),W1-02,3,W1-T-01,wave1-template,Subject bilingual; alasan admin jika ada
+W1-T-03,Template reminder bilingual,W1-02,2,W1-T-01,wave1-template,Waktu id-ID + en-US WIB
+W1-T-04,Escape HTML field user (XSS),W1-02,2,W1-T-01,wave1-template,Test literal script tag
+W1-T-05,PO review copy ID/EN checklist,W1-02,1,W1-T-01;W1-T-02;W1-T-03,wave1-template,Sign-off PO di issue comment
+W1-Q-01,enqueueBookingCancelEmail + cancelBooking,W1-02,3,W1-R-02,wave1-queue,Cancel API -> job email.booking.cancel
+W1-Q-02,Worker handlers confirm + cancel,W1-02,2,W1-Q-01;W1-T-02;W1-M-04,wave1-queue,Kedua job terkirim SMTP
+W1-Q-03,Job payload minimal bookingId,W1-02,1,,wave1-queue,Pola existing confirm
+W1-Q-04,Log structured email sent/failed + BullMQ attempts,W1-02,2,W1-Q-02,wave1-queue,Grep log demo sprint
+W1-S-01,Env BOOKING_REMINDER_MINUTES_BEFORE=60,W1-03,1,,wave1-reminder,.env.example + doc OQ-2
+W1-S-02,Reminder scanner (BullMQ repeatable atau cron),W1-03,5,W1-R-02;W1-T-03;W1-M-04,wave1-reminder,Scan start_at window; enqueue reminder
+W1-S-03,Idempotency reminder (kolom atau Redis SET),W1-03,3,W1-S-02,wave1-reminder,Dua run scanner -> 1 email
+W1-S-04,Worker job email.booking.reminder,W1-03,2,W1-S-02;W1-T-03,wave1-reminder,E2E booking +60 menit -> inbox
+W1-O-01,Mailhog/Mailpit di docker-compose,W1-05,2,,wave1-ops,SMTP localhost:1025 UI 8025
+W1-O-02,Contoh dev SMTP Mailhog README,W1-05,1,W1-O-01,wave1-ops,Langkah book + worker
+W1-O-03,Runbook staging worker + REDIS + SendGrid,W1-05,2,W1-M-03,wave1-ops,Doc Devops atau Architecture 8
+W1-O-04,Script worker:reminder jika cron terpisah,W1-05,1,W1-S-02,wave1-ops,Documented package.json
+W1-V-01,Manual QA Wave 1 (confirm cancel reminder),W1-05,2,W1-Q-02;W1-S-04,wave1-qa,Checklist + bukti screenshot/log
+W1-V-02,Update PRD 4.1 F-10 Selesai,W1-05,1,W1-V-01,wave1-qa,PR docs
+W1-V-03,Centang BRD 13 email bilingual,W1-05,1,W1-V-01,wave1-qa,BRD x + bukti
+W1-V-04,Demo akhir sprint PO/Facilities,W1-05,1,W1-V-01,wave1-qa,Notulen 15 menit

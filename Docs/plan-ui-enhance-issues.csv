@@ -1,0 +1,11 @@
+Issue ID,Summary,Epic,Story Points,Depends On,Labels,Acceptance
+UI-01,Audit & refine design tokens (globals.css light/dark),UI-FOUNDATION,3,,ui-foundation,"Token selaras Design section 4; kontras slot-free/busy; dark mode readable"
+UI-02,Kit ui: Button Input Card Alert di components/ui,UI-FOUNDATION,3,UI-01,ui-foundation,"Minimal 4 komponen; dipakai minimal 1 halaman; tidak breaking class lama"
+UI-03,Polish AppShell MainNav AdminNav UserMenu mobile,UI-SHELL,2,UI-01,ui-shell,"Nav active jelas; header tidak jump; DevAuthBanner tidak overlap konten"
+UI-04,RoomPicker kartu ruang hierarchy selected a11y,UI-BOOK,3,UI-02,ui-book,"listbox/aria-selected tetap; MR-A..E readable; Semua ruang jelas"
+UI-05,BookingCalendar Hari Minggu Daftar readability scroll,UI-BOOK,5,UI-02;UI-04,ui-book,"Organizer D-2 tetap visible; week scroll; toolbar rapi"
+UI-06,BookingModal form labels errors loading states,UI-BOOK,3,UI-02,ui-book,"409 conflict copy PRD; no optimistic submit; dialog a11y"
+UI-07,RoomDirectory + MyBookingsList empty error CTA,UI-SECONDARY,2,UI-02,ui-secondary,"Empty CTA ke /book; datetime WIB konsisten"
+UI-08,Admin rooms bookings audit table density feedback,UI-ADMIN,3,UI-02,ui-admin,"CRUD feedback sukses/gagal; filter audit readable"
+UI-09,Halaman detail ruang /rooms/[code] F-03 text-first,UI-SECONDARY,5,UI-02,ui-secondary,"Kapasitas amenities; CTA pesan; foto optional OQ-3"
+UI-10,Dark mode + a11y smoke alur booking,UI-QA,2,UI-05;UI-06,ui-qa,"Checklist WCAG target Design section 2; keyboard modal"

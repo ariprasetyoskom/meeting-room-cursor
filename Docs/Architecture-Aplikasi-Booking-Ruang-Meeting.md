@@ -281,6 +281,8 @@ No force-push to `main`.
 | **Security** | Dependency scan; OWASP ZAP baseline | No critical findings unmitigated |
 | **UAT** | Facilities + sample employees | Sign-off checklist BRD §13 |
 
+Jadwal sprint QA/E2E/UAT: [PLAN-MVP-Delivery §4 Wave 3](./PLAN-MVP-Delivery.md).
+
 Defect severity: P1 block release; P2 fix or waive with PO approval.
 
 Test data: seed script for rooms and test users in staging only.

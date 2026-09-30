@@ -8,10 +8,13 @@ Indeks dokumen spesifikasi, desain, dan arsitektur — **selaras dengan implemen
 |---------|-----------|
 | [000_platform_setup/](./000_platform_setup/README.md) | **PRD setup environment** + ringkasan arsitektur, tech stack, design |
 
-## Release
+## Perencanaan & release
 
 | Dokumen | Deskripsi |
 |---------|-----------|
+| [PLAN-MVP-Delivery.md](./PLAN-MVP-Delivery.md) | **v1.0** — gelombang W0–W4, sprint S4–S7, backlog PLN-001+, gate v1.0.0 |
+| [PLAN-Wave-1-Email.md](./PLAN-Wave-1-Email.md) | **v1.0** — pecahan Wave 1: 24 ticket W1-R/M/T/Q/S/O/V, jadwal S4, CSV |
+| [PLAN-UI-Enhance.md](./PLAN-UI-Enhance.md) | Epic UI **#30** — token → `/book`; ticket UI-01–10, CSV |
 | [RELEASE-NOTES.md](./RELEASE-NOTES.md) | **0.1.0-mvp** — ringkasan fitur, CI, known issues, changelog commit |
 
 ## Dokumen Utama
@@ -19,7 +22,7 @@ Indeks dokumen spesifikasi, desain, dan arsitektur — **selaras dengan implemen
 | Dokumen | Versi | Deskripsi |
 |---------|-------|-----------|
 | [BRD-Aplikasi-Booking-Ruang-Meeting.md](./BRD-Aplikasi-Booking-Ruang-Meeting.md) | **1.2** | Business requirements: KPI, BR/FR/NFR, acceptance §13 + GitHub |
-| [PRD-Aplikasi-Booking-Ruang-Meeting.md](./PRD-Aplikasi-Booking-Ruang-Meeting.md) | **1.2** | Produk: D-1–D-3, F-01–F-12, status impl. §4.1, UX §6 |
+| [PRD-Aplikasi-Booking-Ruang-Meeting.md](./PRD-Aplikasi-Booking-Ruang-Meeting.md) | **1.3** | Produk: D-1–D-3, F-01–F-12, status §4.1, perencanaan §4.2, UX §6 |
 | [TDD-Aplikasi-Booking-Ruang-Meeting.md](./TDD-Aplikasi-Booking-Ruang-Meeting.md) | **1.1** | Tech stack terkunci (Drizzle, Next 14), API, DB, env |
 | [Architecture-Aplikasi-Booking-Ruang-Meeting.md](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) | **1.3** | C4, komponen/rute §3.3, ADR, GitHub Actions CI/CD, QA |
 | [Design-Aplikasi-Booking-Ruang-Meeting.md](./Design-Aplikasi-Booking-Ruang-Meeting.md) | **1.1** | UI/UX, app shell + logo, tokens, `/book` + admin |
@@ -40,9 +43,10 @@ Indeks dokumen spesifikasi, desain, dan arsitektur — **selaras dengan implemen
 0. **000_platform_setup** — onboarding dev & env (jika setup mesin baru).
 1. **BRD** — konteks bisnis dan acceptance criteria.
 2. **PRD** — scope produk dan keputusan terkunci.
-3. **Design** — layar, copy, dan visual untuk PO/UX/engineering.
-4. **TDD** — implementasi teknis untuk engineering.
-5. **Architecture** — operasi, pipeline, ADR jangka panjang.
+3. **PLAN-MVP-Delivery** — sprint, dependency, gate rilis v1.0.0.
+4. **Design** — layar, copy, dan visual untuk PO/UX/engineering.
+5. **TDD** — implementasi teknis untuk engineering.
+6. **Architecture** — operasi, pipeline, ADR jangka panjang.
 
 ## Agentic — generator dokumen
 

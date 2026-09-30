@@ -114,12 +114,16 @@ Acceptance bisnis: [BRD §13](./BRD-Aplikasi-Booking-Ruang-Meeting.md) — 6/8 i
 
 ---
 
-## Rencana rilis berikutnya (0.2.0)
+## Rencana rilis berikutnya (0.2.0 → v1.0.0)
 
-1. SMTP + email bilingual (D-3)  
-2. Deploy staging nyata + OIDC UAT  
-3. Week view atau defer resmi di PRD  
-4. Playwright smoke + BRD §16 sign-off  
+Ikuti **[PLAN-MVP-Delivery](./PLAN-MVP-Delivery.md)** (PRD §4.2):
+
+1. **Wave 1** — F-10 SMTP + email bilingual (D-3) + Redis staging  
+2. **Wave 2** — Deploy staging + OIDC UAT (F-01)  
+3. **Wave 3** — Playwright/k6, KPI §7, RC `v1.0.0-rc.1`, BRD §16 sign-off  
+4. **Post-MVP** — F-12 CSV, detail ruang F-03, enhancement kalender  
+
+F-04 Minggu ✅ (PRD v1.3).
 
 ---
 
