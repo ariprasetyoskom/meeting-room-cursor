@@ -17,7 +17,7 @@ export function MainNav() {
   const pathname = usePathname();
 
   return (
-    <>
+    <nav className="segmented-nav main-nav" aria-label="Utama">
       {links.map((item) => {
         const active = item.match(pathname);
         return (
@@ -31,6 +31,6 @@ export function MainNav() {
           </Link>
         );
       })}
-    </>
+    </nav>
   );
 }

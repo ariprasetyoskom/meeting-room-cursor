@@ -13,8 +13,8 @@ Polish visual dan UX tanpa ganti stack (CSS tokens + `globals.css`). Prioritas: 
 
 ## Urutan implementasi
 
-1. **UI-01 → UI-02** — tokens + kit `components/ui`
-2. **UI-03** — app shell
+1. **UI-01 → UI-02** — tokens + kit `components/ui` ✅ (#31–#32 closed)
+2. **UI-03** — app shell ✅ (#33 closed)
 3. **UI-04 → UI-06** — `/book` (picker, kalender, modal)
 4. **UI-07, UI-09** — `/rooms`, `/bookings`, detail ruang
 5. **UI-08** — admin

@@ -18,16 +18,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </span>
           </Link>
           <div className="app-header-end">
-            <nav className="app-nav" aria-label="Utama">
+            <div className="app-nav-scroll">
               <MainNav />
               <AdminNav />
-            </nav>
-            <UserMenu />
+            </div>
+            <div className="user-menu-slot">
+              <UserMenu />
+            </div>
           </div>
         </div>
+        <DevAuthBanner />
       </header>
-      <DevAuthBanner />
-      <main className="app-main">{children}</main>
+      <main className="app-main" id="main-content">
+        {children}
+      </main>
     </div>
   );
 }

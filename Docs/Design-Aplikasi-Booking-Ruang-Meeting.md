@@ -74,7 +74,7 @@ Setiap pasangan teks/latar menjaga kontras **≥ 4.5:1** (WCAG AA teks normal) d
 
 ### 5.1 App shell
 
-Komponen: `AppShell` — header **sticky** + backdrop blur, brand **Ruang Meeting** dengan `BrandLogo`, tagline *Booking internal*, nav **segmented pill** (`MainNav`, `AdminNav`):
+Komponen: `AppShell` — header **sticky** + backdrop blur, brand **Ruang Meeting** dengan `BrandLogo`, tagline *Booking internal*, nav **segmented pill** (`MainNav`, `AdminNav` dalam `.app-nav-scroll` horizontal di mobile). `DevAuthBanner` **di dalam** `<header>` (sticky bersama bar atas) + `.dev-banner-inner` selaras lebar konten — konten tidak tertutup banner. `UserMenu`: avatar inisial + slot lebar tetap (UI-03).
 
 | Route | Label nav | Fungsi (PRD) |
 |-------|-----------|--------------|
@@ -203,7 +203,7 @@ Entry OIDC (`AUTH_MODE=oidc`); redirect ke IdP per TDD §6.
 
 | Area | Status |
 |------|--------|
-| App shell (logo, sticky header, nav pill) | ✅ Implemented |
+| App shell (logo, sticky header, nav pill, mobile scroll, UserMenu) | ✅ UI-03 |
 | `/book`, `/rooms`, `/bookings` | ✅ Implemented |
 | Room picker 5 ruang + filter timeline | ✅ Implemented |
 | OIDC + dev auth | ✅ Implemented (staging UAT belum) |

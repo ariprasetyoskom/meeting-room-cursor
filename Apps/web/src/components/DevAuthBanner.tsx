@@ -41,43 +41,45 @@ export function DevAuthBanner() {
 
   return (
     <div className="dev-banner" role="status">
-      {userId ? (
-        <p>
-          Dev session: <code>{userId.slice(0, 8)}…</code>{" "}
-          <button
-            type="button"
-            className="btn-link"
-            onClick={() => setHidden(true)}
+      <div className="dev-banner-inner">
+        {userId ? (
+          <p className="dev-banner-text">
+            Dev session: <code>{userId.slice(0, 8)}…</code>{" "}
+            <button
+              type="button"
+              className="btn-link"
+              onClick={() => setHidden(true)}
+            >
+              Sembunyikan
+            </button>
+          </p>
+        ) : (
+          <form
+            className="dev-banner-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!draft.trim()) return;
+              setDevUserId(draft.trim());
+              setUserId(draft.trim());
+              notifyDevAuthReady();
+            }}
           >
-            Sembunyikan
-          </button>
-        </p>
-      ) : (
-        <form
-          className="dev-banner-form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (!draft.trim()) return;
-            setDevUserId(draft.trim());
-            setUserId(draft.trim());
-            notifyDevAuthReady();
-          }}
-        >
-          <label htmlFor="dev-user-id">
-            Dev user ID (dari <code>npm run db:seed</code>):
-          </label>
-          <input
-            id="dev-user-id"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            placeholder="uuid…"
-            className="input input-sm"
-          />
-          <button type="submit" className="btn btn-secondary btn-sm">
-            Simpan
-          </button>
-        </form>
-      )}
+            <label htmlFor="dev-user-id">
+              Dev user ID (dari <code>npm run db:seed</code>):
+            </label>
+            <input
+              id="dev-user-id"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder="uuid…"
+              className="input input-sm dev-banner-input"
+            />
+            <button type="submit" className="btn btn-secondary btn-sm">
+              Simpan
+            </button>
+          </form>
+        )}
+      </div>
     </div>
   );
 }

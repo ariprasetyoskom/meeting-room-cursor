@@ -19,6 +19,7 @@ Sumber halaman: [Devops/github-wiki/](../Devops/github-wiki/README.md) — publi
 | [PLAN-MVP-Delivery.md](./PLAN-MVP-Delivery.md) | **v1.0** — gelombang W0–W4, sprint S4–S7, backlog PLN-001+, gate v1.0.0 |
 | [PLAN-Wave-1-Email.md](./PLAN-Wave-1-Email.md) | **v1.0** — pecahan Wave 1: 24 ticket W1-R/M/T/Q/S/O/V, jadwal S4, CSV |
 | [PLAN-UI-Enhance.md](./PLAN-UI-Enhance.md) | Epic UI **#30** — token → `/book`; ticket UI-01–10, CSV |
+| [GITHUB-PROJECT.md](./GITHUB-PROJECT.md) | Kanban [Project #1](https://github.com/users/ariprasetyoskom/projects/1) ↔ milestone & label |
 | [RELEASE-NOTES.md](./RELEASE-NOTES.md) | **0.1.0-mvp** — ringkasan fitur, CI, known issues, changelog commit |
 
 ## Dokumen Utama

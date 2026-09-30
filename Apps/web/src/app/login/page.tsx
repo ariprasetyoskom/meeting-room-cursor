@@ -22,15 +22,15 @@ export default function LoginPage() {
 
   if (!cfg) {
     return (
-      <main className="login-page page-content">
+      <div className="login-page page-content">
         <LoadingBlock />
-      </main>
+      </div>
     );
   }
 
   if (cfg.authMode !== "oidc") {
     return (
-      <main className="login-page">
+      <div className="login-page">
         <h1>Mode development</h1>
         <p className="text-muted">
           Set <code>AUTH_MODE=dev</code>. Gunakan banner Dev user ID di atas, lalu
@@ -40,25 +40,25 @@ export default function LoginPage() {
           </Link>
           .
         </p>
-      </main>
+      </div>
     );
   }
 
   if (!cfg.oidcConfigured) {
     return (
-      <main className="login-page">
+      <div className="login-page">
         <h1>SSO belum dikonfigurasi</h1>
         <p className="text-muted">
           Isi <code>OIDC_ISSUER</code>, <code>OIDC_CLIENT_ID</code>,{" "}
           <code>OIDC_CLIENT_SECRET</code>, dan <code>AUTH_SECRET</code> di{" "}
           <code>.env.local</code>.
         </p>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="login-page">
+    <div className="login-page">
       <h1>Login karyawan</h1>
       <p className="text-muted">
         Gunakan akun perusahaan (OIDC / Azure AD / Keycloak).
@@ -70,6 +70,6 @@ export default function LoginPage() {
       >
         Lanjut ke SSO
       </button>
-    </main>
+    </div>
   );
 }

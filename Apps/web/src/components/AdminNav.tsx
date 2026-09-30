@@ -17,17 +17,21 @@ export function AdminNav() {
   if (loading || !isAdmin) return null;
 
   return (
-    <nav className="admin-nav" aria-label="Admin">
+    <nav className="segmented-nav admin-nav" aria-label="Admin">
       <span className="admin-nav-label">Admin</span>
-      {links.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          className={`app-nav-link ${pathname.startsWith(item.href) ? "active" : ""}`}
-        >
-          {item.label}
-        </Link>
-      ))}
+      {links.map((item) => {
+        const active = pathname.startsWith(item.href);
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`app-nav-link ${active ? "active" : ""}`}
+            aria-current={active ? "page" : undefined}
+          >
+            {item.label}
+          </Link>
+        );
+      })}
     </nav>
   );
 }

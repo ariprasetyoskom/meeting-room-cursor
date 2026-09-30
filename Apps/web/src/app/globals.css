@@ -137,6 +137,7 @@ a {
   margin: 0 auto;
   padding: 0.75rem 1.5rem;
   flex-wrap: wrap;
+  min-height: 3.25rem;
 }
 
 .app-brand {
@@ -182,11 +183,36 @@ a {
 .app-header-end {
   display: flex;
   align-items: center;
-  gap: 0.875rem;
-  flex-wrap: wrap;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+  justify-content: flex-end;
 }
 
-.app-nav {
+.app-nav-scroll {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  flex: 1;
+  justify-content: flex-end;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  padding: 0.125rem 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.app-nav-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.app-nav-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--muted) 35%, transparent);
+  border-radius: 999px;
+}
+
+.segmented-nav {
   display: flex;
   align-items: center;
   gap: 0.25rem;
@@ -194,7 +220,14 @@ a {
   background: color-mix(in srgb, var(--bg) 85%, transparent);
   border: 1px solid var(--border);
   border-radius: 999px;
-  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.user-menu-slot {
+  flex-shrink: 0;
+  min-width: 7.5rem;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .user-menu {
@@ -202,14 +235,61 @@ a {
   align-items: center;
   gap: 0.5rem;
   font-size: 0.875rem;
+  max-width: min(240px, 42vw);
+}
+
+.user-menu-avatar {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--primary) 28%, var(--border));
+}
+
+.user-menu--loading .user-menu-avatar--skeleton,
+.user-menu-name--skeleton {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--border) 60%, transparent) 0%,
+    color-mix(in srgb, var(--muted) 25%, transparent) 50%,
+    color-mix(in srgb, var(--border) 60%, transparent) 100%
+  );
+  background-size: 200% 100%;
+  animation: user-menu-shimmer 1.2s ease-in-out infinite;
+  color: transparent;
+  border-color: transparent;
+}
+
+.user-menu-name--skeleton {
+  display: inline-block;
+  width: 5.5rem;
+  height: 0.75rem;
+  border-radius: 4px;
+}
+
+@keyframes user-menu-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
 }
 
 .user-menu-name {
-  max-width: 160px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--muted);
+  color: var(--text);
+  font-weight: 500;
 }
 
 .login-page {
@@ -256,9 +336,10 @@ a {
 .app-nav-link.active {
   background: var(--surface);
   color: var(--primary);
+  font-weight: 600;
   box-shadow:
     var(--shadow),
-    0 0 0 1px var(--border);
+    0 0 0 1px color-mix(in srgb, var(--primary) 35%, var(--border));
 }
 
 .app-nav-link.active:hover {
@@ -267,12 +348,20 @@ a {
 }
 
 .admin-nav {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  margin-left: 0.25rem;
-  padding-left: 0.6rem;
-  border-left: 1px solid var(--border);
+  padding-left: 0.35rem;
+  border-left: none;
+  position: relative;
+}
+
+.admin-nav::before {
+  content: "";
+  position: absolute;
+  left: -0.35rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 1.25rem;
+  background: var(--border);
 }
 
 .admin-nav-label {
@@ -363,9 +452,18 @@ a {
 .dev-banner {
   background: var(--warning-bg);
   color: var(--warning-fg);
-  padding: 0.5rem 1.5rem;
   font-size: 0.875rem;
-  border-bottom: 1px solid var(--warning-border);
+  border-top: 1px solid color-mix(in srgb, var(--warning-border) 65%, transparent);
+}
+
+.dev-banner-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.5rem 1.5rem;
+}
+
+.dev-banner-text {
+  margin: 0;
 }
 
 .dev-banner-form {
@@ -373,6 +471,12 @@ a {
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
+}
+
+.dev-banner-input {
+  flex: 1 1 12rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .page-header {
@@ -1005,13 +1109,39 @@ textarea.input {
     padding: 0.625rem 1rem;
   }
 
+  .dev-banner-inner {
+    padding: 0.5rem 1rem;
+  }
+
   .app-brand-tagline {
     display: none;
   }
 
   .app-header-end {
     width: 100%;
-    justify-content: space-between;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+  }
+
+  .app-nav-scroll {
+    justify-content: flex-start;
+  }
+
+  .app-nav-link {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  .admin-nav-label {
+    display: none;
+  }
+
+  .user-menu-slot {
+    min-width: 5.5rem;
+  }
+
+  .user-menu-name {
+    display: none;
   }
 
   .app-main {
