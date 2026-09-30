@@ -1070,8 +1070,14 @@ textarea.input {
 
 .room-picker-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
   gap: 0.5rem;
+}
+
+.room-picker-grid:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .room-picker-card {
@@ -1085,8 +1091,17 @@ textarea.input {
   color: inherit;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  gap: 0.25rem;
+  min-height: 6.5rem;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s,
+    background 0.15s;
+}
+
+.room-picker-card-all {
+  border-style: dashed;
+  background: color-mix(in srgb, var(--bg) 70%, var(--surface));
 }
 
 .room-picker-card:hover {
@@ -1095,13 +1110,75 @@ textarea.input {
 
 .room-picker-card.selected {
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 25%, transparent);
+  border-style: solid;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 28%, transparent);
   background: var(--surface);
+}
+
+.room-picker-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+}
+
+.room-picker-code {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--primary) 22%, var(--border));
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  line-height: 1.35;
+}
+
+.room-picker-code-all {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border-strong);
+}
+
+.room-picker-code-inline {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.8125em;
+  font-weight: 600;
+}
+
+.room-picker-selected-badge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--primary);
+}
+
+.room-picker-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.room-picker-desc,
+.room-picker-meta {
+  font-size: 0.8125rem;
+  line-height: 1.3;
 }
 
 .room-picker-amenities {
   font-size: 0.75rem;
   color: var(--muted);
+  margin-top: auto;
+  line-height: 1.35;
+}
+
+.room-picker-hint {
+  margin: 0.65rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
 }
 
 @media (max-width: 640px) {

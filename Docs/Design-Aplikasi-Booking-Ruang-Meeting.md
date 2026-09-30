@@ -205,7 +205,7 @@ Entry OIDC (`AUTH_MODE=oidc`); redirect ke IdP per TDD §6.
 |------|--------|
 | App shell (logo, sticky header, nav pill, mobile scroll, UserMenu) | ✅ UI-03 |
 | `/book`, `/rooms`, `/bookings` | ✅ Implemented |
-| Room picker 5 ruang + filter timeline | ✅ Implemented |
+| Room picker 5 ruang + filter timeline | ✅ UI-04 (kode MR-A…E, listbox keyboard) |
 | OIDC + dev auth | ✅ Implemented (staging UAT belum) |
 | Admin UI F-08–F-09, audit F-11 | ✅ |
 | Kalender week view (F-04) | ✅ Minggu — 7 kolom hari, per ruang |
