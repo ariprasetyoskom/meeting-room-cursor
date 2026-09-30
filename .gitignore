@@ -24,6 +24,9 @@ Thumbs.db
 *.log
 npm-debug.log*
 
+# Local script / debug output (e.g. gh project item-list)
+.tmp-*.json
+
 # Docker volumes (local)
 Devops/docker/data/
 
