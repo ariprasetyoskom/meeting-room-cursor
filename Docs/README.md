@@ -8,6 +8,12 @@ Indeks dokumen spesifikasi, desain, dan arsitektur — **selaras dengan implemen
 |---------|-----------|
 | [000_platform_setup/](./000_platform_setup/README.md) | **PRD setup environment** + ringkasan arsitektur, tech stack, design |
 
+## Release
+
+| Dokumen | Deskripsi |
+|---------|-----------|
+| [RELEASE-NOTES.md](./RELEASE-NOTES.md) | **0.1.0-mvp** — ringkasan fitur, CI, known issues, changelog commit |
+
 ## Dokumen Utama
 
 | Dokumen | Versi | Deskripsi |

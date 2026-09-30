@@ -25,7 +25,7 @@ D:\Cursor\
 
 ## Mulai Cepat
 
-1. Baca [Docs/README.md](./Docs/README.md) untuk indeks dokumen.
+1. Baca [Docs/README.md](./Docs/README.md) untuk indeks dokumen · [Release notes](./Docs/RELEASE-NOTES.md) (**0.1.0-mvp**).
 2. Jalankan Postgres & Redis lokal: [Devops/docker/README.md](./Devops/docker/README.md).
 3. Implementasi aplikasi mengikuti [Docs/TDD-Aplikasi-Booking-Ruang-Meeting.md](./Docs/TDD-Aplikasi-Booking-Ruang-Meeting.md).
 
