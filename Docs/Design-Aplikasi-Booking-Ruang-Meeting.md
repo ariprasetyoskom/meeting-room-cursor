@@ -47,16 +47,26 @@ Detail stack lengkap: [TDD §2](./TDD-Aplikasi-Booking-Ruang-Meeting.md).
 
 Definisi di `Apps/web/src/app/globals.css`:
 
-| Token | Light (contoh) | Penggunaan |
-|-------|----------------|------------|
-| `--bg` | `#f4f6f9` | Latar aplikasi |
-| `--surface` | `#ffffff` | Header, kartu, modal |
-| `--text` / `--muted` | `#0f172a` / `#64748b` | Body / hint |
-| `--primary` | `#2563eb` | Link aktif, seleksi ruang, CTA |
-| `--danger` / `--success` | Merah / hijau | Error, konfirmasi |
-| `--slot-free` / `--slot-busy` | Hijau muda / merah muda | Sel timeline kosong/terisi |
-| `--radius` | `10px` | Kartu, input, modal |
-| `--shadow` | Subtle | Header elevation |
+Setiap pasangan teks/latar menjaga kontras **≥ 4.5:1** (WCAG AA teks normal) di light dan dark. Komponen **tidak** memakai warna hex langsung — selalu lewat token (pengecualian: gradien brand `BrandLogo`).
+
+| Token | Light | Dark | Penggunaan |
+|-------|-------|------|------------|
+| `--bg` / `--surface` | `#f4f6f9` / `#ffffff` | `#0b1120` / `#111827` | Latar aplikasi / kartu, header, modal |
+| `--text` / `--muted` | `#0f172a` / `#58687e` | `#f1f5f9` / `#94a3b8` | Body / hint, organizer di slot |
+| `--border` / `--border-strong` | `#e2e8f0` / `#cbd5e1` | `#1e293b` / `#334155` | Kartu / input, tombol sekunder, segmented |
+| `--primary` / `--on-primary` | `#2563eb` / `#fff` | `#60a5fa` / `#0b1120` | CTA, link aktif, seleksi / teks di atas primary |
+| `--focus-ring` | primary 55% | primary 55% | Outline `:focus-visible` (btn, input, slot, picker) |
+| `--danger` / `--on-danger` | `#dc2626` / `#fff` | `#f87171` / `#0b1120` | Tombol destruktif |
+| `--danger-bg/-fg/-border` | merah muda / `#991b1b` | `#450a0a` / `#fecaca` | `.alert-error` |
+| `--success` / `--success-bg` | `#047857` / `#ecfdf5` | `#34d399` / hijau 14% | `.badge-success` |
+| `--warning-bg/-fg/-border` | `#fef3c7` / `#78350f` | `#422006` / `#fde68a` | `DevAuthBanner` |
+| `--slot-free` / `--slot-free-border` | `#dcfce7` / `#86efac` | hijau 14% / 35% | Sel kosong (border agar terlihat di atas putih) |
+| `--slot-busy` / `--slot-busy-border` | `#fee2e2` / `#f87171` | merah 22% / `#f87171` | Sel terisi + aksen kiri 3px (tidak hanya warna) |
+| `--overlay` | slate 45% | hitam 60% | Backdrop modal |
+| `--radius` / `--radius-sm` / `--radius-pill` | `10px` / `8px` / `999px` | — | Kartu & modal / input, tombol, alert / nav pill |
+| `--shadow` / `--shadow-lg` | subtle / modal | lebih pekat | Elevasi header & kartu / modal |
+
+`color-scheme` diset per tema sehingga kontrol native (date picker, scrollbar) ikut gelap.
 
 ---
 
