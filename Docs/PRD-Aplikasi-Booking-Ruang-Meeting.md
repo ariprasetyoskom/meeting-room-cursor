@@ -4,7 +4,7 @@
 | Metadata | |
 |----------|---|
 | **Dokumen** | PRD-Aplikasi-Booking-Ruang-Meeting |
-| **Versi** | **1.4** |
+| **Versi** | **1.5** |
 | **Tanggal** | 30 September 2026 |
 | **Status** | MVP **fungsional lokal** (F-02–F-09, F-11 + F-04); **release-ready** setelah W1–W3 — [PLAN-MVP-Delivery](./PLAN-MVP-Delivery.md) |
 | **Dokumen Terkait** | [BRD](./BRD-Aplikasi-Booking-Ruang-Meeting.md) · [PLAN](./PLAN-MVP-Delivery.md) · [PLAN-UI-Enhance](./PLAN-UI-Enhance.md) · [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Architecture](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) · [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md) |
@@ -46,7 +46,7 @@ Keputusan teknis turunan: lihat [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md).
 | **F-01** | Login & session | Auth karyawan; session persist; logout | Yes | OIDC atau email+magic link per IT |
 | **F-02** | Daftar ruang | Browse ruang aktif; filter kapasitas/lantai | Yes | |
 | **F-03** | Detail ruang | Kapasitas, amenities, foto opsional | Yes | Foto Could jika asset ready |
-| **F-04** | Kalender ruang | View day/week; occupied shows title + organizer name (D-2) | Yes | |
+| **F-04** | Kalender ruang | View day/week; occupied shows title + organizer name (D-2); slot jam sudah lewat (WIB) non-interaktif | Yes | UI abu-abu (`--slot-past`); API tetap enforce BR-02/BR-04 |
 | **F-05** | Buat booking | Form: ruang, title, start, end, description | Yes | Validasi BR-01–04 |
 | **F-06** | Booking saya | List upcoming/history; link ke detail | Yes | |
 | **F-07** | Cancel booking | Restricted cancel (D-1); confirm modal | Yes | |
@@ -58,14 +58,14 @@ Keputusan teknis turunan: lihat [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md).
 
 ### 4.1 Status implementasi (snapshot engineering)
 
-Snapshot **30 Sep 2026** — commit terbaru di branch `cursor/meeting-room-web-scaffold`: `b2ef14c` (pushed). Selarasan gelombang: **§4.3**.
+Snapshot **30 Sep 2026** — commit terbaru di branch `cursor/meeting-room-web-scaffold`: `b1848a6`. Selarasan gelombang: **§4.3**.
 
 | ID | Status MVP | Bukti singkat | Gap utama |
 |----|------------|---------------|-----------|
 | **F-01** | **Sebagian** | Dev auth + OIDC (Auth.js), session, logout | UAT IdP **staging** (W2) |
 | **F-02** | **Selesai** | `/rooms`, `RoomDirectory`, filter kapasitas | UX polish pararel [UI-07](https://github.com/ariprasetyoskom/meeting-room-cursor/issues/37) |
 | **F-03** | **Sebagian** | Kartu + picker di `/book` & `/rooms` | Halaman `/rooms/[code]` (W3 / PLN-007, [UI-09](https://github.com/ariprasetyoskom/meeting-room-cursor/issues/39)); foto OQ-3 optional |
-| **F-04** | **Selesai** | Hari / Minggu / Daftar; 07–21 WIB; organizer (D-2) | UX [UI-04–05](https://github.com/ariprasetyoskom/meeting-room-cursor/issues/34); week multi-ruang → W4+ |
+| **F-04** | **Selesai** | Hari / Minggu / Daftar; 07–21 WIB; organizer (D-2); slot lampau WIB abu-abu + `disabled` (`isBookingSlotPast`, refresh 1 menit, `b1848a6`) | UX [UI-04–05](https://github.com/ariprasetyoskom/meeting-room-cursor/issues/34); week multi-ruang → W4+ |
 | **F-05** | **Selesai** | `BookingModal`, POST booking, BR-01–04; enqueue email **tidak** mem-500 setelah commit DB (`b2ef14c`) | UX [UI-06](https://github.com/ariprasetyoskom/meeting-room-cursor/issues/36); konfirmasi email tetap tergantung F-10 |
 | **F-06** | **Selesai** | `/bookings`, `MyBookingsList` | UX [UI-07](https://github.com/ariprasetyoskom/meeting-room-cursor/issues/37) |
 | **F-07** | **Selesai** | Cancel organizer + window D-1; admin + alasan | Email cancel → F-10 (W1) |
@@ -85,7 +85,7 @@ Detail sprint, gelombang, dan backlog: **[PLAN-MVP-Delivery v1.0](./PLAN-MVP-Del
 
 | Gelombang | Fokus | Target |
 |-----------|-------|--------|
-| **W0** | Inti MVP + F-04 Minggu + perbaikan dev (auth secret, DB timeout, booking vs Redis) | ✅ Selesai (lokal) |
+| **W0** | Inti MVP + F-04 Minggu + slot lampau kalender + perbaikan dev (auth secret, DB timeout, booking vs Redis, wiki publish script) | ✅ Selesai (lokal) |
 | **W1** | F-10 email bilingual + Redis ([ticket](./PLAN-Wave-1-Email.md)) | Sprint S4 — **blok Must** |
 | **W2** | F-01 OIDC staging + deploy | Sprint S5 |
 | **W3** | QA §8.6, E2E, KPI §7, F-03 detail (Should), RC v1.0.0 | Sprint S6 |
@@ -104,7 +104,7 @@ Sumber kebenaran delivery: [PLAN-MVP-Delivery §2–§5](./PLAN-MVP-Delivery.md)
 | **F-01** | Login & session | Sebagian | W0 (dev) | **W2** S5 | PLN-002, W2-01–03 | G3 OIDC UAT |
 | **F-02** | Daftar ruang | Selesai | W0 | — (UX UI-07) | — | G1 |
 | **F-03** | Detail ruang | Sebagian | W0 (kartu) | **W3** Should | PLN-007, UI-09, W3 opsional | G1 (teks); foto OQ-3 Could |
-| **F-04** | Kalender | Selesai | W0 | — (UX UI-04–05) | PLN-011 Could | G1, D-2 |
+| **F-04** | Kalender | Selesai | W0 (+ slot lampau `b1848a6`) | — (UX UI-04–05) | PLN-011 Could | G1, D-2 |
 | **F-05** | Buat booking | Selesai | W0 (+ fix enqueue `b2ef14c`) | — (UX UI-06) | — | G1, BR-01–04 |
 | **F-06** | Booking saya | Selesai | W0 | — (UX UI-07) | — | G1 |
 | **F-07** | Cancel | Selesai | W0 | Notifikasi **W1** | PLN-001 (email cancel) | G1, D-1 |
@@ -139,6 +139,7 @@ Spesifikasi layar lengkap: [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md).
 - Nav: **Booking** (`/book`), **Ruang** (`/rooms`), **Booking saya** (`/bookings`); admin (role): `/admin/rooms`, `/admin/bookings`, `/admin/audit`.
 - **Pilih ruangan:** grid 5 ruang demo (MR-A … MR-E) + opsi **Semua ruang**; filter kapasitas + timeline.
 - Kalender: view **Hari** (timeline multi-ruang) / **Minggu** (grid 7 hari, satu ruang terpilih) / **Daftar**; slot terisi + organizer (D-2).
+- **Slot waktu:** kosong = hijau (klik booking); terisi = merah + judul/organizer; **jam sudah lewat** (banding `Asia/Jakarta`, mulai dari menit `:00` slot) = abu-abu, tidak bisa dipilih — selaras BR-02/BR-04 (tidak booking masa lalu). Status jam diperbarui otomatis ~1 menit.
 - Booking: modal dengan dropdown ruang; tanpa optimistic submit; komponen form memakai kit UI (`Field`, `Input`, `Button`, `Alert`) — [Design §5.1](./Design-Aplikasi-Booking-Ruang-Meeting.md); migrasi layar lain di epic UI.
 - Error API booking: bentrok 409 dengan copy PRD; kegagalan server generik — perbaiki pesan JSON (backlog QA).
 - Empty states dengan CTA ke `/book`.
@@ -201,4 +202,13 @@ Hanya **OQ-4** tetap terbuka di versi dokumen ini.
 
 ---
 
-*Akhir dokumen PRD v1.4.*
+### Changelog
+
+| Versi | Tanggal | Ringkas |
+|-------|---------|---------|
+| **1.5** | 30 Sep 2026 | F-04: slot jam lampau WIB non-interaktif + token `--slot-past`; snapshot `b1848a6`. |
+| 1.4 | 30 Sep 2026 | Matriks §4.3, status gelombang W0–W3, PRD ↔ PLAN. |
+
+---
+
+*Akhir dokumen PRD v1.5.*
