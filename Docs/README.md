@@ -59,6 +59,8 @@ Sumber halaman: [Devops/github-wiki/](../Devops/github-wiki/README.md) — publi
 | Dokumen | Versi | Deskripsi |
 |---------|-------|-----------|
 | [PRD-Orkestrasi-Manusia-AI.md](./PRD-Orkestrasi-Manusia-AI.md) | **1.3** | Runner per task: dokumen agent (rencana, verdict) terpisah dari dokumen development (hasil, bukti) |
+| [PRD-Kanban-Agent-Dispatch.md](./PRD-Kanban-Agent-Dispatch.md) | **1.0** | Geser In Progress di `/admin/board` → webhook Cursor Automation → run agent (bukan chat IDE) |
+| [KANBAN-AGENT-DISPATCH-RUNBOOK.md](./KANBAN-AGENT-DISPATCH-RUNBOOK.md) | **1.0** | Setup Automation webhook + env `BOARD_AGENT_DISPATCH_*` |
 
 ## Agentic — generator dokumen
 

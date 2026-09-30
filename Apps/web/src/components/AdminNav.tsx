@@ -14,6 +14,7 @@ const links = [
   { href: "/admin/bookings", label: "Semua booking" },
   { href: "/admin/audit", label: "Audit log" },
   { href: "/admin/scheduler", label: "Scheduler" },
+  { href: "/admin/board", label: "Papan" },
 ];
 
 export function AdminNav() {
