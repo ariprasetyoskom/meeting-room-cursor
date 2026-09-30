@@ -26,3 +26,6 @@ npm-debug.log*
 
 # Docker volumes (local)
 Devops/docker/data/
+
+# Local clone of GitHub Wiki git (publish-wiki.ps1)
+Devops/github-wiki/.git/

@@ -8,6 +8,10 @@ Indeks dokumen spesifikasi, desain, dan arsitektur — **selaras dengan implemen
 |---------|-----------|
 | [000_platform_setup/](./000_platform_setup/README.md) | **PRD setup environment** + ringkasan arsitektur, tech stack, design |
 
+## GitHub Wiki (onboarding tim)
+
+Sumber halaman: [Devops/github-wiki/](../Devops/github-wiki/README.md) — publish ke https://github.com/ariprasetyoskom/meeting-room-cursor/wiki
+
 ## Perencanaan & release
 
 | Dokumen | Deskripsi |
