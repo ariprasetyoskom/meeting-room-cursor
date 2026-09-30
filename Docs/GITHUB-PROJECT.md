@@ -38,21 +38,53 @@ Kanban ini selaras dengan dokumen delivery di repo.
 
 - **Board:** drag issue antar kolom Status.  
 - **Table view (tambah di UI):** group by **Milestone** atau **Track**.  
-- Saat menutup issue di GitHub, pindahkan kartu ke **Done** (atau aktifkan workflow Project: *When issue closed → Status Done*).
+- Setelah workflow di bawah aktif, menutup issue di GitHub otomatis memindahkan kartu ke **Done**.
+
+## Workflow Project (aktifkan sekali di GitHub UI)
+
+Buka [Project #1](https://github.com/users/ariprasetyoskom/projects/1) → **⋯** (kanan atas) → **Workflows**.
+
+| Workflow | Setelan | Tujuan |
+|----------|---------|--------|
+| **Item closed** | When: *Item is closed* → Set **Status** to **Done** | UI-01–03 / Wave 1 selesai tanpa drag manual |
+| **Item reopened** (opsional) | When: *Item is reopened* → Set **Status** to **Todo** | Issue dibuka lagi tidak stuck di Done |
+| **Auto-add to project** (opsional) | When: *Issue opened* on repo `meeting-room-cursor` → **Add to project** | Issue baru langsung masuk board |
+
+**Catatan:** Workflow Project **tidak** bisa di-commit ke repo; konfigurasi disimpan di GitHub. Dokumen ini adalah runbook tim.
+
+### View tambahan (disarankan)
+
+1. **+ New view** → **Table**.  
+2. **Group by:** `Track` atau `Milestone`.  
+3. **Filter:** `Status` is not `Done` untuk fokus sprint aktif.
 
 ## Setup board (sudah / lanjutkan di UI)
 
 1. Repo **linked** ke project.  
 2. Field custom **Track** (3 opsi di atas).  
-3. Issue **#31–#32** ditambahkan ke board → set **Done**.  
-4. **#30** epic → **In Progress**; **#31–#33** (UI-01–03) → **Done** (issue GitHub **Closed**).  
-5. (Disarankan) Duplikasi view → **Table**, group by **Track** atau **Milestone**.  
-6. (Disarankan) Workflow: *Issue closed* → *Status = Done*.
+3. Aktifkan workflow **Item closed → Done** (lihat atas).  
+4. **#30** epic → **In Progress** (manual); **#31–#33** → **Done** setelah issue closed (workflow atau script).  
+5. View **Table** + group by **Track**.
 
-Jika API rate limit, ulangi langkah 3–4 manual atau jalankan:
+## Script sync (hindari rate limit)
 
-`gh project item-edit 1 --owner ariprasetyoskom --url https://github.com/ariprasetyoskom/meeting-room-cursor/issues/31 --field Status --value Done`
+Jangan loop `item-edit` untuk puluhan issue sekaligus. Gunakan script yang hanya mengubah kartu **yang tidak selaras**:
+
+```bash
+# Preview
+node Devops/scripts/sync-project-status.mjs --dry-run
+
+# Closed issue → Done (jeda 600ms antar edit)
+node Devops/scripts/sync-project-status.mjs
+
+# Issue dibuka lagi + kartu masih Done → Todo
+node Devops/scripts/sync-project-status.mjs --fix-reopened
+```
+
+Env opsional: `PROJECT_OWNER` (default `@me`), `PROJECT_NUMBER` (`1`), `PROJECT_SYNC_DELAY_MS` (default `600`).
+
+Prasyarat: `gh auth login` dengan scope **`project`**.
 
 ---
 
-*Diperbarui 30 Sep 2026 — selarasan issue #1–#40.*
+*Diperbarui 30 Sep 2026 — workflow + script sync-project-status.*
