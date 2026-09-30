@@ -17,9 +17,10 @@ if (-not (Test-Path .git)) {
   git remote set-url origin $remote
 }
 
-git add Home.md Getting-Started.md Product-and-Roadmap.md Troubleshooting.md Documentation-Index.md _Sidebar.md
-if (-not (git diff --cached --quiet 2>$null; $?)) {
-  git commit -m "Update wiki from monorepo Devops/github-wiki"
+git add Home.md Getting-Started.md Product-and-Roadmap.md Troubleshooting.md Documentation-Index.md _Sidebar.md README.md
+$staged = git diff --cached --name-only
+if ($staged) {
+  git -c user.email="wiki@local" -c user.name="Cursor Wiki" commit -m "Update wiki from monorepo Devops/github-wiki"
 }
 git push -u origin $Branch
 Pop-Location
