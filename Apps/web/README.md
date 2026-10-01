@@ -35,6 +35,8 @@ npm run dev:admin
 
 Set `DEV_USER_ID` / `ADMIN_DEV_USER_ID` di `.env.local` dari output `npm run db:seed`. Buka admin di [http://localhost:3001/admin/rooms](http://localhost:3001/admin/rooms) — akses `/admin/*` di `:3000` akan redirect ke `:3001`.
 
+**404 intermiten di `/book`?** Pastikan **`npm run dev` (3000) jalan** sebelum buka Booking dari portal admin. Dua server dev memakai cache build terpisah (`.next` vs `.next-admin`); setelah ubah config, restart keduanya.
+
 Terminal ketiga (opsional, butuh REDIS_URL):
 
 ```bash
