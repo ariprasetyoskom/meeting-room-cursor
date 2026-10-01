@@ -9,7 +9,7 @@ import {
 
 describe("project board", () => {
   it("starts with pipeline column counts", () => {
-    expect(BOARD_CARDS.filter((card) => card.status === "intake")).toHaveLength(34);
+    expect(BOARD_CARDS.filter((card) => card.status === "intake")).toHaveLength(35);
     expect(BOARD_CARDS.filter((card) => card.status === "development")).toHaveLength(2);
     expect(BOARD_CARDS.filter((card) => card.status === "done")).toHaveLength(4);
   });

@@ -122,6 +122,11 @@ export const BOARD_CARDS: BoardCard[] = [
   { number: 38, status: "intake", title: "[UI-08] Admin rooms bookings audit table density feedback" },
   { number: 39, status: "intake", title: "[UI-09] Halaman detail ruang /rooms/[code] F-03 text-first" },
   { number: 40, status: "intake", title: "[UI-10] Dark mode + a11y smoke alur booking" },
+  {
+    number: 45,
+    status: "intake",
+    title: "[KAD-POC] Brand logo MR monogram + aria-label (automation smoke)",
+  },
 ];
 
 export function filterCards(cards: BoardCard[], query: string): BoardCard[] {
