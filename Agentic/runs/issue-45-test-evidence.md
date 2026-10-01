@@ -7,4 +7,6 @@
 
 Smoke (`npm run dev` :3000, `GET /book`): HTTP 200; `role="img"`, `aria-label="Meeting room booking"`, monogram MR.
 
-No code changes in Test run.
+**GitHub Actions CI** (PR #46, branch `agent/issue-45`): run `36830126960` — **success** (lint, unit-test, build).
+
+No product code changes in Test run.
