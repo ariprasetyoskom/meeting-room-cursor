@@ -12,6 +12,21 @@ export function kadStrictStageGates(): boolean {
   return process.env.BOARD_KAD_STRICT_GATES !== "false";
 }
 
+/** Commit di branch agent dulu; bukti stage di body issue; PR dibuka setelah Human QA lulus. */
+export function kadDeferPrUntilHumanQa(): boolean {
+  return process.env.BOARD_KAD_DEFER_PR_UNTIL_HUMAN_QA === "true";
+}
+
+export function stageGateEvidenceBody(
+  issueBody: string,
+  prBody: string | undefined,
+): string {
+  if (kadDeferPrUntilHumanQa()) {
+    return issueBody ?? "";
+  }
+  return prBody ?? issueBody ?? "";
+}
+
 export function extractPrSection(body: string, heading: string): string {
   const re = new RegExp(
     `(?:^|\\n)##\\s*${heading}\\b[^\\n]*\\n([\\s\\S]*?)(?=\\n##\\s|$)`,

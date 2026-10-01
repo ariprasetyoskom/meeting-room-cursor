@@ -67,3 +67,5 @@ DELETE /api/v1/admin/board/dispatch
 Log & ledger terpusat: `Development/logs/` — `kad-dispatch.jsonl` (event), `kad-dispatch-ledger.json` (lock). Legacy `Apps/web/.data/` dimigrasi otomatis saat baca.
 
 Event gate (default `BOARD_KAD_STRICT_GATES` aktif): `dispatch.stage_check` (`ok: false` + `reasons[]` = stage belum selesai, **tidak** auto-chain); `dispatch.completed` = stage lulus; `dispatch.auto_chain_attempt` sebelum webhook berikutnya.
+
+Mode commit dulu: `BOARD_KAD_DEFER_PR_UNTIL_HUMAN_QA=true` — lihat [KANBAN-LOCAL-DELIVERY.md](./KANBAN-LOCAL-DELIVERY.md); log `dispatch.human_qa_open_pr_reminder` setelah Audit pass tanpa PR.

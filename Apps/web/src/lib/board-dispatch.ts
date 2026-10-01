@@ -19,7 +19,9 @@ import {
   checkAuditStageGate,
   checkDevelopmentStageGate,
   checkTestStageGate,
+  kadDeferPrUntilHumanQa,
   kadStrictStageGates,
+  stageGateEvidenceBody,
 } from "@/lib/board-kad-stage-gates";
 import type { DispatchLock } from "@/lib/board-dispatch-policy";
 import { completionStorageKey } from "@/lib/board-dispatch-stages";
@@ -151,23 +153,48 @@ export function buildCompletionSummary(pr: GitHubPullSnapshot): string {
   return pr.title.trim();
 }
 
-export function applyPullRequestCompletion(
+function completionArtifact(
+  issue: GitHubIssueSnapshot,
+  pr: GitHubPullSnapshot | null,
+  summaryOverride?: string,
+): Pick<DispatchCompletedRun, "summary" | "prNumber" | "prUrl" | "prState"> {
+  if (pr) {
+    return {
+      summary: summaryOverride ?? buildCompletionSummary(pr),
+      prNumber: pr.number,
+      prUrl: pr.html_url,
+      prState: pr.state,
+    };
+  }
+  const line =
+    issue.body?.split("\n").find((l) => l.trim())?.trim() ?? issue.title;
+  const summary =
+    summaryOverride ??
+    (line.length <= 220 ? line : `${line.slice(0, 217)}…`);
+  return {
+    summary,
+    prNumber: 0,
+    prUrl: issue.html_url,
+    prState: "issue",
+  };
+}
+
+export function applyStageCompletion(
   ledger: DispatchLedger,
-  pr: GitHubPullSnapshot,
+  issue: GitHubIssueSnapshot,
+  pr: GitHubPullSnapshot | null,
   nowIso: string,
   summaryOverride?: string,
   auditVerdict?: AuditVerdict,
 ): DispatchLedger {
   const active = ledger.active;
   if (!active) return ledger;
+  const artifact = completionArtifact(issue, pr, summaryOverride);
   const completed: DispatchCompletedRun = {
     issueNumber: active.issueNumber,
     correlationId: active.correlationId,
     completedAt: nowIso,
-    summary: summaryOverride ?? buildCompletionSummary(pr),
-    prNumber: pr.number,
-    prUrl: pr.html_url,
-    prState: pr.state,
+    ...artifact,
     pipelineStage: active.pipelineStage,
     ...(active.pipelineStage === "audit" && auditVerdict
       ? { auditVerdict }
@@ -181,6 +208,32 @@ export function applyPullRequestCompletion(
       [completionStorageKey(active.issueNumber, active.pipelineStage)]: completed,
     },
   };
+}
+
+export function applyPullRequestCompletion(
+  ledger: DispatchLedger,
+  pr: GitHubPullSnapshot,
+  nowIso: string,
+  summaryOverride?: string,
+  auditVerdict?: AuditVerdict,
+): DispatchLedger {
+  const active = ledger.active;
+  if (!active) return ledger;
+  const issueStub: GitHubIssueSnapshot = {
+    number: active.issueNumber,
+    title: pr.title,
+    body: "",
+    html_url: pr.html_url.replace("/pull/", "/issues/").replace(/\/pull\/\d+$/, `/issues/${active.issueNumber}`),
+    state: "open",
+  };
+  return applyStageCompletion(
+    ledger,
+    issueStub,
+    pr,
+    nowIso,
+    summaryOverride,
+    auditVerdict,
+  );
 }
 
 type GitHubCommitSnapshot = {
@@ -382,8 +435,24 @@ async function isAuditDispatchComplete(
 async function syncActiveCompletion(ledger: DispatchLedger): Promise<DispatchLedger> {
   const active = getActiveLock(ledger, Date.now(), lockTtlMs());
   if (!active || !githubToken()) return ledger;
+
+  let issueSnap: GitHubIssueSnapshot;
+  try {
+    issueSnap = await fetchGitHubIssue(active.issueNumber);
+  } catch {
+    await logKad("warn", "dispatch.stage_check", {
+      issueNumber: active.issueNumber,
+      correlationId: active.correlationId,
+      pipelineStage: active.pipelineStage,
+      ok: false,
+      reasons: ["GitHub issue tidak dapat dibaca"],
+    });
+    return ledger;
+  }
+
   const pr = await fetchPullRequestForIssue(active.issueNumber);
-  if (!pr) {
+  const deferPr = kadDeferPrUntilHumanQa();
+  if (!pr && !deferPr) {
     await logKad("warn", "dispatch.stage_check", {
       issueNumber: active.issueNumber,
       correlationId: active.correlationId,
@@ -396,7 +465,7 @@ async function syncActiveCompletion(ledger: DispatchLedger): Promise<DispatchLed
 
   const commit = await fetchLatestCommitOnBranch(active.issueNumber);
   const afterCommit = commitAfterDispatch(commit, active.startedAt);
-  const body = pr.body ?? "";
+  const body = stageGateEvidenceBody(issueSnap.body ?? "", pr?.body);
 
   let next: DispatchLedger | null = null;
   let summary: string | undefined;
@@ -404,20 +473,29 @@ async function syncActiveCompletion(ledger: DispatchLedger): Promise<DispatchLed
   if (active.pipelineStage === "development") {
     const gate = checkDevelopmentStageGate(body, afterCommit);
     await logStageCheck(active, gate.ok, {
-      prNumber: pr.number,
+      prNumber: pr?.number ?? 0,
+      deferPrUntilHumanQa: deferPr,
+      evidenceSource: deferPr ? "issue" : "pr",
       reasons: gate.ok ? [] : gate.reasons,
     });
     if (!gate.ok) return ledger;
     summary = gate.summary;
-    next = applyPullRequestCompletion(ledger, pr, new Date().toISOString(), summary);
+    next = applyStageCompletion(
+      ledger,
+      issueSnap,
+      pr,
+      new Date().toISOString(),
+      summary,
+    );
     await writeLedger(next);
     await logKad("info", "dispatch.completed", {
       issueNumber: active.issueNumber,
       correlationId: active.correlationId,
       pipelineStage: active.pipelineStage,
-      prNumber: pr.number,
-      prUrl: pr.html_url,
+      prNumber: pr?.number ?? 0,
+      prUrl: pr?.html_url ?? issueSnap.html_url,
       summary,
+      deferPrUntilHumanQa: deferPr,
     });
     if (autoDispatchTestAfterDev()) {
       await logKad("info", "dispatch.auto_chain_attempt", {
@@ -445,15 +523,18 @@ async function syncActiveCompletion(ledger: DispatchLedger): Promise<DispatchLed
     const ciSuccess = checks === "success";
     const gate = checkTestStageGate(body, ciSuccess, afterCommit);
     await logStageCheck(active, gate.ok, {
-      prNumber: pr.number,
+      prNumber: pr?.number ?? 0,
       ciSuccess,
       commitAfterDispatch: afterCommit,
+      deferPrUntilHumanQa: deferPr,
+      evidenceSource: deferPr ? "issue" : "pr",
       reasons: gate.ok ? [] : gate.reasons,
     });
     if (!gate.ok) return ledger;
     summary = gate.summary;
-    next = applyPullRequestCompletion(
+    next = applyStageCompletion(
       ledger,
+      issueSnap,
       pr,
       new Date().toISOString(),
       summary,
@@ -463,9 +544,10 @@ async function syncActiveCompletion(ledger: DispatchLedger): Promise<DispatchLed
       issueNumber: active.issueNumber,
       correlationId: active.correlationId,
       pipelineStage: active.pipelineStage,
-      prNumber: pr.number,
-      prUrl: pr.html_url,
+      prNumber: pr?.number ?? 0,
+      prUrl: pr?.html_url ?? issueSnap.html_url,
       summary,
+      deferPrUntilHumanQa: deferPr,
     });
     if (autoDispatchAuditAfterTest()) {
       await logKad("info", "dispatch.auto_chain_attempt", {
@@ -492,16 +574,20 @@ async function syncActiveCompletion(ledger: DispatchLedger): Promise<DispatchLed
   if (kadStrictStageGates()) {
     const gate = checkAuditStageGate(body);
     await logStageCheck(active, gate.ok, {
-      prNumber: pr.number,
+      prNumber: pr?.number ?? 0,
+      deferPrUntilHumanQa: deferPr,
+      evidenceSource: deferPr ? "issue" : "pr",
       reasons: gate.ok ? [] : gate.reasons,
     });
     if (!gate.ok) return ledger;
     summary = gate.summary;
     auditVerdict = gate.auditVerdict;
   } else {
-    const legacy = await isAuditDispatchComplete(active, pr);
+    const legacy = pr
+      ? await isAuditDispatchComplete(active, pr)
+      : { ok: false as const };
     await logStageCheck(active, legacy.ok, {
-      prNumber: pr.number,
+      prNumber: pr?.number ?? 0,
       mode: "legacy",
       reasons: legacy.ok ? [] : ["Audit belum memenuhi syarat (legacy)"],
     });
@@ -510,8 +596,9 @@ async function syncActiveCompletion(ledger: DispatchLedger): Promise<DispatchLed
     auditVerdict = legacy.auditVerdict;
   }
 
-  next = applyPullRequestCompletion(
+  next = applyStageCompletion(
     ledger,
+    issueSnap,
     pr,
     new Date().toISOString(),
     summary,
@@ -522,11 +609,19 @@ async function syncActiveCompletion(ledger: DispatchLedger): Promise<DispatchLed
     issueNumber: active.issueNumber,
     correlationId: active.correlationId,
     pipelineStage: active.pipelineStage,
-    prNumber: pr.number,
-    prUrl: pr.html_url,
+    prNumber: pr?.number ?? 0,
+    prUrl: pr?.html_url ?? issueSnap.html_url,
     summary,
     auditVerdict,
+    deferPrUntilHumanQa: deferPr,
   });
+  if (deferPr && !pr && auditVerdict === "pass") {
+    await logKad("info", "dispatch.human_qa_open_pr_reminder", {
+      issueNumber: active.issueNumber,
+      message:
+        "Audit pass — uji lokal di Human QA; buka PR ke main setelah QA lulus (BOARD_KAD_DEFER_PR_UNTIL_HUMAN_QA).",
+    });
+  }
   return next;
 }
 
@@ -630,6 +725,23 @@ export function buildAgentPrompt(
   pipelineStage: BoardDispatchStage,
 ): string {
   const body = issue.body?.trim() || "(tidak ada deskripsi)";
+  const deferPr = kadDeferPrUntilHumanQa();
+  const evidenceTarget = deferPr
+    ? "body **issue GitHub** (#" + issue.number + ")"
+    : "body **PR**";
+  const prRule = deferPr
+    ? [
+        "Mode pengiriman: **commit dulu, PR setelah Human QA lulus**.",
+        "Push commit ke branch `agent/issue-" +
+          issue.number +
+          "`; **jangan buka PR** sampai operator menyelesaikan Human QA.",
+        "Gate KAD membaca " +
+          evidenceTarget +
+          " — pertahankan ## Summary / ## Test evidence / ## Audit di issue.",
+      ]
+    : [
+        "Buka atau perbarui **PR** dari branch agent; gate KAD membaca body PR.",
+      ];
   const fromLine = fromStage
     ? `Kartu kanban dipindah dari **${fromStage}** ke **${pipelineStage}**.`
     : `Stage kanban: **${pipelineStage}**.`;
@@ -637,30 +749,30 @@ export function buildAgentPrompt(
     pipelineStage === "test"
       ? [
           "Kamu dipanggil pada **Test** (verifikasi ORCH).",
-          "Acuan: pasangan dokumen develop (agent + development) bila ada, PR branch `agent/issue-" +
-            issue.number +
-            "`, dan kolom Output/verifikasi issue.",
-          "Jalankan test/verifikasi (npm test / CI); perbaiki minimal jika gagal; tulis bukti (perintah, exit code) di komentar PR atau ## Test evidence di body PR.",
-          "Update PR yang ada; jangan buka PR baru kecuali belum ada.",
-          "Perbarui body PR dengan ringkasan hasil test agar kanban menampilkan summary.",
-          "Jangan jalankan Audit penuh di run ini; setelah verifikasi lulus, papan otomatis lanjut ke Audit + run terpisah.",
+          "Jalankan `cd Apps/web && npm test`; perbaiki minimal jika gagal.",
+          "Perbarui " + evidenceTarget + " — ## Test evidence dengan exit code 0 (bukan placeholder).",
+          "Jangan jalankan Audit penuh di run ini.",
+          ...prRule,
         ]
       : pipelineStage === "audit"
         ? [
-            "Kamu dipanggil pada **Audit** (review ORCH — pelaksana audit ≠ develop).",
-            "Acuan: issue acceptance, PR branch `agent/issue-" +
+            "Kamu dipanggil pada **Audit** (pelaksana audit ≠ develop).",
+            "Review diff branch `agent/issue-" +
               issue.number +
-              "`, ## Summary, ## Test evidence, diff PR vs scope; pasangan dokumen develop/test bila ada.",
-            "Review kontrak & diff; jangan menulis ulang fitur kecuali temuan bug kecil yang wajib diperbaiki agar audit jujur.",
-            "Sebelum run selesai: tambahkan **## Audit** di body PR dengan **Verdict:** pass | fail | clarify (wajib). pass → kanban Human QA; clarify → Human Clarify; fail → tetap Audit untuk perbaikan/ulang.",
-            "Opsional: dokumen agent + development stage audit di `Agentic/runs/` bila skill devops-agent dipakai.",
-            "Update PR yang ada; jangan merge ke main/master.",
+              "` vs acceptance issue.",
+            "Perbarui " +
+              evidenceTarget +
+              " — ## Audit dengan **Verdict:** pass | fail | clarify (bukan pending).",
+            ...prRule,
           ]
         : [
             "Kamu dipanggil pada **Development** (implementasi).",
-            "Implementasi + test lokal relevan; buka atau perbarui PR di branch agent.",
-            "Sebelum menyelesai run: perbarui **body PR** dengan bagian ## Summary (judul, file utama, cara uji) — dipakai papan kanban.",
-            "Setelah PR ada, papan otomatis pindah ke Test dan run Test terpisah akan dipanggil; jangan jalankan stage Test dalam run Development ini.",
+            "Implementasi + test lokal relevan.",
+            "Perbarui " +
+              evidenceTarget +
+              " — ## Summary (perubahan, file, smoke test).",
+            "Push commit ke branch agent sebelum run selesai.",
+            ...prRule,
           ];
   return [
     `Kerjakan GitHub issue #${issue.number} di repo ${repo}.`,
@@ -682,7 +794,12 @@ export function buildAgentPrompt(
     "- Jangan merge ke main/master.",
     "- Jika blocker, komentari di PR/issue.",
     "- Jangan ubah scope di luar issue.",
-  ].join("\n");
+    deferPr
+      ? "- Setelah **Human QA lulus**, operator/agent membuka PR ke main (merge manual)."
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 async function postAutomationWebhook(
@@ -723,6 +840,7 @@ export type DispatchStatus = {
   correlationId: string | null;
   repository: string;
   dispatchStages: BoardDispatchStage[];
+  deferPrUntilHumanQa: boolean;
   completedByIssue: Record<string, DispatchCompletedRun>;
 };
 
@@ -746,6 +864,7 @@ export async function getDispatchStatus(): Promise<DispatchStatus> {
     correlationId: active?.correlationId ?? null,
     repository: githubRepo(),
     dispatchStages: ["development", "test", "audit"],
+    deferPrUntilHumanQa: kadDeferPrUntilHumanQa(),
     completedByIssue: ledger.completedByIssue,
   };
 }

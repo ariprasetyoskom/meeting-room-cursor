@@ -1,11 +1,26 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import {
   checkAuditStageGate,
   checkDevelopmentStageGate,
   checkTestStageGate,
+  stageGateEvidenceBody,
 } from "./board-kad-stage-gates";
 
 describe("KAD stage gates", () => {
+  const env = process.env.BOARD_KAD_DEFER_PR_UNTIL_HUMAN_QA;
+
+  afterEach(() => {
+    if (env === undefined) delete process.env.BOARD_KAD_DEFER_PR_UNTIL_HUMAN_QA;
+    else process.env.BOARD_KAD_DEFER_PR_UNTIL_HUMAN_QA = env;
+  });
+
+  it("prefers issue body when defer PR mode env set", () => {
+    process.env.BOARD_KAD_DEFER_PR_UNTIL_HUMAN_QA = "true";
+    expect(stageGateEvidenceBody("issue-summary", "pr-summary")).toBe(
+      "issue-summary",
+    );
+  });
+
   const devBody = `## Summary
 Perubahan logo MR dan aria-label pada BrandLogo.
 

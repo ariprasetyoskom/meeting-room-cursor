@@ -40,6 +40,7 @@ type DispatchStatus = {
   correlationId: string | null;
   repository: string;
   dispatchStages?: ("development" | "test" | "audit")[];
+  deferPrUntilHumanQa?: boolean;
   completedByIssue?: Record<string, DispatchCompletedRun>;
 };
 
@@ -284,6 +285,13 @@ export function ProjectBoard() {
             <strong>Audit</strong> memanggil agent Cursor. Rantai otomatis:
             Development → Test → Audit; Audit pass → <strong>Human QA</strong>,
             clarify → <strong>Human Clarify</strong>.
+            {dispatchStatus.deferPrUntilHumanQa && (
+              <>
+                {" "}
+                Mode <strong>commit dulu</strong>: gate baca body issue;{" "}
+                <strong>PR setelah Human QA lulus</strong>.
+              </>
+            )}{" "}
             Posisi kartu disimpan di browser (refresh tidak kembali ke Intake)
             {dispatchStatus.configured
               ? activeAgentIssue
