@@ -29,6 +29,13 @@ export async function findActiveRoomById(roomId: string): Promise<Room | null> {
   return row ?? null;
 }
 
+export async function findActiveRoomByCode(code: string): Promise<Room | null> {
+  const row = await db.query.rooms.findFirst({
+    where: and(eq(rooms.code, code), eq(rooms.isActive, true)),
+  });
+  return row ?? null;
+}
+
 export async function findRoomById(roomId: string): Promise<Room | null> {
   const row = await db.query.rooms.findFirst({
     where: eq(rooms.id, roomId),

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { formatAmenities, sortRoomsByCode } from "./room-display";
+import {
+  formatAmenities,
+  normalizeRoomCodeParam,
+  roomDetailHref,
+  sortRoomsByCode,
+} from "./room-display";
 import type { Room } from "@/lib/client-api";
 
 const sample: Room[] = [
@@ -28,5 +33,14 @@ describe("room-display", () => {
 
   it("formatAmenities joins amenities", () => {
     expect(formatAmenities(["tv", "whiteboard"])).toBe("tv · whiteboard");
+  });
+
+  it("normalizeRoomCodeParam uppercases and trims", () => {
+    expect(normalizeRoomCodeParam(" mr-a ")).toBe("MR-A");
+    expect(normalizeRoomCodeParam("mr%2Db")).toBe("MR-B");
+  });
+
+  it("roomDetailHref encodes code in path", () => {
+    expect(roomDetailHref("MR-A")).toBe("/rooms/MR-A");
   });
 });

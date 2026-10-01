@@ -1,4 +1,5 @@
 import {
+  findActiveRoomByCode,
   findActiveRooms,
   findRoomById,
   insertRoom,
@@ -15,6 +16,12 @@ export async function listActiveRooms(filters: {
   minCapacity?: number;
 }) {
   return findActiveRooms(filters);
+}
+
+export async function getActiveRoomByCode(rawCode: string) {
+  const code = rawCode.trim().toUpperCase();
+  if (!code) return null;
+  return findActiveRoomByCode(code);
 }
 
 export async function adminListRooms() {

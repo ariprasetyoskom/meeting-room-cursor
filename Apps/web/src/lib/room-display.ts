@@ -17,3 +17,12 @@ export function formatAmenities(amenities: string[] | undefined): string {
 export function roomOptionLabel(room: Room): string {
   return `${room.code} ${room.name}, ${formatRoomMeta(room)}`;
 }
+
+/** Normalisasi segmen URL `/rooms/[code]` (case-insensitive). */
+export function normalizeRoomCodeParam(raw: string): string {
+  return decodeURIComponent(raw).trim().toUpperCase();
+}
+
+export function roomDetailHref(code: string): string {
+  return `/rooms/${encodeURIComponent(code.trim().toUpperCase())}`;
+}

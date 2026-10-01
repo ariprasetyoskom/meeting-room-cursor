@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { ApiError, apiFetch, type Room } from "@/lib/client-api";
+import { formatAmenities, roomDetailHref } from "@/lib/room-display";
+import { buttonClass } from "./ui/Button";
 import { Alert } from "./ui/Alert";
 import { EmptyState } from "./ui/EmptyState";
 import { ListLoadError } from "./ui/ListLoadError";
@@ -71,18 +73,33 @@ export function RoomDirectory() {
           {rooms.map((room) => (
             <li key={room.id} className="room-card">
               <div>
-                <h3>{room.name}</h3>
+                <h3>
+                  <Link href={roomDetailHref(room.code)} className="room-card-title-link">
+                    {room.name}
+                  </Link>
+                </h3>
                 <p className="text-muted">
                   Kode {room.code} · Lantai {room.floor ?? "—"} · {room.capacity}{" "}
                   orang
                 </p>
                 <p className="text-muted">
-                  Fasilitas: {room.amenities?.join(", ") || "—"}
+                  Fasilitas: {formatAmenities(room.amenities)}
                 </p>
               </div>
-              <Link href={`/book?room=${room.id}`} className="btn btn-secondary">
-                Lihat kalender
-              </Link>
+              <div className="room-card-actions">
+                <Link
+                  href={roomDetailHref(room.code)}
+                  className={buttonClass({ variant: "secondary", size: "sm" })}
+                >
+                  Detail
+                </Link>
+                <Link
+                  href={`/book?room=${room.id}`}
+                  className={buttonClass({ variant: "primary", size: "sm" })}
+                >
+                  Pesan ruang
+                </Link>
+              </div>
             </li>
           ))}
         </ul>
