@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ApiError, apiFetch, type Room } from "@/lib/client-api";
+import { Alert } from "./ui/Alert";
 import { PageHeader } from "./ui/PageHeader";
 import { LoadingBlock } from "./ui/LoadingBlock";
 
@@ -27,6 +28,7 @@ export function AdminRoomsManager() {
   const [rooms, setRooms] = useState<AdminRoom[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [modal, setModal] = useState<"create" | "edit" | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -39,6 +41,7 @@ export function AdminRoomsManager() {
       const res = await apiFetch<{ rooms: AdminRoom[] }>("/api/v1/admin/rooms");
       setRooms(res.rooms);
     } catch (e) {
+      setSuccess(null);
       setError(e instanceof ApiError ? e.message : "Gagal memuat ruang.");
     } finally {
       setLoading(false);
@@ -78,6 +81,7 @@ export function AdminRoomsManager() {
     e.preventDefault();
     setSaving(true);
     setError(null);
+    setSuccess(null);
     const payload = {
       code: form.code,
       name: form.name,
@@ -91,11 +95,13 @@ export function AdminRoomsManager() {
           method: "POST",
           body: JSON.stringify(payload),
         });
+        setSuccess("Ruang berhasil ditambahkan.");
       } else if (editId) {
         await apiFetch(`/api/v1/admin/rooms/${editId}`, {
           method: "PATCH",
           body: JSON.stringify(payload),
         });
+        setSuccess("Perubahan ruang disimpan.");
       }
       setModal(null);
       await load();
@@ -107,11 +113,18 @@ export function AdminRoomsManager() {
   }
 
   async function toggleActive(room: AdminRoom) {
+    setError(null);
+    setSuccess(null);
     try {
       await apiFetch(`/api/v1/admin/rooms/${room.id}`, {
         method: "PATCH",
         body: JSON.stringify({ isActive: !room.isActive }),
       });
+      setSuccess(
+        room.isActive !== false
+          ? "Ruang dinonaktifkan."
+          : "Ruang diaktifkan kembali.",
+      );
       await load();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Update status gagal.");
@@ -131,22 +144,27 @@ export function AdminRoomsManager() {
       />
 
       {error && (
-        <div className="alert alert-error" role="alert">
+        <Alert variant="error" className="admin-feedback-alert">
           {error}
-        </div>
+        </Alert>
+      )}
+      {success && (
+        <Alert variant="success" className="admin-feedback-alert">
+          {success}
+        </Alert>
       )}
 
       {loading && <LoadingBlock />}
 
       {!loading && (
         <div className="data-table-wrap">
-          <table className="data-table">
+          <table className="data-table data-table-compact admin-table">
             <thead>
               <tr>
                 <th>Kode</th>
                 <th>Nama</th>
                 <th>Lantai</th>
-                <th>Kapasitas</th>
+                <th>Kap.</th>
                 <th>Status</th>
                 <th aria-label="Aksi" />
               </tr>
@@ -266,7 +284,7 @@ export function AdminRoomsManager() {
                   className="btn btn-primary"
                   disabled={saving}
                 >
-                  Simpan
+                  {saving ? "Menyimpan…" : "Simpan"}
                 </button>
               </div>
             </form>

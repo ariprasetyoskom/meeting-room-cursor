@@ -8,6 +8,7 @@ import {
   type Room,
 } from "@/lib/client-api";
 import { formatDateId, formatRange, toDateInputValue } from "@/lib/format";
+import { Alert } from "./ui/Alert";
 import { PageHeader } from "./ui/PageHeader";
 import { LoadingBlock } from "./ui/LoadingBlock";
 
@@ -19,8 +20,10 @@ export function AdminBookingsList() {
   const [status, setStatus] = useState<"" | "confirmed" | "cancelled">("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState("");
+  const [cancelling, setCancelling] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -40,6 +43,7 @@ export function AdminBookingsList() {
       setBookings(bookingRes.bookings);
       setRooms(Object.fromEntries(roomRes.rooms.map((r) => [r.id, r])));
     } catch (e) {
+      setSuccess(null);
       setError(e instanceof ApiError ? e.message : "Gagal memuat booking.");
     } finally {
       setLoading(false);
@@ -54,11 +58,28 @@ export function AdminBookingsList() {
     setFrom(toDateInputValue(new Date()));
   }, []);
 
+  const filterSummary = [
+    from && to
+      ? `Rentang ${formatDateId(`${from}T12:00:00+07:00`)} – ${formatDateId(`${to}T12:00:00+07:00`)}`
+      : null,
+    status === "confirmed"
+      ? "Status: confirmed"
+      : status === "cancelled"
+        ? "Status: cancelled"
+        : "Status: semua",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   async function confirmCancel() {
     if (!cancelId || !cancelReason.trim()) {
+      setSuccess(null);
       setError("Alasan wajib untuk pembatalan admin (BR-08).");
       return;
     }
+    setCancelling(true);
+    setError(null);
+    setSuccess(null);
     try {
       await apiFetch(`/api/v1/bookings/${cancelId}/cancel`, {
         method: "POST",
@@ -66,9 +87,12 @@ export function AdminBookingsList() {
       });
       setCancelId(null);
       setCancelReason("");
+      setSuccess("Booking dibatalkan. Entri audit tercatat.");
       await load();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Pembatalan gagal.");
+    } finally {
+      setCancelling(false);
     }
   }
 
@@ -115,53 +139,82 @@ export function AdminBookingsList() {
         <button type="button" className="btn btn-secondary" onClick={load}>
           Terapkan
         </button>
+        {filterSummary ? (
+          <p className="toolbar-summary">{filterSummary}</p>
+        ) : null}
       </div>
 
       {error && (
-        <div className="alert alert-error" role="alert">
+        <Alert variant="error" className="admin-feedback-alert">
           {error}
-        </div>
+        </Alert>
+      )}
+      {success && (
+        <Alert variant="success" className="admin-feedback-alert">
+          {success}
+        </Alert>
       )}
 
       {loading && <LoadingBlock />}
 
-      {!loading && (
-        <ul className="booking-cards">
-          {bookings.map((b) => (
-            <li key={b.id} className="booking-card-item">
-              <div>
-                <h3>{b.title}</h3>
-                <p className="text-muted">
-                  {rooms[b.roomId]?.name ?? b.roomId} ·{" "}
-                  {formatDateId(b.startAt)} · {formatRange(b.startAt, b.endAt)}
-                </p>
-                <p className="text-muted">
-                  Organizer: {b.organizerName} ·{" "}
-                  <span
-                    className={`badge ${b.status === "confirmed" ? "badge-success" : "badge-muted"}`}
-                  >
-                    {b.status}
-                  </span>
-                </p>
-              </div>
-              {b.status === "confirmed" && (
-                <button
-                  type="button"
-                  className="btn btn-danger btn-sm"
-                  onClick={() => {
-                    setCancelId(b.id);
-                    setCancelReason("");
-                  }}
-                >
-                  Batalkan (admin)
-                </button>
-              )}
-            </li>
-          ))}
-          {bookings.length === 0 && (
-            <p className="text-muted">Tidak ada booking untuk filter ini.</p>
-          )}
-        </ul>
+      {!loading && bookings.length === 0 && (
+        <div className="empty-state">
+          <p>Tidak ada booking untuk filter ini.</p>
+        </div>
+      )}
+
+      {!loading && bookings.length > 0 && (
+        <div className="data-table-wrap">
+          <table className="data-table data-table-compact admin-table">
+            <thead>
+              <tr>
+                <th>Judul</th>
+                <th>Ruang</th>
+                <th>Waktu (WIB)</th>
+                <th>Organizer</th>
+                <th>Status</th>
+                <th aria-label="Aksi" />
+              </tr>
+            </thead>
+            <tbody>
+              {bookings.map((b) => (
+                <tr key={b.id}>
+                  <td>{b.title}</td>
+                  <td>{rooms[b.roomId]?.name ?? b.roomId.slice(0, 8)}</td>
+                  <td>
+                    {formatDateId(b.startAt)}
+                    <br />
+                    <span className="text-muted">{formatRange(b.startAt, b.endAt)}</span>
+                  </td>
+                  <td>{b.organizerName}</td>
+                  <td>
+                    <span
+                      className={`badge ${b.status === "confirmed" ? "badge-success" : "badge-muted"}`}
+                    >
+                      {b.status}
+                    </span>
+                  </td>
+                  <td className="admin-table-actions">
+                    {b.status === "confirmed" ? (
+                      <button
+                        type="button"
+                        className="btn btn-danger btn-sm"
+                        onClick={() => {
+                          setCancelId(b.id);
+                          setCancelReason("");
+                        }}
+                      >
+                        Batalkan
+                      </button>
+                    ) : (
+                      <span className="text-muted">—</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {cancelId && (
@@ -186,6 +239,7 @@ export function AdminBookingsList() {
                 type="button"
                 className="btn btn-secondary"
                 onClick={() => setCancelId(null)}
+                disabled={cancelling}
               >
                 Batal
               </button>
@@ -193,8 +247,9 @@ export function AdminBookingsList() {
                 type="button"
                 className="btn btn-danger"
                 onClick={confirmCancel}
+                disabled={cancelling}
               >
-                Batalkan
+                {cancelling ? "Membatalkan…" : "Batalkan"}
               </button>
             </div>
           </div>
