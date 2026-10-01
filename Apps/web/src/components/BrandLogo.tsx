@@ -1,15 +1,21 @@
 type Props = {
   size?: number;
+  /** Accessible name for the mark (default: meeting-room booking). */
+  label?: string;
 };
 
-export function BrandLogo({ size = 36 }: Props) {
+export function BrandLogo({
+  size = 36,
+  label = "Meeting room booking",
+}: Props) {
   return (
     <svg
       width={size}
       height={size}
       viewBox="0 0 40 40"
       fill="none"
-      aria-hidden="true"
+      role="img"
+      aria-label={label}
       className="brand-logo"
     >
       <defs>
@@ -19,16 +25,18 @@ export function BrandLogo({ size = 36 }: Props) {
         </linearGradient>
       </defs>
       <rect width="40" height="40" rx="11" fill="url(#brand-logo-bg)" />
-      <rect x="9" y="11" width="22" height="19" rx="4" stroke="#fff" strokeWidth="2.2" />
-      <path d="M9 17h22" stroke="#fff" strokeWidth="2.2" />
-      <path d="M15 8v5M25 8v5" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" />
-      <path
-        d="m15.5 23.5 3 3 6-6"
-        stroke="#fff"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+      <text
+        x="20"
+        y="27"
+        textAnchor="middle"
+        fill="#fff"
+        fontFamily="system-ui, -apple-system, Segoe UI, sans-serif"
+        fontSize="18"
+        fontWeight="700"
+        letterSpacing="-0.5"
+      >
+        MR
+      </text>
     </svg>
   );
 }
