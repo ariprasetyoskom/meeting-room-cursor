@@ -127,6 +127,11 @@ export const BOARD_CARDS: BoardCard[] = [
     status: "intake",
     title: "[KAD-POC] Brand logo MR monogram + aria-label (automation smoke)",
   },
+  {
+    number: 47,
+    status: "intake",
+    title: "[UI-AUTO] Brand header: Ruang Meeting -> Ruang Meeting Kita",
+  },
 ];
 
 export function filterCards(cards: BoardCard[], query: string): BoardCard[] {
