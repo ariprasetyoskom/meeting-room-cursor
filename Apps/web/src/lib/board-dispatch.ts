@@ -7,6 +7,26 @@ import {
   getActiveLock,
   type DispatchLedger,
 } from "@/lib/board-dispatch-policy";
+import {
+  BOARD_DISPATCH_STAGE,
+  type BoardStatus,
+} from "@/lib/project-board";
+import {
+  appendDevelopmentLog,
+  developmentDataPath,
+} from "@/lib/development-log";
+
+const KAD_LOG_CHANNEL = "kad-dispatch";
+
+export type AutomationWebhookPayload = {
+  source: "kad-v1";
+  correlationId: string;
+  issueNumber: number;
+  repository: string;
+  pipelineStage: typeof BOARD_DISPATCH_STAGE;
+  fromStage: BoardStatus | null;
+  prompt: string;
+};
 
 export class DispatchNotConfiguredError extends Error {
   constructor() {
@@ -44,20 +64,52 @@ function lockTtlMs(): number {
   return Number.isFinite(n) && n > 0 ? n : 4 * 60 * 60 * 1000;
 }
 
-function ledgerPath(): string {
+function legacyLedgerPath(): string {
   return path.join(process.cwd(), ".data", "board-dispatch.json");
+}
+
+function ledgerPath(): string {
+  return developmentDataPath("kad-dispatch-ledger.json");
+}
+
+function parseLedger(raw: string): DispatchLedger {
+  const parsed = JSON.parse(raw) as DispatchLedger;
+  return {
+    active: parsed.active ?? null,
+    lastDispatchAtByIssue: parsed.lastDispatchAtByIssue ?? {},
+  };
 }
 
 async function readLedger(): Promise<DispatchLedger> {
   try {
     const raw = await readFile(ledgerPath(), "utf8");
-    const parsed = JSON.parse(raw) as DispatchLedger;
-    return {
-      active: parsed.active ?? null,
-      lastDispatchAtByIssue: parsed.lastDispatchAtByIssue ?? {},
-    };
+    return parseLedger(raw);
   } catch {
-    return createEmptyLedger();
+    try {
+      const raw = await readFile(legacyLedgerPath(), "utf8");
+      const ledger = parseLedger(raw);
+      await writeLedger(ledger);
+      return ledger;
+    } catch {
+      return createEmptyLedger();
+    }
+  }
+}
+
+async function logKad(
+  level: "info" | "warn" | "error",
+  event: string,
+  data?: Record<string, unknown>,
+): Promise<void> {
+  try {
+    await appendDevelopmentLog({
+      channel: KAD_LOG_CHANNEL,
+      level,
+      event,
+      data,
+    });
+  } catch {
+    /* logging must not break dispatch */
   }
 }
 
@@ -121,30 +173,39 @@ export async function fetchGitHubIssue(
   return data;
 }
 
-export function buildAgentPrompt(issue: GitHubIssueSnapshot, repo: string): string {
+export function buildAgentPrompt(
+  issue: GitHubIssueSnapshot,
+  repo: string,
+  fromStage: BoardStatus | null,
+): string {
   const body = issue.body?.trim() || "(tidak ada deskripsi)";
+  const fromLine = fromStage
+    ? `Kartu kanban dipindah dari **${fromStage}** ke **${BOARD_DISPATCH_STAGE}**.`
+    : `Stage kanban: **${BOARD_DISPATCH_STAGE}**.`;
   return [
     `Kerjakan GitHub issue #${issue.number} di repo ${repo}.`,
     `Judul: ${issue.title}`,
     `URL: ${issue.html_url}`,
+    "",
+    fromLine,
+    "Alur papan: Intake → Plan → Development → Test → Audit → Human Clarify → Human QA → Done.",
+    "Kamu dipanggil pada **Development** (implementasi). Setelah selesai, operator geser ke Test/Audit; jangan loncat stage sendiri.",
     "",
     "Acceptance / deskripsi issue:",
     body,
     "",
     "Aturan:",
     "- Branch: agent/issue-" + issue.number,
-    "- Implementasi + test relevan; jangan merge ke main.",
+    "- Selaras ORCH: tulis dokumen agent + development per stage bila skill devops-agent dipakai.",
+    "- Implementasi + test relevan; jangan merge ke main/master.",
     "- Buka pull request; komentari di PR jika blocker.",
     "- Jangan ubah scope di luar issue.",
   ].join("\n");
 }
 
-async function postAutomationWebhook(payload: {
-  issueNumber: number;
-  repository: string;
-  prompt: string;
-  correlationId: string;
-}): Promise<void> {
+async function postAutomationWebhook(
+  payload: AutomationWebhookPayload,
+): Promise<void> {
   const url = process.env.CURSOR_AUTOMATION_WEBHOOK_URL?.trim();
   const secret = process.env.CURSOR_AUTOMATION_WEBHOOK_SECRET?.trim();
   if (!url || !secret) {
@@ -160,9 +221,15 @@ async function postAutomationWebhook(payload: {
     body: JSON.stringify(payload),
   });
   if (!res.ok) {
-    throw new DispatchWebhookError(
+    const err = new DispatchWebhookError(
       `Webhook Automation gagal (HTTP ${res.status}).`,
     );
+    await logKad("error", "dispatch.webhook_failed", {
+      issueNumber: payload.issueNumber,
+      correlationId: payload.correlationId,
+      httpStatus: res.status,
+    });
+    throw err;
   }
 }
 
@@ -172,6 +239,7 @@ export type DispatchStatus = {
   activeIssueNumber: number | null;
   correlationId: string | null;
   repository: string;
+  pipelineStage: typeof BOARD_DISPATCH_STAGE;
 };
 
 export async function getDispatchStatus(): Promise<DispatchStatus> {
@@ -189,6 +257,7 @@ export async function getDispatchStatus(): Promise<DispatchStatus> {
     activeIssueNumber: active?.issueNumber ?? null,
     correlationId: active?.correlationId ?? null,
     repository: githubRepo(),
+    pipelineStage: BOARD_DISPATCH_STAGE,
   };
 }
 
@@ -200,6 +269,7 @@ export type DispatchResult = {
 
 export async function dispatchBoardIssue(
   issueNumber: number,
+  fromStage: BoardStatus | null = null,
 ): Promise<DispatchResult> {
   if (!dispatchEnabled()) {
     throw new DispatchNotConfiguredError();
@@ -214,19 +284,36 @@ export async function dispatchBoardIssue(
       LOCKED: "Masih ada issue lain yang sedang dikerjakan agent.",
       DEBOUNCE: "Tunggu sebentar sebelum memanggil agent untuk issue yang sama.",
     };
+    await logKad("warn", "dispatch.rejected", {
+      issueNumber,
+      fromStage,
+      code: gate.code,
+    });
     throw new DispatchRejectedError(gate.code, messages[gate.code]);
   }
 
-  const issue = await fetchGitHubIssue(issueNumber);
+  let issue: GitHubIssueSnapshot;
+  try {
+    issue = await fetchGitHubIssue(issueNumber);
+  } catch (e) {
+    await logKad("error", "dispatch.github_failed", {
+      issueNumber,
+      message: e instanceof Error ? e.message : "unknown",
+    });
+    throw e;
+  }
   const repo = githubRepo();
   const correlationId = randomUUID();
-  const prompt = buildAgentPrompt(issue, repo);
+  const prompt = buildAgentPrompt(issue, repo, fromStage);
 
   await postAutomationWebhook({
+    source: "kad-v1",
     issueNumber,
     repository: repo,
     prompt,
     correlationId,
+    pipelineStage: BOARD_DISPATCH_STAGE,
+    fromStage,
   });
 
   ledger = {
@@ -242,6 +329,14 @@ export async function dispatchBoardIssue(
   };
   await writeLedger(ledger);
 
+  await logKad("info", "dispatch.accepted", {
+    issueNumber,
+    correlationId,
+    fromStage,
+    repository: repo,
+    issueTitle: issue.title,
+  });
+
   return {
     correlationId,
     issueNumber,
@@ -252,6 +347,11 @@ export async function dispatchBoardIssue(
 /** Lepas lock aktif (opsional, v1.1 UI). */
 export async function clearDispatchLock(): Promise<void> {
   const ledger = await readLedger();
+  const previous = ledger.active;
   ledger.active = null;
   await writeLedger(ledger);
+  await logKad("info", "lock.cleared", {
+    previousIssueNumber: previous?.issueNumber ?? null,
+    previousCorrelationId: previous?.correlationId ?? null,
+  });
 }

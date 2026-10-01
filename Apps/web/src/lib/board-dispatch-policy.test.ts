@@ -7,11 +7,12 @@ import {
 } from "./board-dispatch-policy";
 
 describe("board dispatch policy", () => {
-  it("only triggers when entering in_progress", () => {
-    expect(shouldTriggerDispatch("todo", "in_progress")).toBe(true);
-    expect(shouldTriggerDispatch("done", "in_progress")).toBe(true);
-    expect(shouldTriggerDispatch("in_progress", "done")).toBe(false);
-    expect(shouldTriggerDispatch("in_progress", "in_progress")).toBe(false);
+  it("only triggers when entering development", () => {
+    expect(shouldTriggerDispatch("intake", "development")).toBe(true);
+    expect(shouldTriggerDispatch("plan", "development")).toBe(true);
+    expect(shouldTriggerDispatch("done", "development")).toBe(true);
+    expect(shouldTriggerDispatch("development", "test")).toBe(false);
+    expect(shouldTriggerDispatch("development", "development")).toBe(false);
   });
 
   it("blocks epic #30", () => {

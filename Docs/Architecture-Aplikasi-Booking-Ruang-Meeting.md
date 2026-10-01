@@ -4,10 +4,10 @@
 | Metadata | |
 |----------|---|
 | **Dokumen** | Architecture-Aplikasi-Booking-Ruang-Meeting |
-| **Versi** | **1.3** |
-| **Tanggal** | 30 September 2026 |
-| **Status** | Selaras implementasi MVP — PRD v1.2, BRD v1.2 |
-| **Dokumen Terkait** | [BRD](./BRD-Aplikasi-Booking-Ruang-Meeting.md) · [PRD](./PRD-Aplikasi-Booking-Ruang-Meeting.md) · [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md) |
+| **Versi** | **1.4** |
+| **Tanggal** | 1 Oktober 2026 |
+| **Status** | Selaras implementasi MVP — PRD v1.2, BRD v1.2; admin orchestration (KAD) |
+| **Dokumen Terkait** | [BRD](./BRD-Aplikasi-Booking-Ruang-Meeting.md) · [PRD](./PRD-Aplikasi-Booking-Ruang-Meeting.md) · [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md) · [Architecture Development Orchestration](./Architecture-Development-Orchestration.md) |
 
 ---
 
@@ -100,8 +100,14 @@ UI/UX detail: [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md) · status fit
 | Area | Route | API utama |
 |------|-------|-----------|
 | Employee | `/book`, `/rooms`, `/bookings`, `/login` | `GET/POST /api/v1/bookings`, `GET /api/v1/rooms`, `GET /api/v1/me` |
-| Admin | `/admin/rooms`, `/admin/bookings`, `/admin/audit` | `/api/v1/admin/rooms`, `.../bookings`, `.../audit-logs` |
+| Admin | `/admin/rooms`, `/admin/bookings`, `/admin/audit`, `/admin/scheduler`, `/admin/board` | `/api/v1/admin/...`, `POST/GET/DELETE .../board/dispatch` |
 | Ops | — | `GET /api/health` |
+
+Admin portal dev: **`npm run dev:admin`** → port **3001** (`NEXT_PUBLIC_ADMIN_PORTAL_URL`).
+
+### 3.3.2 Orkestrasi development (admin)
+
+Di luar domain booking, admin portal memuat **papan pipeline** dan **dispatch agent** (KAD). Arsitektur lengkap, log terpusat, dan pemetaan ORCH: [Architecture-Development-Orchestration.md](./Architecture-Development-Orchestration.md). Log operasional: `Development/logs/` (root repo, gitignored).
 
 ### 3.4 Tech Stack (Single Source of Truth)
 

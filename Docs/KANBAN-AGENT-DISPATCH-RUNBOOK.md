@@ -6,8 +6,33 @@ Selaras [PRD-Kanban-Agent-Dispatch.md](./PRD-Kanban-Agent-Dispatch.md) v1.0.
 
 1. Di Cursor: buat **Automation baru** dengan pemicu **Incoming HTTP webhook**.
 2. Repo: `ariprasetyoskom/meeting-room-cursor`, branch kerja (mis. `cursor/meeting-room-web-scaffold`).
-3. Instruksi agent (ringkas): jalankan `prompt` dari body webhook; kerjakan issue; buka PR; jangan merge.
+3. Instruksi agent (salin ke Automation):
+
+   ```text
+   Terima POST JSON. Baca field "prompt" dan kerjakan persis isinya pada repo yang disebut.
+   Field pipelineStage selalu "development" untuk dispatch kanban v1.
+   Jangan merge ke main/master; buka PR di branch agent/issue-<n>.
+   ```
+
 4. Setelah disimpan, salin **URL webhook** dan **secret** ke server (bukan ke browser).
+
+### Body webhook (contoh)
+
+Server mengirim:
+
+```json
+{
+  "source": "kad-v1",
+  "correlationId": "uuid",
+  "issueNumber": 35,
+  "repository": "ariprasetyoskom/meeting-room-cursor",
+  "pipelineStage": "development",
+  "fromStage": "intake",
+  "prompt": "… teks lengkap untuk agent …"
+}
+```
+
+Automation cukup memakai `prompt`; field lain untuk log/observability.
 
 ## 2. Env server (`Apps/web/.env.local`)
 
@@ -26,7 +51,7 @@ Restart `npm run dev:admin` setelah mengubah env.
 ## 3. Uji manual
 
 1. Buka http://localhost:3001/admin/board (sesi admin).
-2. Geser issue **#35** dari Todo → **In Progress**.
+2. Geser issue **#35** dari **Intake** (atau **Plan**) → **Development**.
 3. Harapan: toast sukses “Agent dipanggil #35”; banner menampilkan `correlationId`.
 4. Geser **#36** saat #35 masih aktif → kartu kembali; pesan lock.
 5. Epic **#30** → ditolak (geser sub-issue saja).
@@ -43,4 +68,4 @@ DELETE /api/v1/admin/board/dispatch
 
 (dengan header dev admin / session admin)
 
-Ledger: `Apps/web/.data/board-dispatch.json` (gitignored).
+Log & ledger terpusat: `Development/logs/` — `kad-dispatch.jsonl` (event), `kad-dispatch-ledger.json` (lock). Legacy `Apps/web/.data/` dimigrasi otomatis saat baca.

@@ -7,9 +7,9 @@ import {
 } from "./project-board";
 
 describe("project board", () => {
-  it("starts with the Project #1 column counts", () => {
-    expect(BOARD_CARDS.filter((card) => card.status === "todo")).toHaveLength(34);
-    expect(BOARD_CARDS.filter((card) => card.status === "in_progress")).toHaveLength(2);
+  it("starts with pipeline column counts", () => {
+    expect(BOARD_CARDS.filter((card) => card.status === "intake")).toHaveLength(34);
+    expect(BOARD_CARDS.filter((card) => card.status === "development")).toHaveLength(2);
     expect(BOARD_CARDS.filter((card) => card.status === "done")).toHaveLength(4);
   });
 
@@ -22,7 +22,7 @@ describe("project board", () => {
   it("moves a card without changing the others", () => {
     const next = moveCard(BOARD_CARDS, 35, "done");
     expect(next.find((card) => card.number === 35)?.status).toBe("done");
-    expect(next.find((card) => card.number === 30)?.status).toBe("in_progress");
+    expect(next.find((card) => card.number === 30)?.status).toBe("development");
   });
 
   it("counts closed UI sub-issues for the epic bar", () => {

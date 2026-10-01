@@ -21,6 +21,7 @@ type DispatchStatus = {
   activeIssueNumber: number | null;
   correlationId: string | null;
   repository: string;
+  pipelineStage?: string;
 };
 
 export function ProjectBoard() {
@@ -34,6 +35,7 @@ export function ProjectBoard() {
   );
   const [boardError, setBoardError] = useState<string | null>(null);
   const [dispatching, setDispatching] = useState<number | null>(null);
+  const [clearingLock, setClearingLock] = useState(false);
 
   const refreshDispatchStatus = useCallback(async () => {
     try {
@@ -93,7 +95,7 @@ export function ProjectBoard() {
         }>("/api/v1/admin/board/dispatch", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ issueNumber: number }),
+          body: JSON.stringify({ issueNumber: number, fromStage: from }),
         });
         setLive(
           `Agent dipanggil untuk #${result.issueNumber} (${result.correlationId.slice(0, 8)}…).`,
@@ -106,7 +108,7 @@ export function ProjectBoard() {
             ? e.message
             : "Gagal memanggil agent. Kartu dikembalikan.";
         setBoardError(message);
-        setLive(`#${number} tidak pindah ke In Progress: ${message}`);
+        setLive(`#${number} tidak pindah ke Development: ${message}`);
       } finally {
         setDispatching(null);
       }
@@ -114,12 +116,32 @@ export function ProjectBoard() {
     [cards, dispatchStatus?.enabled, refreshDispatchStatus],
   );
 
+  const clearActiveLock = useCallback(async () => {
+    setClearingLock(true);
+    setBoardError(null);
+    try {
+      await apiFetch<{ cleared: boolean }>("/api/v1/admin/board/dispatch", {
+        method: "DELETE",
+      });
+      setLive("Lock dispatch dilepas.");
+      await refreshDispatchStatus();
+    } catch (e) {
+      const message =
+        e instanceof ApiError ? e.message : "Gagal melepas lock dispatch.";
+      setBoardError(message);
+    } finally {
+      setClearingLock(false);
+    }
+  }, [refreshDispatchStatus]);
+
+  const activeAgentIssue = dispatchStatus?.activeIssueNumber ?? null;
+
   return (
     <section className="project-board" aria-label="Papan meeting-room-cursor">
       <div className="project-board-toolbar">
         <h1 className="project-board-title">{BOARD_REPO}</h1>
         <div className="project-board-views">
-          <span className="project-board-view-current">View 1</span>
+          <span className="project-board-view-current">Auto development</span>
         </div>
         <label className="project-board-filter">
           <span className="sr-only">Filter kartu</span>
@@ -132,18 +154,34 @@ export function ProjectBoard() {
         </label>
       </div>
 
+      <p className="project-board-pipeline text-muted" aria-hidden="true">
+        {BOARD_COLUMNS.map((column) => column.label).join(" → ")}
+      </p>
+
       {dispatchStatus?.enabled && (
-        <p className="project-board-dispatch-hint text-muted">
-          Geser ke <strong>In Progress</strong> memanggil agent Cursor
-          {dispatchStatus.configured
-            ? dispatchStatus.activeIssueNumber
-              ? ` (aktif: #${dispatchStatus.activeIssueNumber})`
-              : " (siap)"
-            : " — webhook belum dikonfigurasi di server"}
-          . Lihat{" "}
-          <a href="/admin/scheduler">Scheduler</a> · runbook di{" "}
-          <code>Docs/KANBAN-AGENT-DISPATCH-RUNBOOK.md</code>.
-        </p>
+        <div className="project-board-dispatch-row">
+          <p className="project-board-dispatch-hint text-muted">
+            Geser ke <strong>Development</strong> memanggil agent Cursor
+            {dispatchStatus.configured
+              ? activeAgentIssue
+                ? ` (aktif: #${activeAgentIssue})`
+                : " (siap)"
+              : " — webhook belum dikonfigurasi di server"}
+            . Lihat{" "}
+            <a href="/admin/scheduler">Scheduler</a> · runbook di{" "}
+            <code>Docs/KANBAN-AGENT-DISPATCH-RUNBOOK.md</code>.
+          </p>
+          {activeAgentIssue != null && (
+            <button
+              type="button"
+              className="project-board-clear-lock"
+              disabled={clearingLock}
+              onClick={() => void clearActiveLock()}
+            >
+              {clearingLock ? "Melepas…" : "Lepas lock"}
+            </button>
+          )}
+        </div>
       )}
 
       {boardError && (
@@ -156,7 +194,8 @@ export function ProjectBoard() {
         {live}
       </p>
 
-      <div className="project-board-columns">
+      <div className="project-board-scroll">
+        <div className="project-board-columns">
         {BOARD_COLUMNS.map((column) => {
           const items = visible
             .filter((card) => card.status === column.id)
@@ -166,7 +205,7 @@ export function ProjectBoard() {
           return (
             <div
               key={column.id}
-              className={`project-board-column ${dropTarget === column.id ? "is-drop-target" : ""}`}
+              className={`project-board-column ${column.humanGate ? "is-human-gate" : ""} ${dropTarget === column.id ? "is-drop-target" : ""}`}
               onDragOver={(event) => {
                 event.preventDefault();
                 setDropTarget(column.id);
@@ -197,7 +236,7 @@ export function ProjectBoard() {
                 {items.map((card) => (
                   <li key={card.number}>
                     <article
-                      className={`project-board-card ${dragging === card.number ? "is-dragging" : ""} ${dispatching === card.number ? "is-dispatching" : ""}`}
+                      className={`project-board-card ${dragging === card.number ? "is-dragging" : ""} ${dispatching === card.number ? "is-dispatching" : ""} ${activeAgentIssue === card.number ? "is-agent-active" : ""}`}
                       draggable={dispatching !== card.number}
                       tabIndex={0}
                       aria-label={`${BOARD_REPO} #${card.number}. ${card.title}. ${column.label}`}
@@ -231,6 +270,9 @@ export function ProjectBoard() {
                         </span>
                       </div>
                       <h3>{card.title}</h3>
+                      {activeAgentIssue === card.number && (
+                        <p className="project-board-agent-badge">Agent aktif</p>
+                      )}
                       {card.number === 30 && (
                         <div className="project-board-progress">
                           <span>
@@ -251,6 +293,7 @@ export function ProjectBoard() {
             </div>
           );
         })}
+        </div>
       </div>
     </section>
   );

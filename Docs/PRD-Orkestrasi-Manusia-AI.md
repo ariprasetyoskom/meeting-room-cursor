@@ -5,12 +5,12 @@
 |----------|---|
 | **Dokumen** | PRD-Orkestrasi-Manusia-AI |
 | **Identitas PRD** | **ORCH** |
-| **Versi** | **1.3** |
-| **Tanggal** | 30 September 2026 |
+| **Versi** | **1.4** |
+| **Tanggal** | 1 Oktober 2026 |
 | **Status** | Draft — siap ditinjau Product |
 | **Pemohon** | Sayan |
 | **Bahasa** | Indonesia |
-| **Dokumen Terkait** | [PRD fase platform (contoh input)](./000_platform_setup/PRD_platform_setup_development_phase.md) · [PRD platform](./000_platform_setup/PRD-Platform-Environment-Setup.md) · [Agentic](../Agentic/README.md) |
+| **Dokumen Terkait** | [Architecture Development Orchestration](./Architecture-Development-Orchestration.md) · [PRD KAD](./PRD-Kanban-Agent-Dispatch.md) · [PRD fase platform (contoh input)](./000_platform_setup/PRD_platform_setup_development_phase.md) · [PRD platform](./000_platform_setup/PRD-Platform-Environment-Setup.md) · [Agentic](../Agentic/README.md) · [Development](../Development/README.md) |
 
 ---
 
@@ -149,6 +149,24 @@ Dokumen development tidak memuat **Verdict**. Dokumen agent tidak memuat perinta
 
 Gate menolak packet jika bagian dokumen agent kosong. Verdict `pass` juga ditolak jika dokumen development tidak ada. Verdict `clarify` sebelum ada perubahan boleh tanpa dokumen development.
 
+### 4.5 Papan kanban admin (visual) vs mesin ORCH
+
+Operator melihat delapan kolom di `/admin/board` (**Intake → Plan → Development → Test → Audit → Human Clarify → Human QA → Done**). Kolom ini **mirror** alur produk; mesin ORCH §4.1 tetap tiga stage (`develop`, `test`, `audit`) plus gate.
+
+| Kolom kanban | Stage / state ORCH | Pelaksana v1.0 |
+|--------------|-------------------|----------------|
+| Intake, Plan | Pra-`develop` (antrean & rencana) | Manusia geser kartu |
+| **Development** | `develop` | **KAD**: geser ke kolom ini memicu agent via webhook ([PRD KAD](./PRD-Kanban-Agent-Dispatch.md)) |
+| Test | `test` | Manusia geser; runner ORCH menyusul |
+| Audit | `audit` | Manusia geser; runner ORCH menyusul |
+| Human Clarify | `waiting_human` (`clarify`) | Manusia jawab inbox; kartu di kolom ini |
+| Human QA | Gate penerimaan manusia pasca-audit | Manusia |
+| Done | `done` | Manusia |
+
+Runner ORCH **memegang** transisi gate (`pass` / `fail` / `clarify`). Kanban v1.0 tidak mengganti orchestrator; hanya **Development** terhubung dispatch. Dokumen stage tetap di `Agentic/runs/{taskId}/` (§4.4).
+
+**Log operasional** (dispatch, lock, event runner) terpusat di `Development/logs/` — bukan dokumen agent/development. Detail: [Architecture Development Orchestration §6](./Architecture-Development-Orchestration.md).
+
 ---
 
 ## 5. Fitur
@@ -161,7 +179,7 @@ Gate menolak packet jika bagian dokumen agent kosong. Verdict `pass` juga ditola
 | **F-04** | Handoff packet | Menyimpan bukti dan verdict tiap stage sebelum transisi (§7) | v0.1 |
 | **F-05** | Inbox klarifikasi | Menampilkan task `waiting_human` dan mencatat jawaban ke packet (§8) | v0.1 |
 | **F-06** | Gate keluar fase | Meminta persetujuan manusia saat semua task fase `done`; tanpa persetujuan, fase berikutnya tetap tertutup | v0.1 |
-| **F-07** | Ledger run | Menyimpan task, stage, attempt, verdict, identitas run agent, dan path packet | v0.1 |
+| **F-07** | Ledger run | Menyimpan task, stage, attempt, verdict, identitas run agent, dan path packet. Event operasional ORCH/KAD append ke `Development/logs/` (selaras KAD-09) | v0.1 |
 | **F-08** | Pilot develop | Satu task kanonik **be** atau **fe** dikerjakan agent develop pada branch task | v0.1 |
 | **F-09** | Gate perintah | Exit code verifikasi menentukan lapis deterministik, tanpa penilaian model | v0.1 |
 | **F-10** | Stage test | Run test terpisah; inputnya packet develop plus kontrak verifikasi | v1.0 |
@@ -195,7 +213,7 @@ Jika agent atau perintah verifikasi menemukan pilihan produk yang belum terkunci
 
 ## 7. Kontrak Handoff Packet
 
-Satu file per stage yang selesai atau berhenti. Lokasi ledger bersifat lokal pada run dan **tidak di-commit**.
+Satu file per stage yang selesai atau berhenti. Lokasi packet/ledger runner bersifat lokal pada run dan **tidak di-commit** (rencana: subfolder di bawah `Development/` selain `logs/` atau `Development/ledger/orch/` — TDD ORCH). **Log event** (bukan packet) append ke `Development/logs/*.jsonl` ([Architecture §6](./Architecture-Development-Orchestration.md)).
 
 Field wajib:
 
@@ -372,7 +390,9 @@ Hanya OQ-1–OQ-3 yang terbuka. OR-01–OR-16 sudah terkunci untuk versi ini.
 | **Acuan** | Dokumen yang wajib dibaca pelaksana sebelum mengisi Yang akan dilakukan. Daftarnya tetap per stage (§4.4). |
 | **Kanonik** | Segmen domain pada task id (`stack`, `be`, `auth`, …). Menentukan kebijakan §6. |
 | **Gate keluar fase** | Persetujuan manusia setelah seluruh task dalam satu fase `done`. |
-| **Ledger** | Catatan lokal run. Bukan bagian dari PRD induk dan tidak di-commit. |
+| **Ledger** | Catatan lokal run (packet + state orchestrator). Bukan bagian dari PRD induk dan tidak di-commit. |
+| **Log terpusat** | `Development/logs/` — event operasional (KAD, nanti ORCH). Terpisah dari dokumen `Agentic/runs/`. |
+| **KAD** | Dispatch kanban kolom Development → Cursor Automation. Bukan mesin gate ORCH. |
 
 ---
 
@@ -384,9 +404,11 @@ Hanya OQ-1–OQ-3 yang terbuka. OR-01–OR-16 sudah terkunci untuk versi ini.
 | PRD platform | [000_platform_setup/PRD-Platform-Environment-Setup.md](./000_platform_setup/PRD-Platform-Environment-Setup.md) | PRD induk contoh |
 | PRD produk booking | [PRD-Aplikasi-Booking-Ruang-Meeting.md](./PRD-Aplikasi-Booking-Ruang-Meeting.md) | Bukan objek ORCH; scope produk tetap di sana |
 | Skill agen dokumen | [Agentic/README.md](../Agentic/README.md) | Pola instruksi peran; bukan mesin gate |
+| Kanban dispatch | [PRD-Kanban-Agent-Dispatch.md](./PRD-Kanban-Agent-Dispatch.md) | Trigger develop via kolom Development |
+| Arsitektur | [Architecture-Development-Orchestration.md](./Architecture-Development-Orchestration.md) | C4, log, pemetaan kanban |
 
 TDD ORCH (schema ledger, pemanggilan SDK, layout runner) menyusul setelah PRD ini disetujui.
 
 ---
 
-*Akhir PRD Orkestrasi Manusia dan AI v1.3.*
+*Akhir PRD Orkestrasi Manusia dan AI v1.4.*

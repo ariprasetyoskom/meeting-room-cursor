@@ -1,28 +1,30 @@
 # Product Requirements Document (PRD)
-# Kanban → Agent Dispatch (In Progress)
+# Kanban → Agent Dispatch (Pipeline Development)
 
 | Metadata | |
 |----------|---|
 | **Dokumen** | PRD-Kanban-Agent-Dispatch |
 | **Identitas PRD** | **KAD** |
-| **Versi** | **1.0** |
-| **Tanggal** | 30 September 2026 |
-| **Status** | v1.0 API + UI — webhook Automation perlu dikonfigurasi |
+| **Versi** | **1.1** |
+| **Tanggal** | 1 Oktober 2026 |
+| **Status** | v1.0 implementasi — papan 8 kolom ORCH + log `Development/logs/` |
 | **Bahasa** | Indonesia |
 | **Pemohon** | Sayan |
-| **Dokumen Terkait** | [GITHUB-PROJECT.md](./GITHUB-PROJECT.md) · [PRD-GitHub-Project-Scheduler.md](./PRD-GitHub-Project-Scheduler.md) · [PRD-Orkestrasi-Manusia-AI.md](./PRD-Orkestrasi-Manusia-AI.md) · [PLAN-MVP-Delivery.md](./PLAN-MVP-Delivery.md) |
+| **Dokumen Terkait** | [Architecture Development Orchestration](./Architecture-Development-Orchestration.md) · [GITHUB-PROJECT.md](./GITHUB-PROJECT.md) · [PRD-GitHub-Project-Scheduler.md](./PRD-GitHub-Project-Scheduler.md) · [PRD-Orkestrasi-Manusia-AI.md](./PRD-Orkestrasi-Manusia-AI.md) · [Development/README.md](../Development/README.md) |
 
 ---
 
 ## 1. Ringkasan
 
-KAD menghubungkan **geser kartu ke kolom In Progress** pada papan admin (`/admin/board`) dengan **pemanggilan agent Cursor baru** yang mengerjakan issue GitHub terkait.
+KAD menghubungkan **geser kartu ke kolom Development** pada papan admin (`/admin/board`) dengan **pemanggilan agent Cursor baru** yang mengerjakan issue GitHub terkait.
 
-Geser kartu **tidak** membangunkan chat Cursor yang sedang terbuka. Yang dijalankan adalah **run agent terpisah** (Cursor Automation dengan pemicu webhook, atau setara lewat Cursor SDK) dengan instruksi yang memuat nomor issue, judul, dan acceptance dari GitHub.
+Papan menampilkan alur **automatic development** delapan kolom: **Intake → Plan → Development → Test → Audit → Human Clarify → Human QA → Done** (selaras visual [PRD ORCH §4.5](./PRD-Orkestrasi-Manusia-AI.md)). Hanya masuk **Development** yang memicu dispatch v1.0.
 
-Scheduler Project (15 menit) tetap **read-only** — hanya laporan In Progress. KAD adalah jalur **event-driven** saat operator atau PO memindahkan kartu.
+Geser kartu **tidak** membangunkan chat Cursor yang sedang terbuka. Yang dijalankan adalah **run agent terpisah** (Cursor Automation webhook) dengan body `kad-v1` (`prompt`, `pipelineStage`, `fromStage`, …).
 
-**v1.0** fokus papan lokal admin portal; menulis balik ke GitHub Project Status opsional v1.1.
+Scheduler Project (15 menit) tetap **read-only** — laporan **In Progress** di GitHub Project #1, bukan kolom pipeline lokal. KAD adalah jalur **event-driven** saat operator geser ke Development.
+
+**v1.0** papan lokal + log terpusat `Development/logs/`; sync GitHub Project Status opsional v1.1.
 
 ---
 
@@ -30,7 +32,7 @@ Scheduler Project (15 menit) tetap **read-only** — hanya laporan In Progress. 
 
 | Tujuan | Metrik sukses v1.0 |
 |--------|---------------------|
-| Geser ke In Progress memicu agent tanpa mengetik perintah manual | ≥ 95% dispatch sukses (HTTP 2xx + run agent started) pada issue valid |
+| Geser ke Development memicu agent tanpa mengetik perintah manual | ≥ 95% dispatch sukses (HTTP 2xx + run agent started) pada issue valid |
 | Tidak ada tumpukan run paralel untuk issue berbeda tanpa keputusan | Maksimal **1** dispatch aktif per workspace/repo pada v1.0 |
 | Operator tahu hasil dispatch | UI menampilkan status: queued, dispatched, rejected, failed |
 | Aman untuk secret | URL webhook dan API key tidak ada di bundle client |
@@ -46,8 +48,8 @@ Scheduler Project (15 menit) tetap **read-only** — hanya laporan In Progress. 
 
 | Persona | Kebutuhan |
 |---------|-----------|
-| **Product / PO** | Geser issue ke In Progress → agent mulai mengerjakan acceptance |
-| **Engineering** | Satu issue aktif; log dispatch; PR dari agent, merge manual |
+| **Product / PO** | Geser issue ke Development → agent mulai implementasi acceptance |
+| **Engineering** | Satu issue aktif; log di `Development/logs/`; PR dari agent, merge manual |
 | **Operator admin** | Feedback jelas bila webhook mati atau issue sudah jalan |
 
 ---
@@ -56,14 +58,16 @@ Scheduler Project (15 menit) tetap **read-only** — hanya laporan In Progress. 
 
 | ID | Keputusan | Implikasi |
 |----|-----------|-----------|
-| **KAD-01** | Hanya transisi **menuju** status `in_progress` yang memicu dispatch. | Todo → In Progress: ya. In Progress → Done: tidak. Done → In Progress: ya (ulang dispatch diizinkan hanya jika tidak ada run aktif untuk issue itu). |
+| **KAD-01** | Hanya transisi **menuju** kolom `development` yang memicu dispatch. | Intake/Plan → Development: ya. Development → Test: tidak. Done → Development: ya (ulang dispatch bila lock/debounce mengizinkan). |
+| **KAD-01b** | Delapan kolom kanban (`intake` … `done`) adalah **mirror visual** alur ORCH; v1.0 hanya Development terhubung webhook. | Test/Audit/Clarify/QA: geser manual sampai runner ORCH (F-KAD-07). |
 | **KAD-02** | Chat IDE saat geser **bukan** target dispatch. | Integrasi lewat Automation webhook atau SDK server-side. |
 | **KAD-03** | **Satu dispatch aktif** global per repo pada v1.0. | Issue B ditolak bila issue A masih `dispatched` / run belum selesai. |
 | **KAD-04** | Agent **tidak** merge ke `main` otomatis. | Deliverable = branch + PR (jika Automation/SDK mengaktifkan `autoCreatePR`). |
 | **KAD-05** | Instruksi agent wajib memuat: `#n`, judul issue, body/acceptance (dari GitHub), link issue. | Server mengambil metadata via GitHub API; browser hanya mengirim `issueNumber`. |
 | **KAD-06** | Secret webhook hanya di server (`Apps/web` env). | Client memanggil `POST /api/v1/admin/board/dispatch` dengan session admin, bukan webhook langsung dari browser ke Cursor. |
 | **KAD-07** | Papan lokal v1.0 **tidak** wajib sync ke GitHub Project saat geser. | Drift board lokal vs Project #1 acceptable v1.0; v1.1 Could menulis Status via API. |
-| **KAD-08** | Issue **#30 epic** tidak auto-dispatch seluruh sub-issue; dispatch hanya issue yang digeser. | Epic tetap kartu biasa kecuali PO explicitly geser epic (opsional block epic di v1.0 — lihat OQ-2). |
+| **KAD-08** | Issue **#30 epic** **ditolak** dispatch otomatis (geser sub-issue #31–#40). | Response EPIC + rollback UI. |
+| **KAD-09** | Log operasional dispatch dan ledger lock di **`Development/logs/`** (bukan `Apps/web/.data/`). | Channel `kad-dispatch.jsonl` + `kad-dispatch-ledger.json`; gitignored kecuali README. |
 
 ---
 
@@ -71,10 +75,11 @@ Scheduler Project (15 menit) tetap **read-only** — hanya laporan In Progress. 
 
 | ID | Fitur | Deskripsi | Rilis |
 |----|-------|-----------|-------|
-| **F-KAD-01** | Hook drop In Progress | Saat kartu masuk kolom In Progress, panggil API dispatch | v1.0 |
+| **F-KAD-01** | Hook drop Development | Saat kartu masuk kolom Development, panggil API dispatch | v1.0 |
+| **F-KAD-01b** | Papan pipeline 8 kolom | Intake … Done; human gate columns highlighted | v1.0 |
 | **F-KAD-02** | API dispatch | Validasi admin, lock satu aktif, fetch issue GitHub, POST ke Automation webhook | v1.0 |
 | **F-KAD-03** | Rollback UI | Jika dispatch ditolak/gagal, kartu kembali ke kolom asal + pesan | v1.0 |
-| **F-KAD-04** | Ledger dispatch | Catat `issueNumber`, waktu, `correlationId`, status run (jika tersedia) | v1.0 |
+| **F-KAD-04** | Log + ledger dispatch | JSONL `Development/logs/kad-dispatch.jsonl`; lock `kad-dispatch-ledger.json` | v1.0 |
 | **F-KAD-05** | Panel status | Di `/admin/board` atau `/admin/scheduler`: dispatch terakhir, run aktif | v1.0 |
 | **F-KAD-06** | Automation template | Instruksi standar: baca issue, kerjakan acceptance, buka PR, jangan merge | v1.0 (dokumen + prefill editor) |
 | **F-KAD-07** | ORCH alignment | Dispatch opsional memetakan issue → task id fase / skill (`devops-agent`, dll.) | v1.1 |
@@ -87,13 +92,13 @@ Scheduler Project (15 menit) tetap **read-only** — hanya laporan In Progress. 
 
 | ID | Requirement | Prioritas | Acceptance |
 |----|-------------|-----------|------------|
-| **FR-KAD-01** | Kartu yang statusnya berubah ke `in_progress` memicu `POST` dispatch | Must | Network tab: satu request; tidak dispatch pada drag dalam kolom yang sama |
-| **FR-KAD-02** | Payload minimal `{ issueNumber: number }` | Must | Server menolak tanpa nomor atau nomor tidak ada di daftar board/Issues |
+| **FR-KAD-01** | Kartu yang statusnya berubah ke `development` memicu `POST` dispatch | Must | Network tab: satu request; tidak dispatch pada drag dalam kolom yang sama |
+| **FR-KAD-02** | Payload `{ issueNumber, fromStage? }` | Must | `fromStage` opsional; masuk log dan prompt agent |
 | **FR-KAD-03** | Hanya role admin (selaras `AdminGuard`) | Must | Non-admin 403 |
 | **FR-KAD-04** | Lock: tolak dispatch baru jika ledger punya entri `active` | Must | Response 409 + pesan; UI rollback |
 | **FR-KAD-05** | Server memanggil GitHub REST `GET /repos/{owner}/{repo}/issues/{n}` | Must | Judul + body masuk prompt webhook |
 | **FR-KAD-06** | Server mem-forward ke URL webhook Automation dengan auth header env | Must | Tanpa log body yang memuat secret |
-| **FR-KAD-07** | Sukses: kartu tetap In Progress; tampilkan “Agent dipanggil #n” | Must | `correlationId` ditampilkan |
+| **FR-KAD-07** | Sukses: kartu tetap Development; badge “Agent aktif”; live region correlationId | Must | Lock tampil di GET dispatch |
 | **FR-KAD-08** | Gagal webhook: kartu revert + alert | Must | State board konsisten dengan sebelum drop |
 | **FR-KAD-09** | Toggle matikan dispatch (`BOARD_AGENT_DISPATCH_ENABLED=false`) | Should | Geser hanya update UI lokal |
 
@@ -106,7 +111,7 @@ Scheduler Project (15 menit) tetap **read-only** — hanya laporan In Progress. 
 | **NFR-KAD-01** | Latency API dispatch (exclude durasi agent) | P95 ≤ 5 s |
 | **NFR-KAD-02** | Idempotency | Dua drop cepat issue sama → satu dispatch (debounce 2 s per issue) |
 | **NFR-KAD-03** | Secret | `CURSOR_AUTOMATION_WEBHOOK_URL`, `CURSOR_AUTOMATION_WEBHOOK_SECRET`, `GH_DISPATCH_PAT` hanya server env |
-| **NFR-KAD-04** | Audit | Ledger append-only di server (file gitignored atau DB opsional v1.1) |
+| **NFR-KAD-04** | Audit | Log append-only `Development/logs/kad-dispatch.jsonl`; tanpa secret di body log |
 | **NFR-KAD-05** | Rate limit GitHub | Cache issue 60 s per nomor pada request berurutan |
 
 ---
@@ -121,8 +126,8 @@ sequenceDiagram
   participant WH as Cursor Automation webhook
   participant AG as Cloud/local agent run
 
-  UI->>UI: drop kartu ke In Progress
-  UI->>API: POST dispatch issueNumber
+  UI->>UI: drop kartu ke Development
+  UI->>API: POST dispatch issueNumber, fromStage
   API->>API: cek admin + lock aktif
   API->>GH: GET issue n
   GH-->>API: title, body, labels
@@ -139,8 +144,10 @@ sequenceDiagram
 | Data kartu | `Apps/web/src/lib/project-board.ts` |
 | API dispatch | `Apps/web/src/app/api/v1/admin/board/dispatch/route.ts` |
 | Konfigurasi | `Apps/web/src/lib/board-dispatch.ts` |
-| Ledger | `Apps/web/.data/board-dispatch.json` (gitignored) atau env-only log v0 |
-| Runbook Automation | `Docs/KANBAN-AGENT-DISPATCH-RUNBOOK.md` (v1.0 deliverable) |
+| Log terpusat | `Development/logs/` via `Apps/web/src/lib/development-log.ts` |
+| Ledger lock | `Development/logs/kad-dispatch-ledger.json` |
+| Arsitektur | [Architecture-Development-Orchestration.md](./Architecture-Development-Orchestration.md) |
+| Runbook Automation | [KANBAN-AGENT-DISPATCH-RUNBOOK.md](./KANBAN-AGENT-DISPATCH-RUNBOOK.md) |
 
 ### 8.1 Isi instruksi Automation (ringkas)
 
@@ -166,6 +173,7 @@ Opsional selaras [PRD ORCH](./PRD-Orkestrasi-Manusia-AI.md): tulis `Agentic/runs
 | `GH_DISPATCH_PAT` | Server `.env` | Ya jika enabled | PAT `repo` read issues; boleh sama pool dengan scheduler |
 | `GITHUB_DISPATCH_REPO` | Server `.env` | Tidak | Default `ariprasetyoskom/meeting-room-cursor` |
 | `BOARD_DISPATCH_LOCK_TTL_MS` | Server `.env` | Tidak | Default 4 jam; lepas lock stale (run zombie) |
+| `DEVELOPMENT_LOG_DIR` | Server `.env` | Tidak | Override folder log; default `<repo>/Development/logs` |
 
 Client **tidak** menyimpan `CURSOR_API_KEY` untuk dispatch v1.0 (webhook Automation sebagai integrasi utama).
 
@@ -187,7 +195,7 @@ Alternatif v1.1: `CURSOR_API_KEY` + Cursor SDK `Agent.prompt` di server — doku
 ## 11. Out of Scope (v1.0)
 
 - Membangunkan tab chat Cursor yang sedang dibuka user
-- Dispatch otomatis untuk semua kartu In Progress saat halaman load
+- Dispatch otomatis untuk semua kartu Development saat halaman load
 - Merge otomatis PR agent
 - Dispatch paralel multi-issue
 - Menutup issue / menulis Done otomatis saat agent selesai
@@ -199,20 +207,21 @@ Alternatif v1.1: `CURSOR_API_KEY` + Cursor SDK `Agent.prompt` di server — doku
 
 | Kejadian | Perilaku UI |
 |----------|-------------|
-| Drop ke In Progress, dispatch ON | Spinner singkat pada kartu; sukses → badge “Agent dipanggil” |
+| Drop ke Development, dispatch ON | Spinner; sukses → badge “Agent aktif”; tombol lepas lock (dev) |
 | 409 lock | Kartu kembali; toast: issue X masih aktif |
 | 503 webhook down | Kartu kembali; toast + link runbook |
 | Dispatch OFF | Geser seperti sekarang (state lokal saja) |
-| Filter / keyboard move | Sama: hanya transisi **ke** In Progress memicu |
+| Filter / keyboard move | Sama: hanya transisi **ke** Development memicu |
 
-Bahasa UI: **Indonesia**. Istilah `In Progress`, `correlationId` boleh tetap EN.
+Bahasa UI: **Indonesia**. Label kolom pipeline EN (`Development`, `Human QA`, …); `correlationId` boleh EN.
 
 ---
 
 ## 13. Kriteria Rilis v1.0
 
 - [ ] `BOARD_AGENT_DISPATCH_ENABLED=true` di staging admin dengan secret terisi
-- [ ] Geser `#35` Todo → In Progress → run Automation terlihat ≤ 30 s
+- [ ] Geser `#35` Intake/Plan → Development → run Automation terlihat ≤ 30 s
+- [ ] Baris baru di `Development/logs/kad-dispatch.jsonl` untuk `dispatch.accepted`
 - [ ] Geser `#36` saat `#35` aktif → 409 + revert kartu
 - [ ] Geser ke Done **tidak** memanggil webhook
 - [ ] Secret tidak muncul di response API atau bundle JS
@@ -226,7 +235,7 @@ Bahasa UI: **Indonesia**. Istilah `In Progress`, `correlationId` boleh tetap EN.
 | ID | Pertanyaan | Status |
 |----|------------|--------|
 | **OQ-1** | Runtime agent: **cloud** (VM Cursor) vs **local** (SDK di mesin admin)? | **Open** — v1.0 usulan: **cloud** via Automation; local hanya dev |
-| **OQ-2** | Block dispatch untuk epic `#30` (hanya sub-issue)? | **Open** — usulan: block epic, allow #31–#40 dan #1–#29 |
+| **OQ-2** | Block dispatch untuk epic `#30` (hanya sub-issue)? | **Locked** — epic #30 ditolak (KAD-08) |
 | **OQ-3** | Setelah agent selesai, apakah kartu auto Done atau menunggu merge PR? | **Open** — usulan v1.0: **manual** Done; v1.1 hook PR merged |
 | **OQ-4** | Satu Automation per repo vs satu Automation per label (`wave1`, `ui-enhance`)? | **Open** |
 
@@ -257,4 +266,4 @@ Bahasa UI: **Indonesia**. Istilah `In Progress`, `correlationId` boleh tetap EN.
 
 ---
 
-*Akhir PRD Kanban Agent Dispatch v1.0.*
+*Akhir PRD Kanban Agent Dispatch v1.1.*

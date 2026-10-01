@@ -1,4 +1,7 @@
-import type { BoardStatus } from "@/lib/project-board";
+import {
+  BOARD_DISPATCH_STAGE,
+  type BoardStatus,
+} from "@/lib/project-board";
 
 export const DISPATCH_EPIC_BLOCK = 30;
 export const DISPATCH_DEBOUNCE_MS = 2000;
@@ -7,7 +10,7 @@ export function shouldTriggerDispatch(
   from: BoardStatus,
   to: BoardStatus,
 ): boolean {
-  return to === "in_progress" && from !== "in_progress";
+  return to === BOARD_DISPATCH_STAGE && from !== BOARD_DISPATCH_STAGE;
 }
 
 export function isEpicDispatchBlocked(issueNumber: number): boolean {

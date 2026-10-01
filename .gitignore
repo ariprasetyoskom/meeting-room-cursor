@@ -24,6 +24,10 @@ Thumbs.db
 *.log
 npm-debug.log*
 
+# Development pipeline logs (keep README)
+Development/logs/*
+!Development/logs/README.md
+
 # Local script / debug output (e.g. gh project item-list)
 .tmp-*.json
 

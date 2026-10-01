@@ -58,9 +58,11 @@ Sumber halaman: [Devops/github-wiki/](../Devops/github-wiki/README.md) — publi
 
 | Dokumen | Versi | Deskripsi |
 |---------|-------|-----------|
-| [PRD-Orkestrasi-Manusia-AI.md](./PRD-Orkestrasi-Manusia-AI.md) | **1.3** | Runner per task: dokumen agent (rencana, verdict) terpisah dari dokumen development (hasil, bukti) |
-| [PRD-Kanban-Agent-Dispatch.md](./PRD-Kanban-Agent-Dispatch.md) | **1.0** | Geser In Progress di `/admin/board` → webhook Cursor Automation → run agent (bukan chat IDE) |
+| [PRD-Orkestrasi-Manusia-AI.md](./PRD-Orkestrasi-Manusia-AI.md) | **1.4** | Runner per task + §4.5 peta kanban 8 kolom vs stage develop/test/audit |
+| [PRD-Kanban-Agent-Dispatch.md](./PRD-Kanban-Agent-Dispatch.md) | **1.1** | Geser ke **Development** di `/admin/board` → webhook `kad-v1` → agent (bukan chat IDE) |
+| [Architecture-Development-Orchestration.md](./Architecture-Development-Orchestration.md) | **1.0** | C4, dispatch, `Development/logs/`, pemetaan kanban ↔ ORCH |
 | [KANBAN-AGENT-DISPATCH-RUNBOOK.md](./KANBAN-AGENT-DISPATCH-RUNBOOK.md) | **1.0** | Setup Automation webhook + env `BOARD_AGENT_DISPATCH_*` |
+| [../Development/README.md](../Development/README.md) | — | Log terpusat alur development (`Development/logs/`) |
 
 ## Agentic — generator dokumen
 
