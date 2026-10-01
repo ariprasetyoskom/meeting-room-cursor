@@ -14,7 +14,12 @@ export type DevLogEntry = {
 /** Folder `Development/logs` di root monorepo (atau `DEVELOPMENT_LOG_DIR`). */
 export function resolveDevelopmentLogDir(): string {
   const override = process.env.DEVELOPMENT_LOG_DIR?.trim();
-  if (override) return path.resolve(override);
+  if (override) {
+    if (/^[a-zA-Z]:[/\\]/.test(override)) {
+      return override.replace(/\//g, "\\");
+    }
+    return path.resolve(override);
+  }
 
   const cwd = process.cwd();
   const fromWebApp = path.resolve(cwd, "..", "..", "Development", "logs");
