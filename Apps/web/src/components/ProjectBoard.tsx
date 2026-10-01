@@ -10,7 +10,10 @@ import {
   type BoardStatus,
   filterCards,
   isBoardDispatchStage,
+  loadPersistedBoardCards,
   moveCard,
+  persistBoardCards,
+  reconcileCardsWithKadCompletions,
   uiEpicProgress,
 } from "@/lib/project-board";
 import { completionStorageKey } from "@/lib/board-dispatch-stages";
@@ -54,8 +57,7 @@ export function ProjectBoard() {
   const [clearingLock, setClearingLock] = useState(false);
   const [detailCard, setDetailCard] = useState<BoardCard | null>(null);
   const suppressCardClickRef = useRef(false);
-  /** Supaya auto-advance Development→Test hanya sekali per completion. */
-  const autoAdvancedDevRef = useRef<Set<string>>(new Set());
+  const [boardReady, setBoardReady] = useState(false);
 
   const refreshDispatchStatus = useCallback(async () => {
     try {
@@ -73,16 +75,29 @@ export function ProjectBoard() {
   }, [refreshDispatchStatus]);
 
   useEffect(() => {
+    setCards(loadPersistedBoardCards());
+    setBoardReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!boardReady) return;
+    persistBoardCards(cards);
+  }, [cards, boardReady]);
+
+  useEffect(() => {
     if (!dispatchStatus?.enabled) return;
+    const completed = dispatchStatus.completedByIssue ?? {};
     const needsPoll =
       dispatchStatus.activeIssueNumber != null ||
-      cards.some(
-        (card) =>
-          card.status === "development" &&
-          !dispatchStatus.completedByIssue?.[
-            completionStorageKey(card.number, "development")
-          ],
-      );
+      cards.some((card) => {
+        if (card.status === "development") {
+          return !completed[completionStorageKey(card.number, "development")];
+        }
+        if (card.status === "test") {
+          return !completed[completionStorageKey(card.number, "test")];
+        }
+        return false;
+      });
     if (!needsPoll) return;
     const id = window.setInterval(() => {
       void refreshDispatchStatus();
@@ -98,28 +113,33 @@ export function ProjectBoard() {
 
   useEffect(() => {
     const completed = dispatchStatus?.completedByIssue ?? {};
-    const toAdvance = cards.filter((card) => {
-      if (card.status !== "development") return false;
-      const key = completionStorageKey(card.number, "development");
-      return Boolean(completed[key] && !autoAdvancedDevRef.current.has(key));
-    });
-    if (toAdvance.length === 0) return;
+    if (Object.keys(completed).length === 0) return;
 
-    for (const card of toAdvance) {
-      autoAdvancedDevRef.current.add(
-        completionStorageKey(card.number, "development"),
-      );
-    }
     setCards((prev) => {
-      let next = prev;
-      for (const card of toAdvance) {
-        next = moveCard(next, card.number, "test");
+      const next = reconcileCardsWithKadCompletions(prev, completed);
+      if (next === prev) return prev;
+
+      const advanced = prev
+        .filter((card) => {
+          const before = card.status;
+          const after = next.find((c) => c.number === card.number)?.status;
+          return after && after !== before;
+        })
+        .map((card) => {
+          const after = next.find((c) => c.number === card.number)!.status;
+          const label =
+            BOARD_COLUMNS.find((column) => column.id === after)?.label ?? after;
+          return `#${card.number} → ${label}`;
+        });
+
+      if (advanced.length > 0) {
+        setLive(
+          `Kanban selaras ledger KAD: ${advanced.join("; ")}.`,
+        );
       }
       return next;
     });
-    const nums = toAdvance.map((card) => `#${card.number}`).join(", ");
-    setLive(`${nums} otomatis pindah ke Test setelah Development selesai.`);
-  }, [cards, dispatchStatus?.completedByIssue]);
+  }, [dispatchStatus?.completedByIssue]);
 
   const visible = useMemo(() => filterCards(cards, query), [cards, query]);
   const progress = uiEpicProgress(cards);
@@ -173,11 +193,6 @@ export function ProjectBoard() {
             pipelineStage,
           }),
         });
-        if (pipelineStage === "development") {
-          autoAdvancedDevRef.current.delete(
-            completionStorageKey(number, "development"),
-          );
-        }
         setLive(
           `Agent dipanggil untuk #${result.issueNumber} (${result.correlationId.slice(0, 8)}…).`,
         );
@@ -260,9 +275,9 @@ export function ProjectBoard() {
         <div className="project-board-dispatch-row">
           <p className="project-board-dispatch-hint text-muted">
             Geser ke <strong>Development</strong> atau <strong>Test</strong>{" "}
-            memanggil agent Cursor. Selesai Development → kartu otomatis ke{" "}
-            <strong>Test</strong> + agent Test dipanggil otomatis (satu
-            Automation, <code>pipelineStage</code> berbeda)
+            memanggil agent Cursor. Selesai Development → <strong>Test</strong>{" "}
+            (+ agent Test otomatis); selesai Test → <strong>Audit</strong>.
+            Posisi kartu disimpan di browser (refresh tidak kembali ke Intake)
             {dispatchStatus.configured
               ? activeAgentIssue
                 ? ` (aktif: #${activeAgentIssue})`

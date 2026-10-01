@@ -147,6 +147,81 @@ export function moveCard(
   );
 }
 
+const BOARD_STATUS_RANK: Record<BoardStatus, number> = Object.fromEntries(
+  BOARD_COLUMNS.map((column, index) => [column.id, index]),
+) as Record<BoardStatus, number>;
+
+/** Kolom minimum dari ledger KAD (development selesai → Test; test selesai → Audit). */
+export function minBoardStatusFromKadCompletions(
+  issueNumber: number,
+  completedByIssue: Record<string, unknown>,
+): BoardStatus | null {
+  if (completedByIssue[`${issueNumber}:test`]) return "audit";
+  if (completedByIssue[`${issueNumber}:development`]) return "test";
+  return null;
+}
+
+/** Geser kartu maju jika ledger KAD sudah lewat stage kolom saat ini (mis. refresh → Intake). */
+export function reconcileCardsWithKadCompletions(
+  cards: BoardCard[],
+  completedByIssue: Record<string, unknown>,
+): BoardCard[] {
+  let changed = false;
+  const next = cards.map((card) => {
+    const required = minBoardStatusFromKadCompletions(
+      card.number,
+      completedByIssue,
+    );
+    if (!required) return card;
+    if (BOARD_STATUS_RANK[card.status] >= BOARD_STATUS_RANK[required]) {
+      return card;
+    }
+    changed = true;
+    return { ...card, status: required };
+  });
+  return changed ? next : cards;
+}
+
+const BOARD_PERSIST_KEY = "mrb_project_board_v1";
+
+type BoardPersistPayload = {
+  v: 1;
+  statuses: Record<string, BoardStatus>;
+};
+
+export function loadPersistedBoardCards(): BoardCard[] {
+  if (typeof window === "undefined") return BOARD_CARDS;
+  try {
+    const raw = window.localStorage.getItem(BOARD_PERSIST_KEY);
+    if (!raw) return BOARD_CARDS;
+    const data = JSON.parse(raw) as BoardPersistPayload;
+    if (data.v !== 1 || !data.statuses) return BOARD_CARDS;
+    return BOARD_CARDS.map((card) => {
+      const saved = data.statuses[String(card.number)];
+      if (!saved || !BOARD_STATUS_RANK[saved]) return card;
+      return { ...card, status: saved };
+    });
+  } catch {
+    return BOARD_CARDS;
+  }
+}
+
+export function persistBoardCards(cards: BoardCard[]): void {
+  if (typeof window === "undefined") return;
+  const statuses: Record<string, BoardStatus> = {};
+  for (const card of cards) {
+    statuses[String(card.number)] = card.status;
+  }
+  try {
+    window.localStorage.setItem(
+      BOARD_PERSIST_KEY,
+      JSON.stringify({ v: 1, statuses } satisfies BoardPersistPayload),
+    );
+  } catch {
+    /* quota / private mode */
+  }
+}
+
 /** Sub-issue UI #31–#40 yang sudah Done, untuk bar progres epic #30. */
 export function uiEpicProgress(cards: BoardCard[]): { done: number; total: number } {
   const children = cards.filter((card) => card.number >= 31 && card.number <= 40);

@@ -3,6 +3,7 @@ import {
   BOARD_CARDS,
   filterCards,
   moveCard,
+  reconcileCardsWithKadCompletions,
   uiEpicProgress,
 } from "./project-board";
 
@@ -31,5 +32,24 @@ describe("project board", () => {
       done: 5,
       total: 10,
     });
+  });
+
+  it("reconciles UI-06 forward when KAD test completion exists", () => {
+    const atIntake = moveCard(BOARD_CARDS, 36, "intake");
+    const completed = {
+      "36:development": { issueNumber: 36, pipelineStage: "development" },
+      "36:test": { issueNumber: 36, pipelineStage: "test" },
+    };
+    const next = reconcileCardsWithKadCompletions(atIntake, completed);
+    expect(next.find((c) => c.number === 36)?.status).toBe("audit");
+  });
+
+  it("reconciles to Test when only development completion exists", () => {
+    const onDev = moveCard(BOARD_CARDS, 36, "development");
+    const completed = {
+      "36:development": { issueNumber: 36, pipelineStage: "development" },
+    };
+    const next = reconcileCardsWithKadCompletions(onDev, completed);
+    expect(next.find((c) => c.number === 36)?.status).toBe("test");
   });
 });
