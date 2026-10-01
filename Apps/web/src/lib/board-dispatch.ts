@@ -2,9 +2,11 @@ import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
 import {
+  agentBranchForIssue,
   assertCanDispatch,
   createEmptyLedger,
   getActiveLock,
+  type DispatchCompletedRun,
   type DispatchLedger,
 } from "@/lib/board-dispatch-policy";
 import {
@@ -77,7 +79,91 @@ function parseLedger(raw: string): DispatchLedger {
   return {
     active: parsed.active ?? null,
     lastDispatchAtByIssue: parsed.lastDispatchAtByIssue ?? {},
+    completedByIssue: parsed.completedByIssue ?? {},
   };
+}
+
+export type GitHubPullSnapshot = {
+  number: number;
+  title: string;
+  html_url: string;
+  state: string;
+  body: string;
+};
+
+export async function fetchPullRequestForIssue(
+  issueNumber: number,
+): Promise<GitHubPullSnapshot | null> {
+  const token = githubToken();
+  if (!token) return null;
+  const repo = githubRepo();
+  const [owner, name] = repo.split("/");
+  if (!owner || !name) return null;
+  const head = `${owner}:${agentBranchForIssue(issueNumber)}`;
+  const url = new URL(`https://api.github.com/repos/${repo}/pulls`);
+  url.searchParams.set("state", "all");
+  url.searchParams.set("head", head);
+  url.searchParams.set("per_page", "5");
+  const res = await fetch(url.toString(), {
+    headers: {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${token}`,
+      "X-GitHub-Api-Version": "2022-11-28",
+    },
+    cache: "no-store",
+  });
+  if (!res.ok) return null;
+  const pulls = (await res.json()) as GitHubPullSnapshot[];
+  return pulls[0] ?? null;
+}
+
+export function buildCompletionSummary(pr: GitHubPullSnapshot): string {
+  const bodyLine = pr.body?.split("\n").find((line) => line.trim())?.trim();
+  if (bodyLine && bodyLine.length <= 220) return bodyLine;
+  if (bodyLine) return `${bodyLine.slice(0, 217)}…`;
+  return pr.title.trim();
+}
+
+export function applyPullRequestCompletion(
+  ledger: DispatchLedger,
+  pr: GitHubPullSnapshot,
+  nowIso: string,
+): DispatchLedger {
+  const active = ledger.active;
+  if (!active) return ledger;
+  const completed: DispatchCompletedRun = {
+    issueNumber: active.issueNumber,
+    correlationId: active.correlationId,
+    completedAt: nowIso,
+    summary: buildCompletionSummary(pr),
+    prNumber: pr.number,
+    prUrl: pr.html_url,
+    prState: pr.state,
+  };
+  return {
+    ...ledger,
+    active: null,
+    completedByIssue: {
+      ...ledger.completedByIssue,
+      [String(active.issueNumber)]: completed,
+    },
+  };
+}
+
+async function syncActiveCompletion(ledger: DispatchLedger): Promise<DispatchLedger> {
+  const active = getActiveLock(ledger, Date.now(), lockTtlMs());
+  if (!active || !githubToken()) return ledger;
+  const pr = await fetchPullRequestForIssue(active.issueNumber);
+  if (!pr) return ledger;
+  const next = applyPullRequestCompletion(ledger, pr, new Date().toISOString());
+  await writeLedger(next);
+  await logKad("info", "dispatch.completed", {
+    issueNumber: active.issueNumber,
+    correlationId: active.correlationId,
+    prNumber: pr.number,
+    prUrl: pr.html_url,
+  });
+  return next;
 }
 
 async function readLedger(): Promise<DispatchLedger> {
@@ -240,6 +326,7 @@ export type DispatchStatus = {
   correlationId: string | null;
   repository: string;
   pipelineStage: typeof BOARD_DISPATCH_STAGE;
+  completedByIssue: Record<string, DispatchCompletedRun>;
 };
 
 export async function getDispatchStatus(): Promise<DispatchStatus> {
@@ -249,7 +336,10 @@ export async function getDispatchStatus(): Promise<DispatchStatus> {
       process.env.CURSOR_AUTOMATION_WEBHOOK_SECRET?.trim() &&
       githubToken(),
   );
-  const ledger = await readLedger();
+  let ledger = await readLedger();
+  if (enabled && configured && ledger.active) {
+    ledger = await syncActiveCompletion(ledger);
+  }
   const active = getActiveLock(ledger, Date.now(), lockTtlMs());
   return {
     enabled,
@@ -258,6 +348,7 @@ export async function getDispatchStatus(): Promise<DispatchStatus> {
     correlationId: active?.correlationId ?? null,
     repository: githubRepo(),
     pipelineStage: BOARD_DISPATCH_STAGE,
+    completedByIssue: ledger.completedByIssue,
   };
 }
 
@@ -316,6 +407,8 @@ export async function dispatchBoardIssue(
     fromStage,
   });
 
+  const { [String(issueNumber)]: _prev, ...restCompleted } =
+    ledger.completedByIssue;
   ledger = {
     active: {
       issueNumber,
@@ -326,6 +419,7 @@ export async function dispatchBoardIssue(
       ...ledger.lastDispatchAtByIssue,
       [String(issueNumber)]: now,
     },
+    completedByIssue: restCompleted,
   };
   await writeLedger(ledger);
 

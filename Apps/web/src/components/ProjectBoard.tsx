@@ -15,6 +15,16 @@ import { shouldTriggerDispatch } from "@/lib/board-dispatch-policy";
 import { ApiError, apiFetch } from "@/lib/client-api";
 import { Alert } from "./ui/Alert";
 
+type DispatchCompletedRun = {
+  issueNumber: number;
+  correlationId: string;
+  completedAt: string;
+  summary: string;
+  prNumber: number;
+  prUrl: string;
+  prState: string;
+};
+
 type DispatchStatus = {
   enabled: boolean;
   configured: boolean;
@@ -22,6 +32,7 @@ type DispatchStatus = {
   correlationId: string | null;
   repository: string;
   pipelineStage?: string;
+  completedByIssue?: Record<string, DispatchCompletedRun>;
 };
 
 export function ProjectBoard() {
@@ -51,6 +62,20 @@ export function ProjectBoard() {
   useEffect(() => {
     void refreshDispatchStatus();
   }, [refreshDispatchStatus]);
+
+  useEffect(() => {
+    if (!dispatchStatus?.enabled || dispatchStatus.activeIssueNumber == null) {
+      return;
+    }
+    const id = window.setInterval(() => {
+      void refreshDispatchStatus();
+    }, 15_000);
+    return () => window.clearInterval(id);
+  }, [
+    dispatchStatus?.enabled,
+    dispatchStatus?.activeIssueNumber,
+    refreshDispatchStatus,
+  ]);
 
   const visible = useMemo(() => filterCards(cards, query), [cards, query]);
   const progress = uiEpicProgress(cards);
@@ -135,6 +160,7 @@ export function ProjectBoard() {
   }, [refreshDispatchStatus]);
 
   const activeAgentIssue = dispatchStatus?.activeIssueNumber ?? null;
+  const completedByIssue = dispatchStatus?.completedByIssue ?? {};
 
   return (
     <section className="project-board" aria-label="Papan meeting-room-cursor">
@@ -236,7 +262,7 @@ export function ProjectBoard() {
                 {items.map((card) => (
                   <li key={card.number}>
                     <article
-                      className={`project-board-card ${dragging === card.number ? "is-dragging" : ""} ${dispatching === card.number ? "is-dispatching" : ""} ${activeAgentIssue === card.number ? "is-agent-active" : ""}`}
+                      className={`project-board-card ${dragging === card.number ? "is-dragging" : ""} ${dispatching === card.number ? "is-dispatching" : ""} ${activeAgentIssue === card.number ? "is-agent-active" : ""} ${completedByIssue[String(card.number)] && activeAgentIssue !== card.number ? "is-agent-done" : ""}`}
                       draggable={dispatching !== card.number}
                       tabIndex={0}
                       aria-label={`${BOARD_REPO} #${card.number}. ${card.title}. ${column.label}`}
@@ -273,6 +299,30 @@ export function ProjectBoard() {
                       {activeAgentIssue === card.number && (
                         <p className="project-board-agent-badge">Agent aktif</p>
                       )}
+                      {activeAgentIssue !== card.number &&
+                        completedByIssue[String(card.number)] && (
+                          <>
+                            <p className="project-board-agent-badge is-complete">
+                              Agent selesai
+                            </p>
+                            <p className="project-board-agent-summary">
+                              {completedByIssue[String(card.number)].summary}
+                            </p>
+                            <p className="project-board-agent-summary">
+                              <a
+                                href={
+                                  completedByIssue[String(card.number)].prUrl
+                                }
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                PR #{completedByIssue[String(card.number)].prNumber}
+                              </a>
+                              {" · "}
+                              {completedByIssue[String(card.number)].prState}
+                            </p>
+                          </>
+                        )}
                       {card.number === 30 && (
                         <div className="project-board-progress">
                           <span>

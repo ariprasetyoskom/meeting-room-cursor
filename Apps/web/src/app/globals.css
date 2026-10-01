@@ -1602,6 +1602,11 @@ textarea.input {
   box-shadow: 0 0 0 1px #0969da33;
 }
 
+.project-board-card.is-agent-done {
+  border-color: #1a7f37;
+  box-shadow: 0 0 0 1px #1a7f3733;
+}
+
 .project-board-agent-badge {
   margin: 0.4rem 0 0;
   font-size: 0.6875rem;
@@ -1609,6 +1614,22 @@ textarea.input {
   letter-spacing: 0.02em;
   text-transform: uppercase;
   color: #0969da;
+}
+
+.project-board-agent-badge.is-complete {
+  color: #1a7f37;
+}
+
+.project-board-agent-summary {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--board-muted);
+}
+
+.project-board-agent-summary a {
+  color: #0969da;
+  font-weight: 500;
 }
 
 .project-board-scroll {

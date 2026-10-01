@@ -23,13 +23,32 @@ export type DispatchLock = {
   startedAt: string;
 };
 
+export type DispatchCompletedRun = {
+  issueNumber: number;
+  correlationId: string;
+  completedAt: string;
+  summary: string;
+  prNumber: number;
+  prUrl: string;
+  prState: string;
+};
+
 export type DispatchLedger = {
   active: DispatchLock | null;
   lastDispatchAtByIssue: Record<string, number>;
+  completedByIssue: Record<string, DispatchCompletedRun>;
 };
 
 export function createEmptyLedger(): DispatchLedger {
-  return { active: null, lastDispatchAtByIssue: {} };
+  return {
+    active: null,
+    lastDispatchAtByIssue: {},
+    completedByIssue: {},
+  };
+}
+
+export function agentBranchForIssue(issueNumber: number): string {
+  return `agent/issue-${issueNumber}`;
 }
 
 export function isLockStale(
