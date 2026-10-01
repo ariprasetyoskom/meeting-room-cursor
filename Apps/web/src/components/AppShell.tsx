@@ -11,8 +11,8 @@ import { UserMenu } from "./UserMenu";
 export function AppShell({ children }: { children: React.ReactNode }) {
   const homeHref = isAdminPortalClient() ? "/admin/rooms" : "/book";
   const homeLabel = isAdminPortalClient()
-    ? "Ruang Meeting — admin"
-    : "Ruang Meeting — beranda";
+    ? "Ruang Meeting Kita — admin"
+    : "Ruang Meeting Kita — beranda";
 
   return (
     <div className="app-shell">
@@ -21,7 +21,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <Link href={homeHref} className="app-brand" aria-label={homeLabel}>
             <BrandLogo />
             <span className="app-brand-text">
-              <span className="app-brand-name">Ruang Meeting</span>
+              <span className="app-brand-name">Ruang Meeting Kita</span>
               <span className="app-brand-tagline">Booking internal</span>
             </span>
           </Link>
