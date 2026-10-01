@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { ApiError, apiFetch, type Room } from "@/lib/client-api";
+import { Alert } from "./ui/Alert";
+import { EmptyState } from "./ui/EmptyState";
+import { ListLoadError } from "./ui/ListLoadError";
 import { PageHeader } from "./ui/PageHeader";
 import { LoadingBlock } from "./ui/LoadingBlock";
 
@@ -10,20 +13,30 @@ export function RoomDirectory() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [unauthorized, setUnauthorized] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    setUnauthorized(false);
+    try {
+      const res = await apiFetch<{ rooms: Room[] }>("/api/v1/rooms");
+      setRooms(res.rooms);
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 401) {
+        setUnauthorized(true);
+        setError("Silakan login di /login.");
+      } else {
+        setError(e instanceof Error ? e.message : "Gagal memuat.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    setLoading(true);
-    apiFetch<{ rooms: Room[] }>("/api/v1/rooms")
-      .then((res) => setRooms(res.rooms))
-      .catch((e) => {
-        if (e instanceof ApiError && e.status === 401) {
-          setError("Silakan login di /login.");
-        } else {
-          setError(e instanceof Error ? e.message : "Gagal memuat.");
-        }
-      })
-      .finally(() => setLoading(false));
-  }, []);
+    load();
+  }, [load]);
 
   return (
     <div className="page-content">
@@ -37,43 +50,42 @@ export function RoomDirectory() {
         }
       />
 
-      {error && (
-        <div className="alert alert-error" role="alert">
-          {error}
-        </div>
+      {unauthorized && error && (
+        <Alert variant="error">{error}</Alert>
+      )}
+
+      {!unauthorized && error && !loading && (
+        <ListLoadError message={error} onRetry={load} bookLabel="Ke kalender booking" />
       )}
 
       {loading && <LoadingBlock />}
 
-      {!loading && rooms.length === 0 && !error && (
-        <div className="empty-state">
+      {!loading && !error && rooms.length === 0 && (
+        <EmptyState bookLabel="Ke kalender booking">
           <p>Belum ada ruang aktif.</p>
-          <Link href="/book" className="btn btn-primary">
-            Ke kalender booking
-          </Link>
-        </div>
+        </EmptyState>
       )}
 
-      {!loading && (
-      <ul className="room-list">
-        {rooms.map((room) => (
-          <li key={room.id} className="room-card">
-            <div>
-              <h3>{room.name}</h3>
-              <p className="text-muted">
-                Kode {room.code} · Lantai {room.floor ?? "—"} · {room.capacity}{" "}
-                orang
-              </p>
-              <p className="text-muted">
-                Fasilitas: {room.amenities?.join(", ") || "—"}
-              </p>
-            </div>
-            <Link href={`/book?room=${room.id}`} className="btn btn-secondary">
-              Lihat kalender
-            </Link>
-          </li>
-        ))}
-      </ul>
+      {!loading && !error && rooms.length > 0 && (
+        <ul className="room-list">
+          {rooms.map((room) => (
+            <li key={room.id} className="room-card">
+              <div>
+                <h3>{room.name}</h3>
+                <p className="text-muted">
+                  Kode {room.code} · Lantai {room.floor ?? "—"} · {room.capacity}{" "}
+                  orang
+                </p>
+                <p className="text-muted">
+                  Fasilitas: {room.amenities?.join(", ") || "—"}
+                </p>
+              </div>
+              <Link href={`/book?room=${room.id}`} className="btn btn-secondary">
+                Lihat kalender
+              </Link>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );
