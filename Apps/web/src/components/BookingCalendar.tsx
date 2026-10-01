@@ -8,9 +8,17 @@ import {
   type Room,
 } from "@/lib/client-api";
 import { BookingModal } from "./BookingModal";
+import { RoomDayAgenda, SlotOccupancy } from "./calendar-readout";
 import { RoomPicker } from "./RoomPicker";
 import { PageHeader } from "./ui/PageHeader";
 import { LoadingBlock } from "./ui/LoadingBlock";
+import { Button } from "./ui/Button";
+import {
+  agendaForRooms,
+  bookingCoversSlot,
+  occupiedSlotLabel,
+  occupancySpan,
+} from "@/lib/calendar-agenda";
 import {
   OPERATING_HOURS,
   addDaysToDateInput,
@@ -128,15 +136,17 @@ export function BookingCalendar() {
   }
 
   function bookingAtSlot(roomId: string, dayYmd: string, hour: number) {
-    const slotStart = new Date(
-      `${dayYmd}T${String(hour).padStart(2, "0")}:00:00+07:00`,
+    return bookingsForRoom(roomId).find((booking) =>
+      bookingCoversSlot(booking, dayYmd, hour),
     );
-    const slotEnd = new Date(slotStart.getTime() + 60 * 60 * 1000);
-    return bookingsForRoom(roomId).find((b) => {
-      const bStart = new Date(b.startAt);
-      const bEnd = new Date(b.endAt);
-      return bStart < slotEnd && bEnd > slotStart;
-    });
+  }
+
+  function spanAt(roomId: string, dayYmd: string, hour: number) {
+    return occupancySpan(
+      hours,
+      hour,
+      (candidate) => bookingAtSlot(roomId, dayYmd, candidate)?.id ?? null,
+    );
   }
 
   function openBook(room: Room, dayYmd: string, hour: number) {
@@ -163,78 +173,90 @@ export function BookingCalendar() {
         />
       )}
 
-      <div className="toolbar">
-        <label className="toolbar-item">
-          {view === "week" ? "Minggu (tanggal acuan)" : "Tanggal"}
-          <input
-            type="date"
-            className="input"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
-        </label>
-        {view === "week" && (
-          <div className="toolbar-item week-nav">
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={() => shiftWeek(-7)}
-            >
-              ← Minggu lalu
-            </button>
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={() => setDate(toDateInputValue(new Date()))}
-            >
-              Minggu ini
-            </button>
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={() => shiftWeek(7)}
-            >
-              Minggu depan →
-            </button>
-          </div>
-        )}
-        <label className="toolbar-item">
-          Min. kapasitas
-          <input
-            type="number"
-            min={1}
-            className="input input-narrow"
-            value={minCapacity}
-            onChange={(e) => setMinCapacity(e.target.value)}
-            placeholder="Semua"
-          />
-        </label>
-        <div className="segmented" role="group" aria-label="Tampilan">
-          <button
-            type="button"
-            className={view === "timeline" ? "active" : ""}
-            onClick={() => setView("timeline")}
-          >
-            Hari
-          </button>
-          <button
-            type="button"
-            className={view === "week" ? "active" : ""}
-            onClick={() => setView("week")}
-          >
-            Minggu
-          </button>
-          <button
-            type="button"
-            className={view === "list" ? "active" : ""}
-            onClick={() => setView("list")}
-          >
-            Daftar
-          </button>
+      <div className="toolbar booking-toolbar">
+        <div className="toolbar-cluster">
+          <label className="toolbar-item">
+            {view === "week" ? "Minggu (tanggal acuan)" : "Tanggal"}
+            <input
+              type="date"
+              className="input"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
+          </label>
+          {view === "week" && (
+            <div className="toolbar-item">
+              <span>Navigasi</span>
+              <div className="week-nav" role="group" aria-label="Navigasi minggu">
+                <Button variant="secondary" size="sm" onClick={() => shiftWeek(-7)}>
+                  ← Minggu lalu
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setDate(toDateInputValue(new Date()))}
+                >
+                  Minggu ini
+                </Button>
+                <Button variant="secondary" size="sm" onClick={() => shiftWeek(7)}>
+                  Minggu depan →
+                </Button>
+              </div>
+            </div>
+          )}
+          <label className="toolbar-item">
+            Min. kapasitas
+            <input
+              type="number"
+              min={1}
+              className="input input-narrow"
+              value={minCapacity}
+              onChange={(e) => setMinCapacity(e.target.value)}
+              placeholder="Semua"
+            />
+          </label>
         </div>
-        <button type="button" className="btn btn-secondary" onClick={load}>
-          Refresh
-        </button>
+        <div className="toolbar-cluster toolbar-cluster-end">
+          <div className="toolbar-item">
+            <span id="calendar-view-label">Tampilan</span>
+            <div
+              className="segmented"
+              role="group"
+              aria-labelledby="calendar-view-label"
+            >
+              <button
+                type="button"
+                className={view === "timeline" ? "active" : ""}
+                aria-pressed={view === "timeline"}
+                onClick={() => setView("timeline")}
+              >
+                Hari
+              </button>
+              <button
+                type="button"
+                className={view === "week" ? "active" : ""}
+                aria-pressed={view === "week"}
+                onClick={() => setView("week")}
+              >
+                Minggu
+              </button>
+              <button
+                type="button"
+                className={view === "list" ? "active" : ""}
+                aria-pressed={view === "list"}
+                onClick={() => setView("list")}
+              >
+                Daftar
+              </button>
+            </div>
+          </div>
+          <div className="toolbar-item">
+            <span aria-hidden="true">&nbsp;</span>
+            <Button variant="secondary" onClick={() => void load()}>
+              Refresh
+            </Button>
+          </div>
+        </div>
       </div>
 
       <p className="text-muted date-label">
@@ -273,32 +295,34 @@ export function BookingCalendar() {
       {!loading && view === "list" && visibleRooms.length > 0 && (
         <ul className="room-list">
           {visibleRooms.map((room) => (
-            <li key={room.id} className="room-card">
-              <div>
+            <li key={room.id} className="room-card room-card-agenda">
+              <div className="room-card-main">
                 <h3>{room.name}</h3>
                 <p className="text-muted">
                   Lantai {room.floor ?? "—"} · {room.capacity} orang ·{" "}
                   {(room.amenities ?? []).join(", ") || "—"}
                 </p>
               </div>
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => openBook(room, date, 9)}
-              >
+              <Button variant="primary" onClick={() => openBook(room, date, 9)}>
                 Pesan ruang
-              </button>
+              </Button>
+              <RoomDayAgenda bookings={agendaForRooms(bookings, [room.id])} />
             </li>
           ))}
         </ul>
       )}
 
       {!loading && view === "week" && weekRoom && (
-        <div className="timeline-wrap week-wrap">
+        <div
+          className="timeline-wrap week-wrap"
+          tabIndex={0}
+          role="region"
+          aria-label="Kalender minggu. Gulir untuk melihat jam dan hari."
+        >
           <table className="timeline-table week-table">
             <thead>
               <tr>
-                <th>Jam</th>
+                <th className="week-corner">Jam</th>
                 {weekDays.map((dayYmd) => (
                   <th key={dayYmd} className="week-day-head">
                     <span>{formatWeekdayShort(dayYmd)}</span>
@@ -314,14 +338,24 @@ export function BookingCalendar() {
                     {String(h).padStart(2, "0")}
                   </th>
                   {weekDays.map((dayYmd) => {
+                    const span = spanAt(weekRoom.id, dayYmd, h);
+                    if (span === "skip") return null;
                     const occupied = bookingAtSlot(weekRoom.id, dayYmd, h);
-                    if (occupied) {
+                    if (occupied && typeof span === "number") {
                       return (
-                        <td key={dayYmd} className="slot slot-busy">
-                          <span className="slot-title" title={occupied.title}>
-                            {occupied.title}
-                          </span>
-                          <span className="slot-organizer">{occupied.organizerName}</span>
+                        <td
+                          key={dayYmd}
+                          rowSpan={span}
+                          className="slot slot-busy"
+                          aria-label={occupiedSlotLabel(
+                            occupied.title,
+                            occupied.organizerName,
+                          )}
+                        >
+                          <SlotOccupancy
+                            title={occupied.title}
+                            organizerName={occupied.organizerName}
+                          />
                         </td>
                       );
                     }
@@ -347,8 +381,13 @@ export function BookingCalendar() {
       )}
 
       {!loading && view === "timeline" && visibleRooms.length > 0 && (
-        <div className="timeline-wrap">
-          <table className="timeline-table">
+        <div
+          className="timeline-wrap"
+          tabIndex={0}
+          role="region"
+          aria-label="Kalender hari. Gulir mendatar untuk melihat jam."
+        >
+          <table className="timeline-table day-timeline">
             <thead>
               <tr>
                 <th>Ruang</th>
@@ -365,14 +404,24 @@ export function BookingCalendar() {
                     <small>{room.capacity} pax</small>
                   </th>
                   {hours.map((h) => {
+                    const span = spanAt(room.id, date, h);
+                    if (span === "skip") return null;
                     const occupied = bookingAtSlot(room.id, date, h);
-                    if (occupied) {
+                    if (occupied && typeof span === "number") {
                       return (
-                        <td key={h} className="slot slot-busy">
-                          <span className="slot-title" title={occupied.title}>
-                            {occupied.title}
-                          </span>
-                          <span className="slot-organizer">{occupied.organizerName}</span>
+                        <td
+                          key={h}
+                          colSpan={span}
+                          className="slot slot-busy"
+                          aria-label={occupiedSlotLabel(
+                            occupied.title,
+                            occupied.organizerName,
+                          )}
+                        >
+                          <SlotOccupancy
+                            title={occupied.title}
+                            organizerName={occupied.organizerName}
+                          />
                         </td>
                       );
                     }
