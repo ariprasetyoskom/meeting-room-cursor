@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { ApiError, apiFetch } from "@/lib/client-api";
 import type { Room } from "@/lib/client-api";
+import { bookingApiErrorMessage } from "@/lib/booking-messages";
 import { formatDateId } from "@/lib/format";
 import { Alert, Button, Field, Input, Select, Textarea } from "./ui";
 
@@ -33,6 +34,11 @@ export function BookingModal({
   onClose,
   onSuccess,
 }: Props) {
+  const titleId = useId();
+  const descId = useId();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const restoreFocusRef = useRef<HTMLElement | null>(null);
+
   const [roomId, setRoomId] = useState(room?.id ?? "");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -54,6 +60,40 @@ export function BookingModal({
     }
   }, [open, startHour, endHour, room]);
 
+  useEffect(() => {
+    if (!open) return;
+
+    restoreFocusRef.current = document.activeElement as HTMLElement | null;
+
+    const focusFrame = requestAnimationFrame(() => {
+      const root = dialogRef.current;
+      if (!root) return;
+      const first = root.querySelector<HTMLElement>(
+        "input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled])",
+      );
+      first?.focus();
+    });
+
+    return () => {
+      cancelAnimationFrame(focusFrame);
+      restoreFocusRef.current?.focus?.();
+      restoreFocusRef.current = null;
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== "Escape" || loading) return;
+      e.preventDefault();
+      onClose();
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open, loading, onClose]);
+
   const activeRoom =
     rooms.find((r) => r.id === roomId) ?? room;
 
@@ -61,12 +101,17 @@ export function BookingModal({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return;
+
     setLoading(true);
     setError(null);
     setConflicts([]);
     const submitRoom =
       rooms.find((r) => r.id === roomId) ?? room;
-    if (!submitRoom) return;
+    if (!submitRoom) {
+      setLoading(false);
+      return;
+    }
 
     try {
       await apiFetch("/api/v1/bookings", {
@@ -85,7 +130,7 @@ export function BookingModal({
       setDescription("");
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(err.message);
+        setError(bookingApiErrorMessage(err.code, err.message));
         const details = err.body.details as
           | { conflicts?: typeof conflicts }
           | undefined;
@@ -101,20 +146,30 @@ export function BookingModal({
   return (
     <div className="modal-backdrop" onClick={onClose} role="presentation">
       <div
+        ref={dialogRef}
         className="modal"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
-        aria-labelledby="booking-modal-title"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={descId}
       >
-        <h2 id="booking-modal-title">Booking — {activeRoom.name}</h2>
-        <p className="text-muted">{formatDateId(`${date}T12:00:00+07:00`)}</p>
-        <form onSubmit={handleSubmit} className="form-stack">
+        <h2 id={titleId}>Booking — {activeRoom.name}</h2>
+        <p id={descId} className="text-muted">
+          {formatDateId(`${date}T12:00:00+07:00`)}
+        </p>
+        <form
+          onSubmit={handleSubmit}
+          className="form-stack"
+          aria-busy={loading || undefined}
+        >
           {rooms.length > 1 && (
             <Field label="Ruangan" required>
               <Select
                 value={roomId}
                 onChange={(e) => setRoomId(e.target.value)}
                 required
+                disabled={loading}
               >
                 {rooms.map((r) => (
                   <option key={r.id} value={r.id}>
@@ -131,6 +186,8 @@ export function BookingModal({
               minLength={3}
               maxLength={120}
               required
+              disabled={loading}
+              aria-invalid={error ? true : undefined}
             />
           </Field>
           <div className="form-row">
@@ -138,6 +195,7 @@ export function BookingModal({
               <Select
                 value={start}
                 onChange={(e) => setStart(Number(e.target.value))}
+                disabled={loading}
               >
                 {Array.from({ length: 15 }, (_, i) => i + 7).map((h) => (
                   <option key={h} value={h}>
@@ -150,6 +208,7 @@ export function BookingModal({
               <Select
                 value={end}
                 onChange={(e) => setEnd(Number(e.target.value))}
+                disabled={loading}
               >
                 {Array.from({ length: 16 }, (_, i) => i + 7).map((h) => (
                   <option key={h} value={h}>
@@ -165,6 +224,7 @@ export function BookingModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               maxLength={500}
+              disabled={loading}
             />
           </Field>
           {error && (
