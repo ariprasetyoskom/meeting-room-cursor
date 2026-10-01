@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     if (err instanceof RoomConflictError) {
       return jsonError(
         "ROOM_CONFLICT",
-        "Ruangan sudah dibooking pada slot ini.",
+        "Ruangan sudah dipesan pada waktu ini.",
         409,
         "This room is already booked for that time.",
         {
