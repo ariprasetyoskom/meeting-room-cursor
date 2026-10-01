@@ -1,8 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError, apiFetch } from "@/lib/client-api";
+import {
+  formatAuditAction,
+  formatAuditPayload,
+} from "@/lib/admin-display";
 import { formatDateId, formatTimeId, toDateInputValue } from "@/lib/format";
+import { Alert } from "./ui/Alert";
 import { PageHeader } from "./ui/PageHeader";
 import { LoadingBlock } from "./ui/LoadingBlock";
 
@@ -30,7 +35,7 @@ export function AdminAuditLogList() {
     try {
       const params = new URLSearchParams({ limit: "100" });
       if (from) params.set("from", `${from}T00:00:00+07:00`);
-      if (to) params.set("to", to);
+      if (to) params.set("to", `${to}T23:59:59+07:00`);
       const res = await apiFetch<{ logs: AuditRow[]; total: number }>(
         `/api/v1/admin/audit-logs?${params}`,
       );
@@ -53,6 +58,11 @@ export function AdminAuditLogList() {
   useEffect(() => {
     if (from && to) load();
   }, [from, to, load]);
+
+  const filterSummary = useMemo(() => {
+    if (!from || !to) return "";
+    return `Menampilkan log ${formatDateId(`${from}T12:00:00+07:00`)} – ${formatDateId(`${to}T12:00:00+07:00`)} (WIB)`;
+  }, [from, to]);
 
   return (
     <div>
@@ -81,19 +91,24 @@ export function AdminAuditLogList() {
           />
         </label>
         <button type="button" className="btn btn-secondary" onClick={load}>
-          Muat ulang
+          Terapkan filter
         </button>
+        {filterSummary ? (
+          <p className="toolbar-summary">{filterSummary}</p>
+        ) : null}
       </div>
 
       {error && (
-        <div className="alert alert-error" role="alert">
+        <Alert variant="error" className="admin-feedback-alert">
           {error}
-        </div>
+        </Alert>
       )}
 
-      <p className="text-muted">
-        Menampilkan {logs.length} dari {total} entri
-      </p>
+      {!loading && !error && (
+        <p className="text-muted">
+          {logs.length} dari {total} entri (maks. 100 terbaru)
+        </p>
+      )}
 
       {loading && <LoadingBlock />}
 
@@ -105,7 +120,7 @@ export function AdminAuditLogList() {
 
       {!loading && logs.length > 0 && (
         <div className="data-table-wrap">
-          <table className="data-table">
+          <table className="data-table data-table-compact admin-table">
             <thead>
               <tr>
                 <th>Waktu</th>
@@ -116,30 +131,43 @@ export function AdminAuditLogList() {
               </tr>
             </thead>
             <tbody>
-              {logs.map((log) => (
-                <tr key={log.id}>
-                  <td>
-                    {formatDateId(log.createdAt)}{" "}
-                    {formatTimeId(log.createdAt)}
-                  </td>
-                  <td>{log.actorName ?? "—"}</td>
-                  <td>
-                    <code>{log.action}</code>
-                  </td>
-                  <td>
-                    {log.entityType}
-                    <br />
-                    <span className="text-muted mono-sm">
-                      {log.entityId.slice(0, 8)}…
-                    </span>
-                  </td>
-                  <td className="mono-sm">
-                    {log.payload
-                      ? JSON.stringify(log.payload).slice(0, 80)
-                      : "—"}
-                  </td>
-                </tr>
-              ))}
+              {logs.map((log) => {
+                const payloadText = log.payload
+                  ? JSON.stringify(log.payload)
+                  : "";
+                return (
+                  <tr key={log.id}>
+                    <td>
+                      {formatDateId(log.createdAt)}
+                      <br />
+                      <span className="text-muted">
+                        {formatTimeId(log.createdAt)}
+                      </span>
+                    </td>
+                    <td>{log.actorName ?? "—"}</td>
+                    <td>
+                      <span className="badge badge-muted audit-action-badge">
+                        {formatAuditAction(log.action)}
+                      </span>
+                      <br />
+                      <code className="mono-sm text-muted">{log.action}</code>
+                    </td>
+                    <td>
+                      {log.entityType}
+                      <br />
+                      <span className="text-muted mono-sm" title={log.entityId}>
+                        {log.entityId.slice(0, 8)}…
+                      </span>
+                    </td>
+                    <td
+                      className="mono-sm audit-payload-cell"
+                      title={payloadText || undefined}
+                    >
+                      {formatAuditPayload(log.payload)}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
