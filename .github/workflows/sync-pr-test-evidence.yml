@@ -1,4 +1,4 @@
-# Agent Test stage — sinkronkan ## Test evidence dari artifact commit ke body PR (token Actions).
+# Agent Test/Audit — sinkronkan ## Test evidence / ## Audit dari artifact commit ke body PR (token Actions).
 name: Sync PR test evidence
 
 on:
@@ -46,6 +46,40 @@ jobs:
           if not pattern.search(body):
               raise SystemExit("PR body tidak punya ## Test evidence")
           new_body = pattern.sub(rf"\1{evidence.strip()}\n\n", body, count=1)
+          Path("/tmp/pr-body-new.md").write_text(new_body)
+          PY
+          gh pr edit "$PR_NUMBER" --body-file /tmp/pr-body-new.md
+
+      - name: Patch ## Audit on open PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+          ISSUE="$(echo "$HEAD_REF" | sed -n 's/^agent\/issue-\([0-9][0-9]*\)$/\1/p')"
+          if [ -z "$ISSUE" ]; then
+            echo "Skip: bukan branch agent/issue-N"
+            exit 0
+          fi
+          FILE="Agentic/pr-artifacts/issue-${ISSUE}-audit.md"
+          if [ ! -f "$FILE" ]; then
+            echo "Skip: tidak ada $FILE"
+            exit 0
+          fi
+          PR_NUMBER="$(gh pr view "$HEAD_REF" --json number -q .number)"
+          cp "$FILE" /tmp/audit.md
+          gh pr view "$PR_NUMBER" --json body -q .body > /tmp/pr-body.md
+          python3 << 'PY'
+          import re
+          from pathlib import Path
+          audit = Path("/tmp/audit.md").read_text()
+          body = Path("/tmp/pr-body.md").read_text()
+          pattern = re.compile(
+              r"(?ms)(^##\s*Audit\b[^\n]*\n)(.*?)(?=^\s*##\s|\Z|^<div>|\Z)"
+          )
+          if not pattern.search(body):
+              raise SystemExit("PR body tidak punya ## Audit")
+          new_body = pattern.sub(rf"\1{audit.strip()}\n\n", body, count=1)
           Path("/tmp/pr-body-new.md").write_text(new_body)
           PY
           gh pr edit "$PR_NUMBER" --body-file /tmp/pr-body-new.md
