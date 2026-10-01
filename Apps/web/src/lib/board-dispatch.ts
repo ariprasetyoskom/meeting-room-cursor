@@ -927,7 +927,8 @@ export async function dispatchBoardIssue(
   });
 
   const completionKey = completionStorageKey(issueNumber, pipelineStage);
-  const { [completionKey]: _prev, ...restCompleted } = ledger.completedByIssue;
+  const restCompleted = { ...ledger.completedByIssue };
+  delete restCompleted[completionKey];
   ledger = {
     active: {
       issueNumber,
