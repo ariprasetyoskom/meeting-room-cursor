@@ -95,13 +95,13 @@ describe("booking calendar css contract", () => {
   );
 
   it("scrolls the week grid and keeps the hour column sticky", () => {
-    expect(css).toMatch(/\.week-wrap\s*\{[^}]*overflow:\s*auto/s);
-    expect(css).toMatch(/\.week-table \.timeline-hour\s*\{[^}]*position:\s*sticky/s);
-    expect(css).toMatch(/\.week-table thead th\s*\{[^}]*position:\s*sticky/s);
+    expect(css).toMatch(/\.week-wrap\s*\{[^}]*overflow:\s*auto/);
+    expect(css).toMatch(/\.week-table \.timeline-hour\s*\{[^}]*position:\s*sticky/);
+    expect(css).toMatch(/\.week-table thead th\s*\{[^}]*position:\s*sticky/);
   });
 
   it("keeps organizer text in the document flow", () => {
-    expect(css).toMatch(/\.slot-organizer\s*\{[^}]*display:\s*block/s);
-    expect(css).not.toMatch(/\.slot-organizer\s*\{[^}]*display:\s*none/s);
+    expect(css).toMatch(/\.slot-organizer\s*\{[^}]*display:\s*block/);
+    expect(css).not.toMatch(/\.slot-organizer\s*\{[^}]*display:\s*none/);
   });
 });
