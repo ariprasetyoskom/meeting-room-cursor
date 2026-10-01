@@ -65,3 +65,5 @@ DELETE /api/v1/admin/board/dispatch
 (dengan header dev admin / session admin)
 
 Log & ledger terpusat: `Development/logs/` — `kad-dispatch.jsonl` (event), `kad-dispatch-ledger.json` (lock). Legacy `Apps/web/.data/` dimigrasi otomatis saat baca.
+
+Event gate (default `BOARD_KAD_STRICT_GATES` aktif): `dispatch.stage_check` (`ok: false` + `reasons[]` = stage belum selesai, **tidak** auto-chain); `dispatch.completed` = stage lulus; `dispatch.auto_chain_attempt` sebelum webhook berikutnya.

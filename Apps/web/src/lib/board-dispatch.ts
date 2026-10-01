@@ -10,11 +10,18 @@ import {
   type DispatchCompletedRun,
   type DispatchLedger,
 } from "@/lib/board-dispatch-policy";
+import type { AuditVerdict } from "@/lib/board-audit-verdict";
 import {
   parseAuditVerdictFromLooseText,
   parseAuditVerdictFromPrBody,
-  type AuditVerdict,
 } from "@/lib/board-audit-verdict";
+import {
+  checkAuditStageGate,
+  checkDevelopmentStageGate,
+  checkTestStageGate,
+  kadStrictStageGates,
+} from "@/lib/board-kad-stage-gates";
+import type { DispatchLock } from "@/lib/board-dispatch-policy";
 import { completionStorageKey } from "@/lib/board-dispatch-stages";
 import {
   type BoardDispatchStage,
@@ -260,31 +267,28 @@ async function fetchCheckConclusion(
   return "success";
 }
 
-async function isTestDispatchComplete(
-  active: NonNullable<DispatchLedger["active"]>,
-  pr: GitHubPullSnapshot,
-): Promise<{ ok: true; summary: string } | { ok: false }> {
-  const commit = await fetchLatestCommitOnBranch(active.issueNumber);
-  const started = Date.parse(active.startedAt);
-  const checks = commit ? await fetchCheckConclusion(commit.sha) : "none";
+function commitAfterDispatch(
+  commit: GitHubCommitSnapshot | null,
+  startedAt: string,
+): boolean {
+  const started = Date.parse(startedAt);
+  if (!commit || Number.isNaN(started)) return false;
+  return Date.parse(commit.date) > started;
+}
 
-  if (checks === "success") {
-    return {
-      ok: true,
-      summary: `Verifikasi test: CI lulus pada PR #${pr.number}.`,
-    };
-  }
-  if (checks === "pending" || checks === "failure") {
-    return { ok: false };
-  }
-  if (commit && !Number.isNaN(started) && Date.parse(commit.date) > started) {
-    const line = commit.message || buildCompletionSummary(pr);
-    return {
-      ok: true,
-      summary: `Verifikasi test: commit setelah dispatch — ${line}`,
-    };
-  }
-  return { ok: false };
+async function logStageCheck(
+  active: DispatchLock,
+  ok: boolean,
+  detail: Record<string, unknown>,
+): Promise<void> {
+  await logKad("info", "dispatch.stage_check", {
+    issueNumber: active.issueNumber,
+    correlationId: active.correlationId,
+    pipelineStage: active.pipelineStage,
+    ok,
+    strictGates: kadStrictStageGates(),
+    ...detail,
+  });
 }
 
 async function fetchIssueCommentsText(issueNumber: number): Promise<string> {
@@ -379,13 +383,33 @@ async function syncActiveCompletion(ledger: DispatchLedger): Promise<DispatchLed
   const active = getActiveLock(ledger, Date.now(), lockTtlMs());
   if (!active || !githubToken()) return ledger;
   const pr = await fetchPullRequestForIssue(active.issueNumber);
-  if (!pr) return ledger;
+  if (!pr) {
+    await logKad("warn", "dispatch.stage_check", {
+      issueNumber: active.issueNumber,
+      correlationId: active.correlationId,
+      pipelineStage: active.pipelineStage,
+      ok: false,
+      reasons: ["PR branch agent belum ditemukan di GitHub"],
+    });
+    return ledger;
+  }
+
+  const commit = await fetchLatestCommitOnBranch(active.issueNumber);
+  const afterCommit = commitAfterDispatch(commit, active.startedAt);
+  const body = pr.body ?? "";
 
   let next: DispatchLedger | null = null;
   let summary: string | undefined;
 
   if (active.pipelineStage === "development") {
-    next = applyPullRequestCompletion(ledger, pr, new Date().toISOString());
+    const gate = checkDevelopmentStageGate(body, afterCommit);
+    await logStageCheck(active, gate.ok, {
+      prNumber: pr.number,
+      reasons: gate.ok ? [] : gate.reasons,
+    });
+    if (!gate.ok) return ledger;
+    summary = gate.summary;
+    next = applyPullRequestCompletion(ledger, pr, new Date().toISOString(), summary);
     await writeLedger(next);
     await logKad("info", "dispatch.completed", {
       issueNumber: active.issueNumber,
@@ -393,8 +417,14 @@ async function syncActiveCompletion(ledger: DispatchLedger): Promise<DispatchLed
       pipelineStage: active.pipelineStage,
       prNumber: pr.number,
       prUrl: pr.html_url,
+      summary,
     });
     if (autoDispatchTestAfterDev()) {
+      await logKad("info", "dispatch.auto_chain_attempt", {
+        issueNumber: active.issueNumber,
+        fromStage: "development",
+        toStage: "test",
+      });
       try {
         await dispatchBoardIssue(active.issueNumber, "development", "test");
         await logKad("info", "dispatch.auto_test_chained", {
@@ -411,7 +441,15 @@ async function syncActiveCompletion(ledger: DispatchLedger): Promise<DispatchLed
   }
 
   if (active.pipelineStage === "test") {
-    const gate = await isTestDispatchComplete(active, pr);
+    const checks = commit ? await fetchCheckConclusion(commit.sha) : "none";
+    const ciSuccess = checks === "success";
+    const gate = checkTestStageGate(body, ciSuccess, afterCommit);
+    await logStageCheck(active, gate.ok, {
+      prNumber: pr.number,
+      ciSuccess,
+      commitAfterDispatch: afterCommit,
+      reasons: gate.ok ? [] : gate.reasons,
+    });
     if (!gate.ok) return ledger;
     summary = gate.summary;
     next = applyPullRequestCompletion(
@@ -430,6 +468,11 @@ async function syncActiveCompletion(ledger: DispatchLedger): Promise<DispatchLed
       summary,
     });
     if (autoDispatchAuditAfterTest()) {
+      await logKad("info", "dispatch.auto_chain_attempt", {
+        issueNumber: active.issueNumber,
+        fromStage: "test",
+        toStage: "audit",
+      });
       try {
         await dispatchBoardIssue(active.issueNumber, "test", "audit");
         await logKad("info", "dispatch.auto_audit_chained", {
@@ -445,15 +488,34 @@ async function syncActiveCompletion(ledger: DispatchLedger): Promise<DispatchLed
     return readLedger();
   }
 
-  const gate = await isAuditDispatchComplete(active, pr);
-  if (!gate.ok) return ledger;
-  summary = gate.summary;
+  let auditVerdict: AuditVerdict | undefined;
+  if (kadStrictStageGates()) {
+    const gate = checkAuditStageGate(body);
+    await logStageCheck(active, gate.ok, {
+      prNumber: pr.number,
+      reasons: gate.ok ? [] : gate.reasons,
+    });
+    if (!gate.ok) return ledger;
+    summary = gate.summary;
+    auditVerdict = gate.auditVerdict;
+  } else {
+    const legacy = await isAuditDispatchComplete(active, pr);
+    await logStageCheck(active, legacy.ok, {
+      prNumber: pr.number,
+      mode: "legacy",
+      reasons: legacy.ok ? [] : ["Audit belum memenuhi syarat (legacy)"],
+    });
+    if (!legacy.ok) return ledger;
+    summary = legacy.summary;
+    auditVerdict = legacy.auditVerdict;
+  }
+
   next = applyPullRequestCompletion(
     ledger,
     pr,
     new Date().toISOString(),
     summary,
-    gate.auditVerdict,
+    auditVerdict,
   );
   await writeLedger(next);
   await logKad("info", "dispatch.completed", {
@@ -463,6 +525,7 @@ async function syncActiveCompletion(ledger: DispatchLedger): Promise<DispatchLed
     prNumber: pr.number,
     prUrl: pr.html_url,
     summary,
+    auditVerdict,
   });
   return next;
 }

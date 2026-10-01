@@ -23,7 +23,7 @@ Terima body POST JSON dari papan admin meeting-room-cursor (KAD v1).
 6. pipelineStage "audit" (fase review ORCH — pelaksana audit ≠ develop):
    - Checkout PR/branch agent yang sama; baca ## Summary, ## Test evidence, diff PR, dan acceptance issue.
    - Review kontrak & scope; jangan menulis ulang fitur kecuali perbaikan bug kecil yang wajib agar audit jujur.
-   - Sebelum run selesai: tambahkan ## Audit di body PR dengan **Verdict:** pass | fail | clarify (wajib untuk kanban). Alternatif: commit/comment dengan teks `verdict pass` (mis. dokumen ORCH di branch) — server juga membaca itu.
+   - Sebelum run selesai: tambahkan ## Audit di body PR dengan **Verdict:** pass | fail | clarify (wajib). Server **tidak** lanjut ke Human QA/Clarify tanpa verdict valid di PR (gate ketat; log `dispatch.stage_check` di `Development/logs/kad-dispatch.jsonl`).
    - Opsional: pasangan dokumen agent + development stage audit di Agentic/runs/ bila skill devops-agent dipakai.
 
 7. Kanban & dispatch otomatis (bukan tugas agent):
