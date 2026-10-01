@@ -1,6 +1,6 @@
 # Runbook — Kanban Agent Dispatch (KAD)
 
-Selaras [PRD-Kanban-Agent-Dispatch.md](./PRD-Kanban-Agent-Dispatch.md) v1.0.
+Selaras [PRD-Kanban-Agent-Dispatch.md](./PRD-Kanban-Agent-Dispatch.md) v1.2.
 
 ## 1. Cursor Automation (sekali)
 

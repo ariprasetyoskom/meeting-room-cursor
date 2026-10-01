@@ -4,10 +4,10 @@
 | Metadata | |
 |----------|---|
 | **Dokumen** | PRD-Aplikasi-Booking-Ruang-Meeting |
-| **Versi** | **1.5** |
-| **Tanggal** | 30 September 2026 |
+| **Versi** | **1.6** |
+| **Tanggal** | 1 Oktober 2026 |
 | **Status** | MVP **fungsional lokal** (F-02–F-09, F-11 + F-04); **release-ready** setelah W1–W3 — [PLAN-MVP-Delivery](./PLAN-MVP-Delivery.md) |
-| **Dokumen Terkait** | [BRD](./BRD-Aplikasi-Booking-Ruang-Meeting.md) · [PLAN](./PLAN-MVP-Delivery.md) · [PLAN-UI-Enhance](./PLAN-UI-Enhance.md) · [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Architecture](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) · [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md) |
+| **Dokumen Terkait** | [BRD](./BRD-Aplikasi-Booking-Ruang-Meeting.md) · [PLAN](./PLAN-MVP-Delivery.md) · [PLAN-UI-Enhance](./PLAN-UI-Enhance.md) · [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md) · [Architecture](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) · [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md) · [PRD KAD](./PRD-Kanban-Agent-Dispatch.md) (orkestrasi UX, bukan scope F-xx) |
 
 ---
 
@@ -58,21 +58,21 @@ Keputusan teknis turunan: lihat [TDD](./TDD-Aplikasi-Booking-Ruang-Meeting.md).
 
 ### 4.1 Status implementasi (snapshot engineering)
 
-Snapshot **30 Sep 2026** — commit terbaru di branch `cursor/meeting-room-web-scaffold`: `b1848a6`. Selarasan gelombang: **§4.3**.
+Snapshot **1 Okt 2026** — commit terbaru di branch `cursor/meeting-room-web-scaffold`: `a144c57`. Selarasan gelombang: **§4.3**. Epic UI [#30](https://github.com/ariprasetyoskom/meeting-room-cursor/issues/30): token/shell + komponen kit ✅; polish layar (UI-05–10) dan KAD smoke (#45 logo, #47 header) **pararel** — tidak mengubah status fungsional F-xx Must di bawah kecuali UX.
 
 | ID | Status MVP | Bukti singkat | Gap utama |
 |----|------------|---------------|-----------|
 | **F-01** | **Sebagian** | Dev auth + OIDC (Auth.js), session, logout | UAT IdP **staging** (W2) |
-| **F-02** | **Selesai** | `/rooms`, `RoomDirectory`, filter kapasitas | UX polish pararel [UI-07](https://github.com/ariprasetyoskom/meeting-room-cursor/issues/37) |
+| **F-02** | **Selesai** | `/rooms`, `RoomDirectory`, filter kapasitas; empty/error states (`EmptyState`, `ListLoadError`) | UX polish pararel [UI-07](https://github.com/ariprasetyoskom/meeting-room-cursor/issues/37) |
 | **F-03** | **Sebagian** | Kartu + picker di `/book` & `/rooms` | Halaman `/rooms/[code]` (W3 / PLN-007, [UI-09](https://github.com/ariprasetyoskom/meeting-room-cursor/issues/39)); foto OQ-3 optional |
 | **F-04** | **Selesai** | Hari / Minggu / Daftar; 07–21 WIB; organizer (D-2); slot lampau WIB abu-abu + `disabled` (`isBookingSlotPast`, refresh 1 menit, `b1848a6`) | UX [UI-04–05](https://github.com/ariprasetyoskom/meeting-room-cursor/issues/34); week multi-ruang → W4+ |
 | **F-05** | **Selesai** | `BookingModal`, POST booking, BR-01–04; enqueue email **tidak** mem-500 setelah commit DB (`b2ef14c`) | UX [UI-06](https://github.com/ariprasetyoskom/meeting-room-cursor/issues/36); konfirmasi email tetap tergantung F-10 |
 | **F-06** | **Selesai** | `/bookings`, `MyBookingsList` | UX [UI-07](https://github.com/ariprasetyoskom/meeting-room-cursor/issues/37) |
 | **F-07** | **Selesai** | Cancel organizer + window D-1; admin + alasan | Email cancel → F-10 (W1) |
-| **F-08** | **Selesai** | `/admin/rooms`, CRUD, activate/deactivate | UX [UI-08](https://github.com/ariprasetyoskom/meeting-room-cursor/issues/38) |
-| **F-09** | **Selesai** | `/admin/bookings`, admin cancel + alasan | UX [UI-08](https://github.com/ariprasetyoskom/meeting-room-cursor/issues/38) |
+| **F-08** | **Selesai** | `/admin/rooms`, CRUD, activate/deactivate; density/feedback polish `a144c57` | UX [UI-08](https://github.com/ariprasetyoskom/meeting-room-cursor/issues/38) — sisa ticket |
+| **F-09** | **Selesai** | `/admin/bookings`, admin cancel + alasan; tabel + pesan booking (`booking-messages`) | UX [UI-08](https://github.com/ariprasetyoskom/meeting-room-cursor/issues/38) |
 | **F-10** | **Sebagian** | Worker + enqueue confirm; gagal Redis di-log (booking tetap 201) | **Must W1:** SMTP, template D-3, cancel + reminder, Redis staging — [PLAN-Wave-1-Email](./PLAN-Wave-1-Email.md) |
-| **F-11** | **Selesai** | `/admin/audit`, filter tanggal | UX [UI-08](https://github.com/ariprasetyoskom/meeting-room-cursor/issues/38) |
+| **F-11** | **Selesai** | `/admin/audit`, filter tanggal; display helper `admin-display` | UX [UI-08](https://github.com/ariprasetyoskom/meeting-room-cursor/issues/38) |
 | **F-12** | **Belum** | — | Post v1.0.0 (W4+, PLN-010) |
 
 Repo: [github.com/ariprasetyoskom/meeting-room-cursor](https://github.com/ariprasetyoskom/meeting-room-cursor). Setup lokal: [000_platform_setup §9](./000_platform_setup/PRD-Platform-Environment-Setup.md).
@@ -135,14 +135,15 @@ Sumber kebenaran delivery: [PLAN-MVP-Delivery §2–§5](./PLAN-MVP-Delivery.md)
 Spesifikasi layar lengkap: [Design](./Design-Aplikasi-Booking-Ruang-Meeting.md).
 
 - Bahasa UI utama: **Indonesia** (`lang="id"`); datetime **WIB**; tipografi **Geist Sans** (`layout.tsx` variabel di `<html>`).
-- **App shell:** header sticky + blur, **logo** (`BrandLogo`) + brand *Ruang Meeting* / tagline *Booking internal*; nav segmented pill (`MainNav`, `AdminNav`); profil `UserMenu` + `SessionProfileProvider`; dev: `DevAuthBanner`. Detail: [Design §5](./Design-Aplikasi-Booking-Ruang-Meeting.md).
+- **App shell:** header sticky + blur, **logo** (`BrandLogo`, monogram MR — smoke KAD [#45](https://github.com/ariprasetyoskom/meeting-room-cursor/issues/45)) + brand *Ruang Meeting* (copy header smoke [#47](https://github.com/ariprasetyoskom/meeting-room-cursor/issues/47) dapat berbeda di branch `agent/issue-47` sampai merge); tagline *Booking internal*; nav segmented pill; profil `UserMenu`; dev: `DevAuthBanner`. Detail: [Design §5](./Design-Aplikasi-Booking-Ruang-Meeting.md).
+- **Dark mode / a11y (epic UI):** token `prefers-color-scheme` + class di `globals.css` ([UI-10](https://github.com/ariprasetyoskom/meeting-room-cursor/issues/40)) — polish booking flow, bukan gate Must v1.0.0.
 - Nav: **Booking** (`/book`), **Ruang** (`/rooms`), **Booking saya** (`/bookings`); admin (role): `/admin/rooms`, `/admin/bookings`, `/admin/audit`.
 - **Pilih ruangan:** grid 5 ruang demo (MR-A … MR-E) + opsi **Semua ruang**; filter kapasitas + timeline.
 - Kalender: view **Hari** (timeline multi-ruang) / **Minggu** (grid 7 hari, satu ruang terpilih) / **Daftar**; slot terisi + organizer (D-2).
 - **Slot waktu:** kosong = hijau (klik booking); terisi = merah + judul/organizer; **jam sudah lewat** (banding `Asia/Jakarta`, mulai dari menit `:00` slot) = abu-abu, tidak bisa dipilih — selaras BR-02/BR-04 (tidak booking masa lalu). Status jam diperbarui otomatis ~1 menit.
 - Booking: modal dengan dropdown ruang; tanpa optimistic submit; komponen form memakai kit UI (`Field`, `Input`, `Button`, `Alert`) — [Design §5.1](./Design-Aplikasi-Booking-Ruang-Meeting.md); migrasi layar lain di epic UI.
 - Error API booking: bentrok 409 dengan copy PRD; kegagalan server generik — perbaiki pesan JSON (backlog QA).
-- Empty states dengan CTA ke `/book`.
+- Empty states dengan CTA ke `/book` (`EmptyState`); error load list (`ListLoadError`).
 - Error bentrok: *"Ruangan sudah dipesan pada waktu ini"*.
 - Cancel denied: window **1 jam** (D-1) atau bukan organizer.
 
@@ -183,7 +184,7 @@ Hanya **OQ-4** tetap terbuka di versi dokumen ini.
 - Semua fitur **F-01–F-11** lulus QA checklist Architecture §8.6 — lihat matriks penutupan **§4.3** (posisi: **8/11** fungsional penuh di dev; **F-01**, **F-03** (Should), **F-10** Must belum sign-off).
 - **D-1**, **D-2** verified di dev/UAT; **D-3** menunggu penutupan **F-10** Wave **W1**.
 - Zero P1 bugs (termasuk regresi booking POST vs Redis — diperbaiki `b2ef14c`); load test 100 concurrent users on staging (W3).
-- CI **GitHub Actions** hijau pada branch release / `main` ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)) — develop aktif: `cursor/meeting-room-web-scaffold`.
+- CI **GitHub Actions** hijau pada branch release / `main` ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml), [sync PR test evidence](../.github/workflows/sync-pr-test-evidence.yml)) — develop aktif: `cursor/meeting-room-web-scaffold`.
 
 ---
 
@@ -206,9 +207,10 @@ Hanya **OQ-4** tetap terbuka di versi dokumen ini.
 
 | Versi | Tanggal | Ringkas |
 |-------|---------|---------|
+| **1.6** | 1 Okt 2026 | Snapshot `a144c57`: UI kit empty/error, admin polish, dark mode CSS, selaras epic UI + KAD smoke; PRD KAD v1.2 cross-ref. |
 | **1.5** | 30 Sep 2026 | F-04: slot jam lampau WIB non-interaktif + token `--slot-past`; snapshot `b1848a6`. |
 | 1.4 | 30 Sep 2026 | Matriks §4.3, status gelombang W0–W3, PRD ↔ PLAN. |
 
 ---
 
-*Akhir dokumen PRD v1.5.*
+*Akhir dokumen PRD v1.6.*

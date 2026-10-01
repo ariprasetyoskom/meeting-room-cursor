@@ -28,7 +28,7 @@ Sumber halaman: [Devops/github-wiki/](../Devops/github-wiki/README.md) — publi
 | Dokumen | Versi | Deskripsi |
 |---------|-------|-----------|
 | [BRD-Aplikasi-Booking-Ruang-Meeting.md](./BRD-Aplikasi-Booking-Ruang-Meeting.md) | **1.2** | Business requirements: KPI, BR/FR/NFR, acceptance §13 + GitHub |
-| [PRD-Aplikasi-Booking-Ruang-Meeting.md](./PRD-Aplikasi-Booking-Ruang-Meeting.md) | **1.5** | Produk: F-01–F-12, status §4.1, gelombang §4.2–§4.3, UX §6 |
+| [PRD-Aplikasi-Booking-Ruang-Meeting.md](./PRD-Aplikasi-Booking-Ruang-Meeting.md) | **1.6** | Produk: F-01–F-12, status §4.1, gelombang §4.2–§4.3, UX §6 |
 | [TDD-Aplikasi-Booking-Ruang-Meeting.md](./TDD-Aplikasi-Booking-Ruang-Meeting.md) | **1.1** | Tech stack terkunci (Drizzle, Next 14), API, DB, env |
 | [Architecture-Aplikasi-Booking-Ruang-Meeting.md](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) | **1.3** | C4, komponen/rute §3.3, ADR, GitHub Actions CI/CD, QA |
 | [Design-Aplikasi-Booking-Ruang-Meeting.md](./Design-Aplikasi-Booking-Ruang-Meeting.md) | **1.1** | UI/UX, app shell + logo, tokens, `/book` + admin |
@@ -58,10 +58,12 @@ Sumber halaman: [Devops/github-wiki/](../Devops/github-wiki/README.md) — publi
 
 | Dokumen | Versi | Deskripsi |
 |---------|-------|-----------|
-| [PRD-Orkestrasi-Manusia-AI.md](./PRD-Orkestrasi-Manusia-AI.md) | **1.4** | Runner per task + §4.5 peta kanban 8 kolom vs stage develop/test/audit |
-| [PRD-Kanban-Agent-Dispatch.md](./PRD-Kanban-Agent-Dispatch.md) | **1.1** | Geser ke **Development** di `/admin/board` → webhook `kad-v1` → agent (bukan chat IDE) |
-| [Architecture-Development-Orchestration.md](./Architecture-Development-Orchestration.md) | **1.0** | C4, dispatch, `Development/logs/`, pemetaan kanban ↔ ORCH |
+| [PRD-Orkestrasi-Manusia-AI.md](./PRD-Orkestrasi-Manusia-AI.md) | **1.5** | Runner per task + §4.5 peta kanban 8 kolom vs stage develop/test/audit |
+| [PRD-Kanban-Agent-Dispatch.md](./PRD-Kanban-Agent-Dispatch.md) | **1.2** | Geser ke **Development / Test / Audit** → webhook `kad-v1` + auto-chain + gate ketat |
+| [Architecture-Development-Orchestration.md](./Architecture-Development-Orchestration.md) | **1.1** | C4, dispatch multi-stage, `Development/logs/`, pemetaan kanban ↔ ORCH |
 | [KANBAN-AGENT-DISPATCH-RUNBOOK.md](./KANBAN-AGENT-DISPATCH-RUNBOOK.md) | **1.0** | Setup Automation webhook + env `BOARD_AGENT_DISPATCH_*` |
+| [KANBAN-AUTOMATION-INSTRUCTIONS.md](./KANBAN-AUTOMATION-INSTRUCTIONS.md) | — | Teks instruksi agent (salin ke Cursor Automation) |
+| [KANBAN-LOCAL-DELIVERY.md](./KANBAN-LOCAL-DELIVERY.md) | — | Commit di branch agent dulu; PR setelah Human QA (`BOARD_KAD_DEFER_PR_UNTIL_HUMAN_QA`) |
 | [../Development/README.md](../Development/README.md) | — | Log terpusat alur development (`Development/logs/`) |
 
 ## Agentic — generator dokumen

@@ -3,9 +3,9 @@
 | Metadata | |
 |----------|---|
 | **Dokumen** | Architecture-Development-Orchestration |
-| **Versi** | **1.0** |
+| **Versi** | **1.1** |
 | **Tanggal** | 1 Oktober 2026 |
-| **Status** | Selaras implementasi papan admin + KAD v1.0; runner ORCH belum diimplementasi |
+| **Status** | Selaras papan admin + KAD multi-stage (v1.2 PRD); runner ORCH file-based belum diimplementasi |
 | **Bahasa** | Indonesia |
 | **Dokumen Terkait** | [PRD ORCH](./PRD-Orkestrasi-Manusia-AI.md) · [PRD KAD](./PRD-Kanban-Agent-Dispatch.md) · [Architecture booking](./Architecture-Aplikasi-Booking-Ruang-Meeting.md) · [Development/README.md](../Development/README.md) |
 
@@ -51,14 +51,14 @@ Satu view **Auto development** (`/admin/board`). Kolom (kiri → kanan):
 |----------|----------|--------|
 | `intake` | Intake | Antrian; belum direncanakan |
 | `plan` | Plan | Acuan, scope, manifest pelaksana (ORCH v1.1+) |
-| `development` | Development | **Satu-satunya kolom yang memicu KAD v1.0** |
-| `test` | Test | Verifikasi / bukti lulus |
-| `audit` | Audit | Review diff & kontrak (pelaksana ≠ develop) |
+| `development` | Development | **KAD** — `pipelineStage: development` |
+| `test` | Test | **KAD** — geser atau auto-chain setelah gate Development |
+| `audit` | Audit | **KAD** — geser atau auto-chain setelah gate Test |
 | `human_clarify` | Human Clarify | Gate `clarify` ORCH — menunggu jawaban |
 | `human_qa` | Human QA | Penerimaan manusia sebelum tutup |
 | `done` | Done | Task diterima |
 
-**KAD v1.0:** hanya transisi **menuju** `development` memanggil `POST /api/v1/admin/board/dispatch`. Kolom lain = geser UI (atau ORCH runner di masa depan).
+**KAD v1.2:** transisi **menuju** `development`, `test`, atau `audit` memanggil `POST /api/v1/admin/board/dispatch` dengan `pipelineStage` sesuai. Auto-chain memanggil stage berikut setelah gate lulus. Kolom human = geser UI + reconcile ledger/localStorage.
 
 **GitHub Project #1** (Todo / In Progress / Done) tetah terpisah; scheduler 15 m monitor **In Progress** GitHub — bukan kolom pipeline lokal.
 
@@ -70,13 +70,13 @@ Satu view **Auto development** (`/admin/board`). Kolom (kiri → kanan):
 |--------------|----------------------------------|-------------------|
 | Intake, Plan | `queued` (pra-develop) | Manual geser; v1.1 bisa hook Plan |
 | Development | `develop` | **KAD** → Automation webhook |
-| Test | `test` | Manual / runner ORCH (belum) |
-| Audit | `audit` | Manual / runner ORCH (belum) |
+| Test | `test` | **KAD** (geser atau auto-chain) |
+| Audit | `audit` | **KAD** (geser atau auto-chain); verdict → Human QA / Clarify |
 | Human Clarify | `waiting_human` (`clarify`) | Manual |
 | Human QA | Gate manusia pasca-audit | Manual |
 | Done | `done` | Manual |
 
-Runner ORCH nanti **memegang transisi gate** (`pass` / `fail` / `clarify`); kanban v1.0 **mirror visual** — operator geser kartu, kecuali trigger Development yang terhubung KAD.
+Gate stage KAD (`board-kad-stage-gates.ts`) meniru transisi ORCH (`pass` / `fail` / `clarify`) untuk tiga stage agent. Runner ORCH file-based nanti bisa menggantikan sebagian logika; saat ini kanban + dispatch + `Development/logs/` adalah jalur operasional.
 
 ---
 
@@ -85,9 +85,10 @@ Runner ORCH nanti **memegang transisi gate** (`pass` / `fail` / `clarify`); kanb
 | Komponen | Path | Tanggung jawab |
 |----------|------|----------------|
 | UI papan | `Apps/web/src/components/ProjectBoard.tsx` | Drag/keyboard; rollback jika dispatch gagal |
-| Model kartu | `Apps/web/src/lib/project-board.ts` | `BoardStatus`, kolom, `BOARD_DISPATCH_STAGE=development` |
-| Kebijakan | `Apps/web/src/lib/board-dispatch-policy.ts` | Lock, debounce, block epic #30 |
-| Dispatch service | `Apps/web/src/lib/board-dispatch.ts` | GitHub fetch, webhook, ledger |
+| Model kartu | `Apps/web/src/lib/project-board.ts` | `BoardStatus`, `BOARD_DISPATCH_STAGES`, reconcile kolom |
+| Kebijakan | `Apps/web/src/lib/board-dispatch-policy.ts` | Lock, debounce, block epic #30, trigger stage |
+| Gate | `Apps/web/src/lib/board-kad-stage-gates.ts` | Summary, Test evidence, Audit |
+| Dispatch service | `Apps/web/src/lib/board-dispatch.ts` | GitHub fetch, webhook, ledger, auto-chain, sync completion |
 | Log terpusat | `Apps/web/src/lib/development-log.ts` | Resolve `Development/logs/` |
 | API | `Apps/web/src/app/api/v1/admin/board/dispatch/route.ts` | GET status, POST dispatch, DELETE lock |
 
@@ -101,7 +102,7 @@ sequenceDiagram
   participant GH as GitHub API
   participant WH as Cursor webhook
 
-  UI->>API: POST { issueNumber, fromStage? }
+  UI->>API: POST { issueNumber, fromStage?, pipelineStage }
   API->>LOG: kad-dispatch.jsonl (rejected/…)
   API->>GH: GET issue
   API->>WH: POST kad-v1 { prompt, pipelineStage, … }
@@ -116,7 +117,7 @@ sequenceDiagram
 |-------|-----------|
 | `prompt` | Instruksi lengkap untuk agent (issue + alur pipeline) |
 | `issueNumber`, `repository` | Konteks GitHub |
-| `pipelineStage` | Selalu `development` pada v1.0 |
+| `pipelineStage` | `development` \| `test` \| `audit` |
 | `fromStage` | Kolom asal kanban (opsional) |
 | `correlationId` | UUID; lock ledger |
 
@@ -168,7 +169,7 @@ Admin session wajib untuk semua route `/api/v1/admin/board/dispatch`.
 | Sistem | Trigger | Agent |
 |--------|---------|-------|
 | **SCH** (15 m) | Cron GitHub Actions | Tidak — laporan In Progress |
-| **KAD** | Geser → Development | Ya — Automation webhook |
+| **KAD** | Geser → Development / Test / Audit (+ auto-chain) | Ya — Automation webhook |
 
 Keduanya complement; jangan polling board untuk dispatch (anti-pattern KAD-02).
 
@@ -178,9 +179,9 @@ Keduanya complement; jangan polling board untuk dispatch (anti-pattern KAD-02).
 
 | Versi | Target |
 |-------|--------|
-| KAD v1.1 | Sync Status GitHub Project; release lock on run complete |
+| KAD v1.3 | Sync Status GitHub Project; release lock on run complete |
 | ORCH v0.1 | Parser + state + packet di `Development/logs/` atau subfolder ledger |
-| Integrasi | Geser Test/Audit memicu runner stage, bukan hanya UI |
+| Integrasi penuh | Runner ORCH file-based menggantikan sebagian gate KAD di server |
 
 ---
 
@@ -194,4 +195,4 @@ Keduanya complement; jangan polling board untuk dispatch (anti-pattern KAD-02).
 
 ---
 
-*Akhir Architecture Development Orchestration v1.0.*
+*Akhir Architecture Development Orchestration v1.1.*

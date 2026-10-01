@@ -153,17 +153,17 @@ Gate menolak packet jika bagian dokumen agent kosong. Verdict `pass` juga ditola
 
 Operator melihat delapan kolom di `/admin/board` (**Intake → Plan → Development → Test → Audit → Human Clarify → Human QA → Done**). Kolom ini **mirror** alur produk; mesin ORCH §4.1 tetap tiga stage (`develop`, `test`, `audit`) plus gate.
 
-| Kolom kanban | Stage / state ORCH | Pelaksana v1.0 |
-|--------------|-------------------|----------------|
+| Kolom kanban | Stage / state ORCH | Pelaksana (implementasi KAD) |
+|--------------|-------------------|------------------------------|
 | Intake, Plan | Pra-`develop` (antrean & rencana) | Manusia geser kartu |
-| **Development** | `develop` | **KAD**: geser ke kolom ini memicu agent via webhook ([PRD KAD](./PRD-Kanban-Agent-Dispatch.md)) |
-| Test | `test` | Manusia geser; runner ORCH menyusul |
-| Audit | `audit` | Manusia geser; runner ORCH menyusul |
-| Human Clarify | `waiting_human` (`clarify`) | Manusia jawab inbox; kartu di kolom ini |
-| Human QA | Gate penerimaan manusia pasca-audit | Manusia |
+| **Development** | `develop` | **KAD**: geser ke kolom ini memicu agent (`pipelineStage: development`) |
+| **Test** | `test` | **KAD**: geser ke kolom **atau** auto-chain setelah gate Development lulus |
+| **Audit** | `audit` | **KAD**: geser ke kolom **atau** auto-chain setelah gate Test lulus |
+| Human Clarify | `waiting_human` (`clarify`) | Manusia jawab inbox; kartu di kolom ini (verdict audit `clarify`) |
+| Human QA | Gate penerimaan manusia pasca-audit | Manusia; opsional buka PR jika `BOARD_KAD_DEFER_PR_UNTIL_HUMAN_QA` |
 | Done | `done` | Manusia |
 
-Runner ORCH **memegang** transisi gate (`pass` / `fail` / `clarify`). Kanban v1.0 tidak mengganti orchestrator; hanya **Development** terhubung dispatch. Dokumen stage tetap di `Agentic/runs/{taskId}/` (§4.4).
+Gate stage KAD (Summary / Test evidence / Audit verdict) meniru keputusan ORCH (`pass` / `fail` / `clarify`) sebelum stage dianggap selesai atau di-chain. Runner ORCH file-based **belum** diimplementasi; kanban + dispatch + log di `Development/logs/` adalah jalur operasional saat ini. Dokumen stage tetap di `Agentic/runs/{taskId}/` (§4.4). Detail: [PRD KAD](./PRD-Kanban-Agent-Dispatch.md), [KANBAN-LOCAL-DELIVERY](./KANBAN-LOCAL-DELIVERY.md).
 
 **Log operasional** (dispatch, lock, event runner) terpusat di `Development/logs/` — bukan dokumen agent/development. Detail: [Architecture Development Orchestration §6](./Architecture-Development-Orchestration.md).
 
