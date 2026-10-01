@@ -9,6 +9,9 @@ import {
   type Room,
 } from "@/lib/client-api";
 import { formatDateId, formatRange } from "@/lib/format";
+import { Alert } from "./ui/Alert";
+import { EmptyState } from "./ui/EmptyState";
+import { ListLoadError } from "./ui/ListLoadError";
 import { PageHeader } from "./ui/PageHeader";
 import { LoadingBlock } from "./ui/LoadingBlock";
 
@@ -21,12 +24,14 @@ export function MyBookingsList() {
   const [me, setMe] = useState<{ id: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [unauthorized, setUnauthorized] = useState(false);
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setUnauthorized(false);
     try {
       const [meRes, bookingRes, roomRes] = await Promise.all([
         apiFetch<{ id: string }>("/api/v1/me"),
@@ -38,6 +43,7 @@ export function MyBookingsList() {
       setRooms(Object.fromEntries(roomRes.rooms.map((r) => [r.id, r])));
     } catch (e) {
       if (e instanceof ApiError && e.status === 401) {
+        setUnauthorized(true);
         setError("Silakan login di /login.");
       } else {
         setError(e instanceof Error ? e.message : "Gagal memuat.");
@@ -84,6 +90,11 @@ export function MyBookingsList() {
     }
   }
 
+  const emptyCopy =
+    tab === "upcoming"
+      ? "Belum ada booking mendatang — mulai dari kalender booking."
+      : "Belum ada riwayat booking di tab ini.";
+
   return (
     <div className="page-content bookings-page">
       <PageHeader
@@ -117,54 +128,56 @@ export function MyBookingsList() {
         </button>
       </div>
 
-      {error && (
-        <div className="alert alert-error" role="alert">
-          {error}
-        </div>
+      {unauthorized && error && (
+        <Alert variant="error">{error}</Alert>
       )}
+
+      {!unauthorized && error && !loading && (
+        <ListLoadError message={error} onRetry={load} bookLabel="Booking baru" />
+      )}
+
       {loading && <LoadingBlock />}
 
-      {!loading && filtered.length === 0 && (
-        <div className="empty-state">
-          <p>Belum ada booking di tab ini.</p>
-          <Link href="/book" className="btn btn-primary">
-            Booking baru
-          </Link>
-        </div>
+      {!loading && !error && filtered.length === 0 && (
+        <EmptyState bookLabel="Booking baru">
+          <p>{emptyCopy}</p>
+        </EmptyState>
       )}
 
-      <ul className="booking-cards">
-        {filtered.map((b) => {
-          const room = rooms[b.roomId];
-          const isOrganizer = me?.id === b.organizerUserId;
-          const canCancel =
-            b.status === "confirmed" && isOrganizer && tab === "upcoming";
-          return (
-            <li key={b.id} className="booking-card-item">
-              <div>
-                <h3>{b.title}</h3>
-                <p className="text-muted">
-                  {room?.name ?? "Ruang"} · {formatDateId(b.startAt)}
-                </p>
-                <p>{formatRange(b.startAt, b.endAt)}</p>
-                <p className="text-muted">
-                  Organizer: <strong>{b.organizerName}</strong>
-                  {b.status === "cancelled" && " · Dibatalkan"}
-                </p>
-              </div>
-              {canCancel && (
-                <button
-                  type="button"
-                  className="btn btn-danger-outline"
-                  onClick={() => setCancelId(b.id)}
-                >
-                  Batalkan
-                </button>
-              )}
-            </li>
-          );
-        })}
-      </ul>
+      {!loading && !error && filtered.length > 0 && (
+        <ul className="booking-cards">
+          {filtered.map((b) => {
+            const room = rooms[b.roomId];
+            const isOrganizer = me?.id === b.organizerUserId;
+            const canCancel =
+              b.status === "confirmed" && isOrganizer && tab === "upcoming";
+            return (
+              <li key={b.id} className="booking-card-item">
+                <div>
+                  <h3>{b.title}</h3>
+                  <p className="text-muted">
+                    {room?.name ?? "Ruang"} · {formatDateId(b.startAt)} ·{" "}
+                    {formatRange(b.startAt, b.endAt)}
+                  </p>
+                  <p className="text-muted">
+                    Organizer: <strong>{b.organizerName}</strong>
+                    {b.status === "cancelled" && " · Dibatalkan"}
+                  </p>
+                </div>
+                {canCancel && (
+                  <button
+                    type="button"
+                    className="btn btn-danger-outline"
+                    onClick={() => setCancelId(b.id)}
+                  >
+                    Batalkan
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
       {cancelId && (
         <div className="modal-backdrop" onClick={() => setCancelId(null)}>
