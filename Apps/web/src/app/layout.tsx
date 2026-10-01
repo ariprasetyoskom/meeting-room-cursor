@@ -17,7 +17,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Booking Ruang Meeting Kita",
+  title: "Booking Ruang Meeting SPIRIT",
   description: "Pesan ruang meeting internal — cepat dan tanpa bentrok.",
 };
 
