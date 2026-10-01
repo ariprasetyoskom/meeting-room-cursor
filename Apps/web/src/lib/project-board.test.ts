@@ -9,7 +9,8 @@ import {
 
 describe("project board", () => {
   it("starts with pipeline column counts", () => {
-    expect(BOARD_CARDS.filter((card) => card.status === "intake")).toHaveLength(36);
+    expect(BOARD_CARDS.filter((card) => card.status === "intake")).toHaveLength(35);
+    expect(BOARD_CARDS.filter((card) => card.status === "plan")).toHaveLength(1);
     expect(BOARD_CARDS.filter((card) => card.status === "development")).toHaveLength(2);
     expect(BOARD_CARDS.filter((card) => card.status === "done")).toHaveLength(4);
   });
@@ -17,6 +18,7 @@ describe("project board", () => {
   it("filters by title and issue number", () => {
     expect(filterCards(BOARD_CARDS, "RoomPicker")).toHaveLength(1);
     expect(filterCards(BOARD_CARDS, "#35")[0]?.number).toBe(35);
+    expect(filterCards(BOARD_CARDS, "[SMOKE]")[0]?.number).toBe(47);
     expect(filterCards(BOARD_CARDS, "  ")).toHaveLength(BOARD_CARDS.length);
   });
 

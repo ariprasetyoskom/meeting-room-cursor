@@ -127,10 +127,11 @@ export const BOARD_CARDS: BoardCard[] = [
     status: "intake",
     title: "[KAD-POC] Brand logo MR monogram + aria-label (automation smoke)",
   },
+  /** Smoke KAD: ganti teks header — GitHub issue #47, filter kanban: `SMOKE` atau `#47` */
   {
     number: 47,
-    status: "intake",
-    title: "[UI-AUTO] Brand header: Ruang Meeting -> Ruang Meeting Kita",
+    status: "plan",
+    title: "[SMOKE] Header → Ruang Meeting Kita",
   },
 ];
 
