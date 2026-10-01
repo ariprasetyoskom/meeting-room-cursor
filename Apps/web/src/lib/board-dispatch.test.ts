@@ -12,7 +12,7 @@ describe("board dispatch prompt", () => {
   };
 
   it("mentions pipeline stage and fromStage", () => {
-    const prompt = buildAgentPrompt(issue, "o/r", "intake");
+    const prompt = buildAgentPrompt(issue, "o/r", "intake", "development");
     expect(prompt).toContain("#35");
     expect(prompt).toContain(BOARD_DISPATCH_STAGE);
     expect(prompt).toContain("intake");
@@ -20,8 +20,14 @@ describe("board dispatch prompt", () => {
   });
 
   it("works without fromStage", () => {
-    const prompt = buildAgentPrompt(issue, "o/r", null);
+    const prompt = buildAgentPrompt(issue, "o/r", null, "development");
     expect(prompt).toContain(BOARD_DISPATCH_STAGE);
     expect(prompt).not.toContain("dipindah dari");
+  });
+
+  it("includes test stage instructions", () => {
+    const prompt = buildAgentPrompt(issue, "o/r", "development", "test");
+    expect(prompt).toContain("**Test**");
+    expect(prompt.toLowerCase()).toContain("verifikasi");
   });
 });

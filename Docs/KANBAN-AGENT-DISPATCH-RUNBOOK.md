@@ -6,13 +6,7 @@ Selaras [PRD-Kanban-Agent-Dispatch.md](./PRD-Kanban-Agent-Dispatch.md) v1.0.
 
 1. Di Cursor: buat **Automation baru** dengan pemicu **Incoming HTTP webhook**.
 2. Repo: `ariprasetyoskom/meeting-room-cursor`, branch kerja (mis. `cursor/meeting-room-web-scaffold`).
-3. Instruksi agent (salin ke Automation):
-
-   ```text
-   Terima POST JSON. Baca field "prompt" dan kerjakan persis isinya pada repo yang disebut.
-   Field pipelineStage selalu "development" untuk dispatch kanban v1.
-   Jangan merge ke main/master; buka PR di branch agent/issue-<n>.
-   ```
+3. Instruksi agent: salin dari [KANBAN-AUTOMATION-INSTRUCTIONS.md](./KANBAN-AUTOMATION-INSTRUCTIONS.md) (satu Automation; `development` dan `test`).
 
 4. Setelah disimpan, salin **URL webhook** dan **secret** ke server (bukan ke browser).
 
@@ -33,6 +27,8 @@ Server mengirim:
 ```
 
 Automation cukup memakai `prompt`; field lain untuk log/observability.
+
+Setelah Development selesai (PR terdeteksi), server dapat memanggil webhook lagi dengan `"pipelineStage": "test"` (`BOARD_AUTO_DISPATCH_TEST`, default aktif). Papan memindahkan kartu ke kolom Test secara otomatis.
 
 ## 2. Env server (`Apps/web/.env.local`)
 

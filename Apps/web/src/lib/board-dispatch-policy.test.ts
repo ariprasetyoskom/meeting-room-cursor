@@ -7,12 +7,12 @@ import {
 } from "./board-dispatch-policy";
 
 describe("board dispatch policy", () => {
-  it("only triggers when entering development", () => {
+  it("triggers when entering development or test", () => {
     expect(shouldTriggerDispatch("intake", "development")).toBe(true);
     expect(shouldTriggerDispatch("plan", "development")).toBe(true);
-    expect(shouldTriggerDispatch("done", "development")).toBe(true);
-    expect(shouldTriggerDispatch("development", "test")).toBe(false);
-    expect(shouldTriggerDispatch("development", "development")).toBe(false);
+    expect(shouldTriggerDispatch("development", "test")).toBe(true);
+    expect(shouldTriggerDispatch("development", "audit")).toBe(false);
+    expect(shouldTriggerDispatch("test", "test")).toBe(false);
   });
 
   it("blocks epic #30", () => {
@@ -26,6 +26,7 @@ describe("board dispatch policy", () => {
       issueNumber: 35,
       correlationId: "abc",
       startedAt: new Date().toISOString(),
+      pipelineStage: "development",
     };
     const result = assertCanDispatch(ledger, 36, Date.now(), 4 * 60 * 60 * 1000);
     expect(result).toEqual({ ok: false, code: "LOCKED" });

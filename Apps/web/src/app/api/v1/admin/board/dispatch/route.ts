@@ -22,9 +22,12 @@ const boardStageSchema = z.enum([
   "done",
 ]);
 
+const dispatchStageSchema = z.enum(["development", "test"]);
+
 const postSchema = z.object({
   issueNumber: z.number().int().positive(),
   fromStage: boardStageSchema.optional(),
+  pipelineStage: dispatchStageSchema.optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -45,6 +48,7 @@ export async function POST(request: NextRequest) {
       const result = await dispatchBoardIssue(
         body.issueNumber,
         body.fromStage ?? null,
+        body.pipelineStage ?? "development",
       );
       return NextResponse.json(result, { status: 202 });
     } catch (e) {

@@ -6,17 +6,22 @@ import {
   assertCanDispatch,
   createEmptyLedger,
   getActiveLock,
+  normalizeDispatchLedger,
   type DispatchCompletedRun,
   type DispatchLedger,
 } from "@/lib/board-dispatch-policy";
+import { completionStorageKey } from "@/lib/board-dispatch-stages";
 import {
-  BOARD_DISPATCH_STAGE,
+  type BoardDispatchStage,
   type BoardStatus,
 } from "@/lib/project-board";
 import {
   appendDevelopmentLog,
   developmentDataPath,
 } from "@/lib/development-log";
+import type { IssueAgentDetail } from "@/lib/board-agent-detail";
+
+export type { IssueAgentDetail };
 
 const KAD_LOG_CHANNEL = "kad-dispatch";
 
@@ -25,7 +30,7 @@ export type AutomationWebhookPayload = {
   correlationId: string;
   issueNumber: number;
   repository: string;
-  pipelineStage: typeof BOARD_DISPATCH_STAGE;
+  pipelineStage: BoardDispatchStage;
   fromStage: BoardStatus | null;
   prompt: string;
 };
@@ -60,6 +65,11 @@ function dispatchEnabled(): boolean {
   return process.env.BOARD_AGENT_DISPATCH_ENABLED === "true";
 }
 
+function autoDispatchTestAfterDev(): boolean {
+  if (!dispatchEnabled()) return false;
+  return process.env.BOARD_AUTO_DISPATCH_TEST !== "false";
+}
+
 function lockTtlMs(): number {
   const raw = process.env.BOARD_DISPATCH_LOCK_TTL_MS;
   const n = raw ? Number(raw) : 4 * 60 * 60 * 1000;
@@ -76,11 +86,11 @@ function ledgerPath(): string {
 
 function parseLedger(raw: string): DispatchLedger {
   const parsed = JSON.parse(raw) as DispatchLedger;
-  return {
+  return normalizeDispatchLedger({
     active: parsed.active ?? null,
     lastDispatchAtByIssue: parsed.lastDispatchAtByIssue ?? {},
     completedByIssue: parsed.completedByIssue ?? {},
-  };
+  });
 }
 
 export type GitHubPullSnapshot = {
@@ -128,6 +138,7 @@ export function applyPullRequestCompletion(
   ledger: DispatchLedger,
   pr: GitHubPullSnapshot,
   nowIso: string,
+  summaryOverride?: string,
 ): DispatchLedger {
   const active = ledger.active;
   if (!active) return ledger;
@@ -135,19 +146,131 @@ export function applyPullRequestCompletion(
     issueNumber: active.issueNumber,
     correlationId: active.correlationId,
     completedAt: nowIso,
-    summary: buildCompletionSummary(pr),
+    summary: summaryOverride ?? buildCompletionSummary(pr),
     prNumber: pr.number,
     prUrl: pr.html_url,
     prState: pr.state,
+    pipelineStage: active.pipelineStage,
   };
   return {
     ...ledger,
     active: null,
     completedByIssue: {
       ...ledger.completedByIssue,
-      [String(active.issueNumber)]: completed,
+      [completionStorageKey(active.issueNumber, active.pipelineStage)]: completed,
     },
   };
+}
+
+type GitHubCommitSnapshot = {
+  sha: string;
+  date: string;
+  message: string;
+};
+
+async function fetchLatestCommitOnBranch(
+  issueNumber: number,
+): Promise<GitHubCommitSnapshot | null> {
+  const token = githubToken();
+  if (!token) return null;
+  const repo = githubRepo();
+  const branch = agentBranchForIssue(issueNumber);
+  const url = new URL(`https://api.github.com/repos/${repo}/commits`);
+  url.searchParams.set("sha", branch);
+  url.searchParams.set("per_page", "1");
+  const res = await fetch(url.toString(), {
+    headers: {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${token}`,
+      "X-GitHub-Api-Version": "2022-11-28",
+    },
+    cache: "no-store",
+  });
+  if (!res.ok) return null;
+  const commits = (await res.json()) as Array<{
+    sha: string;
+    commit: { message: string; author: { date: string } };
+  }>;
+  const head = commits[0];
+  if (!head) return null;
+  return {
+    sha: head.sha,
+    date: head.commit.author.date,
+    message: head.commit.message.split("\n")[0]?.trim() ?? "",
+  };
+}
+
+async function fetchCheckConclusion(
+  ref: string,
+): Promise<"success" | "pending" | "failure" | "none"> {
+  const token = githubToken();
+  if (!token) return "none";
+  const repo = githubRepo();
+  const res = await fetch(
+    `https://api.github.com/repos/${repo}/commits/${ref}/check-runs?per_page=100`,
+    {
+      headers: {
+        Accept: "application/vnd.github+json",
+        Authorization: `Bearer ${token}`,
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+      cache: "no-store",
+    },
+  );
+  if (!res.ok) return "none";
+  const data = (await res.json()) as {
+    check_runs: Array<{ status: string; conclusion: string | null }>;
+  };
+  const runs = data.check_runs ?? [];
+  if (runs.length === 0) return "none";
+  if (
+    runs.some(
+      (run) =>
+        run.status === "queued" ||
+        run.status === "in_progress" ||
+        run.conclusion == null,
+    )
+  ) {
+    return "pending";
+  }
+  if (
+    runs.some(
+      (run) =>
+        run.conclusion === "failure" ||
+        run.conclusion === "cancelled" ||
+        run.conclusion === "timed_out",
+    )
+  ) {
+    return "failure";
+  }
+  return "success";
+}
+
+async function isTestDispatchComplete(
+  active: NonNullable<DispatchLedger["active"]>,
+  pr: GitHubPullSnapshot,
+): Promise<{ ok: true; summary: string } | { ok: false }> {
+  const commit = await fetchLatestCommitOnBranch(active.issueNumber);
+  const started = Date.parse(active.startedAt);
+  const checks = commit ? await fetchCheckConclusion(commit.sha) : "none";
+
+  if (checks === "success") {
+    return {
+      ok: true,
+      summary: `Verifikasi test: CI lulus pada PR #${pr.number}.`,
+    };
+  }
+  if (checks === "pending" || checks === "failure") {
+    return { ok: false };
+  }
+  if (commit && !Number.isNaN(started) && Date.parse(commit.date) > started) {
+    const line = commit.message || buildCompletionSummary(pr);
+    return {
+      ok: true,
+      summary: `Verifikasi test: commit setelah dispatch — ${line}`,
+    };
+  }
+  return { ok: false };
 }
 
 async function syncActiveCompletion(ledger: DispatchLedger): Promise<DispatchLedger> {
@@ -155,13 +278,54 @@ async function syncActiveCompletion(ledger: DispatchLedger): Promise<DispatchLed
   if (!active || !githubToken()) return ledger;
   const pr = await fetchPullRequestForIssue(active.issueNumber);
   if (!pr) return ledger;
-  const next = applyPullRequestCompletion(ledger, pr, new Date().toISOString());
+
+  let next: DispatchLedger | null = null;
+  let summary: string | undefined;
+
+  if (active.pipelineStage === "development") {
+    next = applyPullRequestCompletion(ledger, pr, new Date().toISOString());
+    await writeLedger(next);
+    await logKad("info", "dispatch.completed", {
+      issueNumber: active.issueNumber,
+      correlationId: active.correlationId,
+      pipelineStage: active.pipelineStage,
+      prNumber: pr.number,
+      prUrl: pr.html_url,
+    });
+    if (autoDispatchTestAfterDev()) {
+      try {
+        await dispatchBoardIssue(active.issueNumber, "development", "test");
+        await logKad("info", "dispatch.auto_test_chained", {
+          issueNumber: active.issueNumber,
+        });
+      } catch (e) {
+        await logKad("warn", "dispatch.auto_test_failed", {
+          issueNumber: active.issueNumber,
+          message: e instanceof Error ? e.message : "unknown",
+        });
+      }
+    }
+    return readLedger();
+  } else {
+    const gate = await isTestDispatchComplete(active, pr);
+    if (!gate.ok) return ledger;
+    summary = gate.summary;
+    next = applyPullRequestCompletion(
+      ledger,
+      pr,
+      new Date().toISOString(),
+      summary,
+    );
+  }
+
   await writeLedger(next);
   await logKad("info", "dispatch.completed", {
     issueNumber: active.issueNumber,
     correlationId: active.correlationId,
+    pipelineStage: active.pipelineStage,
     prNumber: pr.number,
     prUrl: pr.html_url,
+    summary,
   });
   return next;
 }
@@ -263,11 +427,29 @@ export function buildAgentPrompt(
   issue: GitHubIssueSnapshot,
   repo: string,
   fromStage: BoardStatus | null,
+  pipelineStage: BoardDispatchStage,
 ): string {
   const body = issue.body?.trim() || "(tidak ada deskripsi)";
   const fromLine = fromStage
-    ? `Kartu kanban dipindah dari **${fromStage}** ke **${BOARD_DISPATCH_STAGE}**.`
-    : `Stage kanban: **${BOARD_DISPATCH_STAGE}**.`;
+    ? `Kartu kanban dipindah dari **${fromStage}** ke **${pipelineStage}**.`
+    : `Stage kanban: **${pipelineStage}**.`;
+  const stageBlock =
+    pipelineStage === "test"
+      ? [
+          "Kamu dipanggil pada **Test** (verifikasi ORCH).",
+          "Acuan: pasangan dokumen develop (agent + development) bila ada, PR branch `agent/issue-" +
+            issue.number +
+            "`, dan kolom Output/verifikasi issue.",
+          "Jalankan test/verifikasi (npm test / CI); perbaiki minimal jika gagal; tulis bukti (perintah, exit code) di komentar PR atau ## Test evidence di body PR.",
+          "Update PR yang ada; jangan buka PR baru kecuali belum ada.",
+          "Perbarui body PR dengan ringkasan hasil test agar kanban menampilkan summary.",
+        ]
+      : [
+          "Kamu dipanggil pada **Development** (implementasi).",
+          "Implementasi + test lokal relevan; buka atau perbarui PR di branch agent.",
+          "Sebelum menyelesai run: perbarui **body PR** dengan bagian ## Summary (judul, file utama, cara uji) — dipakai papan kanban.",
+          "Setelah PR ada, papan otomatis pindah ke Test dan run Test terpisah akan dipanggil; jangan jalankan stage Test dalam run Development ini.",
+        ];
   return [
     `Kerjakan GitHub issue #${issue.number} di repo ${repo}.`,
     `Judul: ${issue.title}`,
@@ -275,16 +457,18 @@ export function buildAgentPrompt(
     "",
     fromLine,
     "Alur papan: Intake → Plan → Development → Test → Audit → Human Clarify → Human QA → Done.",
-    "Kamu dipanggil pada **Development** (implementasi). Setelah selesai, operator geser ke Test/Audit; jangan loncat stage sendiri.",
+    ...stageBlock,
     "",
     "Acceptance / deskripsi issue:",
     body,
     "",
     "Aturan:",
     "- Branch: agent/issue-" + issue.number,
-    "- Selaras ORCH: tulis dokumen agent + development per stage bila skill devops-agent dipakai.",
-    "- Implementasi + test relevan; jangan merge ke main/master.",
-    "- Buka pull request; komentari di PR jika blocker.",
+    "- Selaras ORCH: tulis dokumen agent + development untuk stage **" +
+      pipelineStage +
+      "** bila skill devops-agent dipakai.",
+    "- Jangan merge ke main/master.",
+    "- Jika blocker, komentari di PR/issue.",
     "- Jangan ubah scope di luar issue.",
   ].join("\n");
 }
@@ -323,9 +507,10 @@ export type DispatchStatus = {
   enabled: boolean;
   configured: boolean;
   activeIssueNumber: number | null;
+  activePipelineStage: BoardDispatchStage | null;
   correlationId: string | null;
   repository: string;
-  pipelineStage: typeof BOARD_DISPATCH_STAGE;
+  dispatchStages: BoardDispatchStage[];
   completedByIssue: Record<string, DispatchCompletedRun>;
 };
 
@@ -345,9 +530,10 @@ export async function getDispatchStatus(): Promise<DispatchStatus> {
     enabled,
     configured,
     activeIssueNumber: active?.issueNumber ?? null,
+    activePipelineStage: active?.pipelineStage ?? null,
     correlationId: active?.correlationId ?? null,
     repository: githubRepo(),
-    pipelineStage: BOARD_DISPATCH_STAGE,
+    dispatchStages: ["development", "test"],
     completedByIssue: ledger.completedByIssue,
   };
 }
@@ -361,6 +547,7 @@ export type DispatchResult = {
 export async function dispatchBoardIssue(
   issueNumber: number,
   fromStage: BoardStatus | null = null,
+  pipelineStage: BoardDispatchStage = "development",
 ): Promise<DispatchResult> {
   if (!dispatchEnabled()) {
     throw new DispatchNotConfiguredError();
@@ -378,6 +565,7 @@ export async function dispatchBoardIssue(
     await logKad("warn", "dispatch.rejected", {
       issueNumber,
       fromStage,
+      pipelineStage,
       code: gate.code,
     });
     throw new DispatchRejectedError(gate.code, messages[gate.code]);
@@ -395,7 +583,7 @@ export async function dispatchBoardIssue(
   }
   const repo = githubRepo();
   const correlationId = randomUUID();
-  const prompt = buildAgentPrompt(issue, repo, fromStage);
+  const prompt = buildAgentPrompt(issue, repo, fromStage, pipelineStage);
 
   await postAutomationWebhook({
     source: "kad-v1",
@@ -403,17 +591,18 @@ export async function dispatchBoardIssue(
     repository: repo,
     prompt,
     correlationId,
-    pipelineStage: BOARD_DISPATCH_STAGE,
+    pipelineStage,
     fromStage,
   });
 
-  const { [String(issueNumber)]: _prev, ...restCompleted } =
-    ledger.completedByIssue;
+  const completionKey = completionStorageKey(issueNumber, pipelineStage);
+  const { [completionKey]: _prev, ...restCompleted } = ledger.completedByIssue;
   ledger = {
     active: {
       issueNumber,
       correlationId,
       startedAt: new Date(now).toISOString(),
+      pipelineStage,
     },
     lastDispatchAtByIssue: {
       ...ledger.lastDispatchAtByIssue,
@@ -427,6 +616,7 @@ export async function dispatchBoardIssue(
     issueNumber,
     correlationId,
     fromStage,
+    pipelineStage,
     repository: repo,
     issueTitle: issue.title,
   });
@@ -435,6 +625,54 @@ export async function dispatchBoardIssue(
     correlationId,
     issueNumber,
     issueTitle: issue.title,
+  };
+}
+
+export async function getIssueAgentDetail(
+  issueNumber: number,
+  contextStage: BoardDispatchStage = "development",
+): Promise<IssueAgentDetail> {
+  let ledger = await readLedger();
+  const activeLock = getActiveLock(ledger, Date.now(), lockTtlMs());
+  if (
+    dispatchEnabled() &&
+    activeLock?.issueNumber === issueNumber &&
+    githubToken()
+  ) {
+    ledger = await syncActiveCompletion(ledger);
+  }
+  const lock = getActiveLock(ledger, Date.now(), lockTtlMs());
+  const active =
+    lock?.issueNumber === issueNumber && lock.pipelineStage === contextStage
+      ? lock
+      : null;
+  const completed =
+    ledger.completedByIssue[completionStorageKey(issueNumber, contextStage)] ??
+    null;
+  const issue = await fetchGitHubIssue(issueNumber);
+  const repo = githubRepo();
+  const pullRequest = await fetchPullRequestForIssue(issueNumber);
+
+  let agentStatus: IssueAgentDetail["agentStatus"] = "none";
+  if (active) agentStatus = "active";
+  else if (completed) agentStatus = "completed";
+
+  return {
+    issueNumber,
+    repository: repo,
+    contextStage,
+    issue,
+    agentStatus,
+    active: active
+      ? {
+          correlationId: active.correlationId,
+          startedAt: active.startedAt,
+          pipelineStage: active.pipelineStage,
+        }
+      : null,
+    completed,
+    pullRequest,
+    branch: agentBranchForIssue(issueNumber),
   };
 }
 

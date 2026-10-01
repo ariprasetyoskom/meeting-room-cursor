@@ -24,6 +24,7 @@ describe("dispatch completion", () => {
       issueNumber: 35,
       correlationId: "abc",
       startedAt: new Date().toISOString(),
+      pipelineStage: "development",
     };
     const next = applyPullRequestCompletion(
       ledger,
@@ -37,7 +38,9 @@ describe("dispatch completion", () => {
       "2026-10-01T00:00:00.000Z",
     );
     expect(next.active).toBeNull();
-    expect(next.completedByIssue["35"]?.prNumber).toBe(41);
-    expect(next.completedByIssue["35"]?.summary).toContain("calendar");
+    expect(next.completedByIssue["35:development"]?.prNumber).toBe(41);
+    expect(next.completedByIssue["35:development"]?.summary).toContain(
+      "calendar",
+    );
   });
 });

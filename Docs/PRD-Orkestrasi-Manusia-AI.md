@@ -5,7 +5,7 @@
 |----------|---|
 | **Dokumen** | PRD-Orkestrasi-Manusia-AI |
 | **Identitas PRD** | **ORCH** |
-| **Versi** | **1.4** |
+| **Versi** | **1.5** |
 | **Tanggal** | 1 Oktober 2026 |
 | **Status** | Draft — siap ditinjau Product |
 | **Pemohon** | Sayan |
@@ -166,6 +166,99 @@ Operator melihat delapan kolom di `/admin/board` (**Intake → Plan → Developm
 Runner ORCH **memegang** transisi gate (`pass` / `fail` / `clarify`). Kanban v1.0 tidak mengganti orchestrator; hanya **Development** terhubung dispatch. Dokumen stage tetap di `Agentic/runs/{taskId}/` (§4.4).
 
 **Log operasional** (dispatch, lock, event runner) terpusat di `Development/logs/` — bukan dokumen agent/development. Detail: [Architecture Development Orchestration §6](./Architecture-Development-Orchestration.md).
+
+### 4.6 Template GitHub Issue dan body PR (briefing KAD)
+
+Setiap run Cursor Automation adalah **session baru** tanpa memori chat run sebelumnya. Agar agent develop/test memahami pekerjaan, operator dan agent memakai **tiga sumber briefing**: (1) body issue GitHub (masuk field `prompt` webhook saat dispatch), (2) body PR agent (jembatan Development → Test), (3) pasangan dokumen ORCH di `Agentic/runs/{taskId}/` bila skill devops-agent dipakai (§4.4).
+
+| Artefak | Siapa mengisi | Kapan |
+|---------|---------------|-------|
+| Body issue (§4.6.1) | PO / operator | Sebelum geser ke **Development** (ideal: sudah di **Plan**) |
+| Body PR — Summary & How to test (§4.6.2) | Agent develop (atau manusia) | Sebelum run Development dianggap selesai (PR terdeteksi kanban) |
+| Body PR — Test evidence (§4.6.2) | Agent test (atau manusia) | Sebelum run Test dianggap selesai |
+| Template issue (GitHub UI) | Repo | [`.github/ISSUE_TEMPLATE/orch_kanban_task.md`](../.github/ISSUE_TEMPLATE/orch_kanban_task.md) — salinan §4.6.1 |
+| Template PR (GitHub UI) | Repo | [`.github/PULL_REQUEST_TEMPLATE/agent_issue_pr.md`](../.github/PULL_REQUEST_TEMPLATE/agent_issue_pr.md) — salinan §4.6.2 |
+
+Branch agent: `agent/issue-{nomorIssue}` (KAD). Jangan merge ke `main`/`master` otomatis.
+
+#### 4.6.1 Template body issue GitHub
+
+Salin ke issue baru atau gunakan template **ORCH / Kanban task (KAD)** di GitHub.
+
+```markdown
+## Konteks
+<!-- 2–4 kalimat: masalah pengguna, FR/BR jika ada -->
+
+## Scope
+**In scope**
+- [ ] …
+
+**Out of scope**
+- …
+
+## Acceptance criteria
+- [ ] …
+- [ ] …
+
+## Area kode / modul
+<!-- Path atau modul: mis. Apps/web/src/lib/..., admin :3001 -->
+
+## Verifikasi (perintah)
+<!-- Exit code 0 = lulus gate ORCH bila kanonik auto -->
+- `cd Apps/web && npm test`
+- Smoke manual: …
+
+## Acuan ORCH (opsional)
+| Field | Nilai |
+|-------|--------|
+| Task id fase | <!-- mis. PSET26-be-auth-task --> |
+| Ref PRD / doc | <!-- link Docs/... --> |
+| Kanonik | <!-- stack \| be \| fe \| auth \| … --> |
+
+## Catatan Plan (opsional)
+<!-- Keputusan, manifest skill, risiko — diisi saat kartu di kolom Plan -->
+```
+
+**Aturan singkat:** acceptance criteria harus bisa diverifikasi tanpa asumsi chat sebelumnya; epic **#30** tidak didispatch — buat sub-issue (#31–#40).
+
+#### 4.6.2 Template body pull request (branch `agent/issue-{n}`)
+
+Agent **wajib** mempertahankan struktur di bawah di PR. Kanban membaca **## Summary** untuk tampilan kartu; run Test membaca **Summary** + **How to test**.
+
+```markdown
+## Summary
+<!-- Wajib sebelum Development selesai -->
+- **Issue:** #… — judul singkat
+- **Perubahan:** …
+- **File utama:** …
+- **Risiko / edge case:** …
+
+## How to test
+<!-- Wajib sebelum Development selesai -->
+1. …
+2. Perintah: `cd Apps/web && npm test`
+
+## Test evidence
+<!-- Diisi pada stage Test — perintah + exit code -->
+| Perintah | Exit code | Catatan |
+|----------|-----------|---------|
+| `npm test` | 0 | … |
+
+## ORCH / dokumen stage (opsional)
+<!-- Path relatif repo -->
+- Agent develop: `Agentic/runs/{taskId}/agent/…`
+- Development develop: `Agentic/runs/{taskId}/development/…`
+
+## Out of scope (konfirmasi)
+- …
+
+---
+Closes #…
+```
+
+**Aturan singkat:** jangan hapus **## Summary** saat menambah Test evidence; run Test **perbarui PR yang ada**, bukan PR baru kecuali belum ada.
+
+Instruksi statis Automation: [KANBAN-AUTOMATION-INSTRUCTIONS.md](./KANBAN-AUTOMATION-INSTRUCTIONS.md).
 
 ---
 
@@ -405,10 +498,11 @@ Hanya OQ-1–OQ-3 yang terbuka. OR-01–OR-16 sudah terkunci untuk versi ini.
 | PRD produk booking | [PRD-Aplikasi-Booking-Ruang-Meeting.md](./PRD-Aplikasi-Booking-Ruang-Meeting.md) | Bukan objek ORCH; scope produk tetap di sana |
 | Skill agen dokumen | [Agentic/README.md](../Agentic/README.md) | Pola instruksi peran; bukan mesin gate |
 | Kanban dispatch | [PRD-Kanban-Agent-Dispatch.md](./PRD-Kanban-Agent-Dispatch.md) | Trigger develop via kolom Development |
+| Template issue / PR (KAD) | §4.6 dokumen ini · `.github/ISSUE_TEMPLATE/orch_kanban_task.md` | Briefing session Automation |
 | Arsitektur | [Architecture-Development-Orchestration.md](./Architecture-Development-Orchestration.md) | C4, log, pemetaan kanban |
 
 TDD ORCH (schema ledger, pemanggilan SDK, layout runner) menyusul setelah PRD ini disetujui.
 
 ---
 
-*Akhir PRD Orkestrasi Manusia dan AI v1.4.*
+*Akhir PRD Orkestrasi Manusia dan AI v1.5.*

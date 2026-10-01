@@ -17,7 +17,18 @@ export type BoardCard = {
 export const BOARD_REPO = "meeting-room-cursor";
 
 /** Kolom geser ke sini memicu Cursor Automation (KAD). */
-export const BOARD_DISPATCH_STAGE: BoardStatus = "development";
+export const BOARD_DISPATCH_STAGES = ["development", "test"] as const;
+
+export type BoardDispatchStage = (typeof BOARD_DISPATCH_STAGES)[number];
+
+/** @deprecated gunakan `BoardDispatchStage` / `BOARD_DISPATCH_STAGES` */
+export const BOARD_DISPATCH_STAGE: BoardDispatchStage = "development";
+
+export function isBoardDispatchStage(
+  stage: BoardStatus,
+): stage is BoardDispatchStage {
+  return (BOARD_DISPATCH_STAGES as readonly string[]).includes(stage);
+}
 
 export const BOARD_COLUMNS: {
   id: BoardStatus;

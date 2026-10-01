@@ -1,7 +1,9 @@
 import {
-  BOARD_DISPATCH_STAGE,
+  isBoardDispatchStage,
+  type BoardDispatchStage,
   type BoardStatus,
 } from "@/lib/project-board";
+import { completionStorageKey } from "@/lib/board-dispatch-stages";
 
 export const DISPATCH_EPIC_BLOCK = 30;
 export const DISPATCH_DEBOUNCE_MS = 2000;
@@ -10,7 +12,7 @@ export function shouldTriggerDispatch(
   from: BoardStatus,
   to: BoardStatus,
 ): boolean {
-  return to === BOARD_DISPATCH_STAGE && from !== BOARD_DISPATCH_STAGE;
+  return isBoardDispatchStage(to) && from !== to;
 }
 
 export function isEpicDispatchBlocked(issueNumber: number): boolean {
@@ -21,6 +23,7 @@ export type DispatchLock = {
   issueNumber: number;
   correlationId: string;
   startedAt: string;
+  pipelineStage: BoardDispatchStage;
 };
 
 export type DispatchCompletedRun = {
@@ -31,6 +34,7 @@ export type DispatchCompletedRun = {
   prNumber: number;
   prUrl: string;
   prState: string;
+  pipelineStage: BoardDispatchStage;
 };
 
 export type DispatchLedger = {
@@ -49,6 +53,33 @@ export function createEmptyLedger(): DispatchLedger {
 
 export function agentBranchForIssue(issueNumber: number): string {
   return `agent/issue-${issueNumber}`;
+}
+
+export function normalizeDispatchLedger(ledger: DispatchLedger): DispatchLedger {
+  const completedByIssue: Record<string, DispatchCompletedRun> = {};
+  for (const [key, run] of Object.entries(ledger.completedByIssue ?? {})) {
+    const stage: BoardDispatchStage =
+      run.pipelineStage ??
+      (key.includes(":") ? (key.split(":")[1] as BoardDispatchStage) : "development");
+    const issueNumber = run.issueNumber;
+    completedByIssue[completionStorageKey(issueNumber, stage)] = {
+      ...run,
+      pipelineStage: stage,
+      issueNumber,
+    };
+  }
+  let active = ledger.active;
+  if (active) {
+    active = {
+      ...active,
+      pipelineStage: active.pipelineStage ?? "development",
+    };
+  }
+  return {
+    active,
+    lastDispatchAtByIssue: ledger.lastDispatchAtByIssue ?? {},
+    completedByIssue,
+  };
 }
 
 export function isLockStale(

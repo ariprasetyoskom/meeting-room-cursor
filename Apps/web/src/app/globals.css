@@ -435,6 +435,88 @@ a {
   max-width: 520px;
 }
 
+.project-board-detail-modal.modal-wide {
+  max-width: 36rem;
+  max-height: min(90vh, 40rem);
+  overflow: auto;
+}
+
+.project-board-detail-meta {
+  margin: 0.25rem 0 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.project-board-detail-issue-title {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.project-board-detail-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 0.75rem 0 1rem;
+}
+
+.project-board-detail-sections h4 {
+  margin: 0 0 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
+
+.project-board-detail-status {
+  display: inline-block;
+  margin: 0;
+}
+
+.project-board-detail-list {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.project-board-detail-summary {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.project-board-detail-pre {
+  margin: 0.5rem 0 0;
+  padding: 0.65rem 0.75rem;
+  max-height: 14rem;
+  overflow: auto;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.project-board-detail-issue-body {
+  margin: 0 0 0.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  max-height: 8rem;
+  overflow: auto;
+}
+
+.project-board-card.is-clickable {
+  cursor: pointer;
+}
+
+.project-board-card.is-clickable:active {
+  cursor: grabbing;
+}
+
 .mono-sm {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 0.75rem;

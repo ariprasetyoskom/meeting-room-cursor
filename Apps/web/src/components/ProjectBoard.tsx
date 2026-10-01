@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { BoardCardAgentModal } from "./BoardCardAgentModal";
 import {
   BOARD_CARDS,
   BOARD_COLUMNS,
@@ -8,9 +9,11 @@ import {
   type BoardCard,
   type BoardStatus,
   filterCards,
+  isBoardDispatchStage,
   moveCard,
   uiEpicProgress,
 } from "@/lib/project-board";
+import { completionStorageKey } from "@/lib/board-dispatch-stages";
 import { shouldTriggerDispatch } from "@/lib/board-dispatch-policy";
 import { ApiError, apiFetch } from "@/lib/client-api";
 import { Alert } from "./ui/Alert";
@@ -23,15 +26,17 @@ type DispatchCompletedRun = {
   prNumber: number;
   prUrl: string;
   prState: string;
+  pipelineStage: "development" | "test";
 };
 
 type DispatchStatus = {
   enabled: boolean;
   configured: boolean;
   activeIssueNumber: number | null;
+  activePipelineStage: "development" | "test" | null;
   correlationId: string | null;
   repository: string;
-  pipelineStage?: string;
+  dispatchStages?: ("development" | "test")[];
   completedByIssue?: Record<string, DispatchCompletedRun>;
 };
 
@@ -47,6 +52,10 @@ export function ProjectBoard() {
   const [boardError, setBoardError] = useState<string | null>(null);
   const [dispatching, setDispatching] = useState<number | null>(null);
   const [clearingLock, setClearingLock] = useState(false);
+  const [detailCard, setDetailCard] = useState<BoardCard | null>(null);
+  const suppressCardClickRef = useRef(false);
+  /** Supaya auto-advance Development→Test hanya sekali per completion. */
+  const autoAdvancedDevRef = useRef<Set<string>>(new Set());
 
   const refreshDispatchStatus = useCallback(async () => {
     try {
@@ -64,18 +73,53 @@ export function ProjectBoard() {
   }, [refreshDispatchStatus]);
 
   useEffect(() => {
-    if (!dispatchStatus?.enabled || dispatchStatus.activeIssueNumber == null) {
-      return;
-    }
+    if (!dispatchStatus?.enabled) return;
+    const needsPoll =
+      dispatchStatus.activeIssueNumber != null ||
+      cards.some(
+        (card) =>
+          card.status === "development" &&
+          !dispatchStatus.completedByIssue?.[
+            completionStorageKey(card.number, "development")
+          ],
+      );
+    if (!needsPoll) return;
     const id = window.setInterval(() => {
       void refreshDispatchStatus();
     }, 15_000);
     return () => window.clearInterval(id);
   }, [
-    dispatchStatus?.enabled,
+    cards,
     dispatchStatus?.activeIssueNumber,
+    dispatchStatus?.completedByIssue,
+    dispatchStatus?.enabled,
     refreshDispatchStatus,
   ]);
+
+  useEffect(() => {
+    const completed = dispatchStatus?.completedByIssue ?? {};
+    const toAdvance = cards.filter((card) => {
+      if (card.status !== "development") return false;
+      const key = completionStorageKey(card.number, "development");
+      return Boolean(completed[key] && !autoAdvancedDevRef.current.has(key));
+    });
+    if (toAdvance.length === 0) return;
+
+    for (const card of toAdvance) {
+      autoAdvancedDevRef.current.add(
+        completionStorageKey(card.number, "development"),
+      );
+    }
+    setCards((prev) => {
+      let next = prev;
+      for (const card of toAdvance) {
+        next = moveCard(next, card.number, "test");
+      }
+      return next;
+    });
+    const nums = toAdvance.map((card) => `#${card.number}`).join(", ");
+    setLive(`${nums} otomatis pindah ke Test setelah Development selesai.`);
+  }, [cards, dispatchStatus?.completedByIssue]);
 
   const visible = useMemo(() => filterCards(cards, query), [cards, query]);
   const progress = uiEpicProgress(cards);
@@ -99,7 +143,10 @@ export function ProjectBoard() {
         setCards((prev) => moveCard(prev, number, from));
       };
 
+      const pipelineStage = isBoardDispatchStage(status) ? status : null;
+
       if (
+        !pipelineStage ||
         !shouldTriggerDispatch(from, status) ||
         !dispatchStatus?.enabled
       ) {
@@ -120,8 +167,17 @@ export function ProjectBoard() {
         }>("/api/v1/admin/board/dispatch", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ issueNumber: number, fromStage: from }),
+          body: JSON.stringify({
+            issueNumber: number,
+            fromStage: from,
+            pipelineStage,
+          }),
         });
+        if (pipelineStage === "development") {
+          autoAdvancedDevRef.current.delete(
+            completionStorageKey(number, "development"),
+          );
+        }
         setLive(
           `Agent dipanggil untuk #${result.issueNumber} (${result.correlationId.slice(0, 8)}…).`,
         );
@@ -133,7 +189,7 @@ export function ProjectBoard() {
             ? e.message
             : "Gagal memanggil agent. Kartu dikembalikan.";
         setBoardError(message);
-        setLive(`#${number} tidak pindah ke Development: ${message}`);
+        setLive(`#${number} tidak pindah ke ${label}: ${message}`);
       } finally {
         setDispatching(null);
       }
@@ -160,7 +216,23 @@ export function ProjectBoard() {
   }, [refreshDispatchStatus]);
 
   const activeAgentIssue = dispatchStatus?.activeIssueNumber ?? null;
+  const activePipelineStage = dispatchStatus?.activePipelineStage ?? null;
   const completedByIssue = dispatchStatus?.completedByIssue ?? {};
+
+  const cardCompletion = (card: BoardCard) => {
+    if (!isBoardDispatchStage(card.status)) return null;
+    return (
+      completedByIssue[completionStorageKey(card.number, card.status)] ?? null
+    );
+  };
+
+  const cardAgentActive = (card: BoardCard) =>
+    activeAgentIssue === card.number &&
+    isBoardDispatchStage(card.status) &&
+    activePipelineStage === card.status;
+
+  const agentActiveLabel = (stage: "development" | "test") =>
+    stage === "test" ? "Agent aktif (Test)" : "Agent aktif (Development)";
 
   return (
     <section className="project-board" aria-label="Papan meeting-room-cursor">
@@ -187,7 +259,10 @@ export function ProjectBoard() {
       {dispatchStatus?.enabled && (
         <div className="project-board-dispatch-row">
           <p className="project-board-dispatch-hint text-muted">
-            Geser ke <strong>Development</strong> memanggil agent Cursor
+            Geser ke <strong>Development</strong> atau <strong>Test</strong>{" "}
+            memanggil agent Cursor. Selesai Development → kartu otomatis ke{" "}
+            <strong>Test</strong> + agent Test dipanggil otomatis (satu
+            Automation, <code>pipelineStage</code> berbeda)
             {dispatchStatus.configured
               ? activeAgentIssue
                 ? ` (aktif: #${activeAgentIssue})`
@@ -262,11 +337,16 @@ export function ProjectBoard() {
                 {items.map((card) => (
                   <li key={card.number}>
                     <article
-                      className={`project-board-card ${dragging === card.number ? "is-dragging" : ""} ${dispatching === card.number ? "is-dispatching" : ""} ${activeAgentIssue === card.number ? "is-agent-active" : ""} ${completedByIssue[String(card.number)] && activeAgentIssue !== card.number ? "is-agent-done" : ""}`}
+                      className={`project-board-card is-clickable ${dragging === card.number ? "is-dragging" : ""} ${dispatching === card.number ? "is-dispatching" : ""} ${cardAgentActive(card) ? "is-agent-active" : ""} ${cardCompletion(card) && !cardAgentActive(card) ? "is-agent-done" : ""}`}
                       draggable={dispatching !== card.number}
                       tabIndex={0}
-                      aria-label={`${BOARD_REPO} #${card.number}. ${card.title}. ${column.label}`}
+                      aria-label={`${BOARD_REPO} #${card.number}. ${card.title}. ${column.label}. Klik untuk detail agent.`}
+                      onClick={() => {
+                        if (suppressCardClickRef.current) return;
+                        setDetailCard(card);
+                      }}
                       onDragStart={(event) => {
+                        suppressCardClickRef.current = true;
                         event.dataTransfer.setData("text/plain", String(card.number));
                         event.dataTransfer.effectAllowed = "move";
                         setDragging(card.number);
@@ -274,10 +354,21 @@ export function ProjectBoard() {
                       onDragEnd={() => {
                         setDragging(null);
                         setDropTarget(null);
+                        window.setTimeout(() => {
+                          suppressCardClickRef.current = false;
+                        }, 0);
                       }}
                       onKeyDown={(event) => {
                         const order = BOARD_COLUMNS.map((item) => item.id);
                         const index = order.indexOf(card.status);
+                        if (
+                          (event.key === "Enter" || event.key === " ") &&
+                          !event.altKey
+                        ) {
+                          event.preventDefault();
+                          setDetailCard(card);
+                          return;
+                        }
                         if (event.key === "ArrowRight" && index < order.length - 1) {
                           event.preventDefault();
                           void place(card.number, order[index + 1]);
@@ -296,30 +387,32 @@ export function ProjectBoard() {
                         </span>
                       </div>
                       <h3>{card.title}</h3>
-                      {activeAgentIssue === card.number && (
-                        <p className="project-board-agent-badge">Agent aktif</p>
+                      {cardAgentActive(card) && isBoardDispatchStage(card.status) && (
+                        <p className="project-board-agent-badge">
+                          {agentActiveLabel(card.status)}
+                        </p>
                       )}
-                      {activeAgentIssue !== card.number &&
-                        completedByIssue[String(card.number)] && (
+                      {cardCompletion(card) && !cardAgentActive(card) && (
                           <>
                             <p className="project-board-agent-badge is-complete">
                               Agent selesai
+                              {isBoardDispatchStage(card.status) &&
+                                card.status === "test" &&
+                                " (Test)"}
                             </p>
                             <p className="project-board-agent-summary">
-                              {completedByIssue[String(card.number)].summary}
+                              {cardCompletion(card)!.summary}
                             </p>
                             <p className="project-board-agent-summary">
                               <a
-                                href={
-                                  completedByIssue[String(card.number)].prUrl
-                                }
+                                href={cardCompletion(card)!.prUrl}
                                 target="_blank"
                                 rel="noreferrer"
                               >
-                                PR #{completedByIssue[String(card.number)].prNumber}
+                                PR #{cardCompletion(card)!.prNumber}
                               </a>
                               {" · "}
-                              {completedByIssue[String(card.number)].prState}
+                              {cardCompletion(card)!.prState}
                             </p>
                           </>
                         )}
@@ -345,6 +438,11 @@ export function ProjectBoard() {
         })}
         </div>
       </div>
+
+      <BoardCardAgentModal
+        card={detailCard}
+        onClose={() => setDetailCard(null)}
+      />
     </section>
   );
 }
