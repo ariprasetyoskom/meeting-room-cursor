@@ -6,7 +6,7 @@ Selaras [PRD-Kanban-Agent-Dispatch.md](./PRD-Kanban-Agent-Dispatch.md) v1.0.
 
 1. Di Cursor: buat **Automation baru** dengan pemicu **Incoming HTTP webhook**.
 2. Repo: `ariprasetyoskom/meeting-room-cursor`, branch kerja (mis. `cursor/meeting-room-web-scaffold`).
-3. Instruksi agent: salin dari [KANBAN-AUTOMATION-INSTRUCTIONS.md](./KANBAN-AUTOMATION-INSTRUCTIONS.md) (satu Automation; `development` dan `test`).
+3. Instruksi agent: salin dari [KANBAN-AUTOMATION-INSTRUCTIONS.md](./KANBAN-AUTOMATION-INSTRUCTIONS.md) (satu Automation; `development`, `test`, `audit`).
 
 4. Setelah disimpan, salin **URL webhook** dan **secret** ke server (bukan ke browser).
 
@@ -28,7 +28,7 @@ Server mengirim:
 
 Automation cukup memakai `prompt`; field lain untuk log/observability.
 
-Setelah Development selesai (PR terdeteksi), server dapat memanggil webhook lagi dengan `"pipelineStage": "test"` (`BOARD_AUTO_DISPATCH_TEST`, default aktif). Papan memindahkan kartu ke kolom Test secara otomatis.
+Rantai otomatis (default aktif): Development selesai → webhook `"pipelineStage": "test"`; Test selesai → webhook `"audit"`. Matikan per stage: `BOARD_AUTO_DISPATCH_TEST`, `BOARD_AUTO_DISPATCH_AUDIT`. Papan menyelaraskan kolom kartu dengan ledger KAD (Test → Audit → Human QA).
 
 ## 2. Env server (`Apps/web/.env.local`)
 

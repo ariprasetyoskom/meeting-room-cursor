@@ -29,17 +29,17 @@ type DispatchCompletedRun = {
   prNumber: number;
   prUrl: string;
   prState: string;
-  pipelineStage: "development" | "test";
+  pipelineStage: "development" | "test" | "audit";
 };
 
 type DispatchStatus = {
   enabled: boolean;
   configured: boolean;
   activeIssueNumber: number | null;
-  activePipelineStage: "development" | "test" | null;
+  activePipelineStage: "development" | "test" | "audit" | null;
   correlationId: string | null;
   repository: string;
-  dispatchStages?: ("development" | "test")[];
+  dispatchStages?: ("development" | "test" | "audit")[];
   completedByIssue?: Record<string, DispatchCompletedRun>;
 };
 
@@ -95,6 +95,9 @@ export function ProjectBoard() {
         }
         if (card.status === "test") {
           return !completed[completionStorageKey(card.number, "test")];
+        }
+        if (card.status === "audit") {
+          return !completed[completionStorageKey(card.number, "audit")];
         }
         return false;
       });
@@ -246,8 +249,11 @@ export function ProjectBoard() {
     isBoardDispatchStage(card.status) &&
     activePipelineStage === card.status;
 
-  const agentActiveLabel = (stage: "development" | "test") =>
-    stage === "test" ? "Agent aktif (Test)" : "Agent aktif (Development)";
+  const agentActiveLabel = (stage: "development" | "test" | "audit") => {
+    if (stage === "test") return "Agent aktif (Test)";
+    if (stage === "audit") return "Agent aktif (Audit)";
+    return "Agent aktif (Development)";
+  };
 
   return (
     <section className="project-board" aria-label="Papan meeting-room-cursor">
@@ -274,9 +280,10 @@ export function ProjectBoard() {
       {dispatchStatus?.enabled && (
         <div className="project-board-dispatch-row">
           <p className="project-board-dispatch-hint text-muted">
-            Geser ke <strong>Development</strong> atau <strong>Test</strong>{" "}
-            memanggil agent Cursor. Selesai Development → <strong>Test</strong>{" "}
-            (+ agent Test otomatis); selesai Test → <strong>Audit</strong>.
+            Geser ke <strong>Development</strong>, <strong>Test</strong>, atau{" "}
+            <strong>Audit</strong> memanggil agent Cursor. Rantai otomatis:
+            Development → Test → Audit; Audit pass → <strong>Human QA</strong>,
+            clarify → <strong>Human Clarify</strong>.
             Posisi kartu disimpan di browser (refresh tidak kembali ke Intake)
             {dispatchStatus.configured
               ? activeAgentIssue
@@ -412,8 +419,8 @@ export function ProjectBoard() {
                             <p className="project-board-agent-badge is-complete">
                               Agent selesai
                               {isBoardDispatchStage(card.status) &&
-                                card.status === "test" &&
-                                " (Test)"}
+                                card.status !== "development" &&
+                                ` (${card.status === "test" ? "Test" : "Audit"})`}
                             </p>
                             <p className="project-board-agent-summary">
                               {cardCompletion(card)!.summary}

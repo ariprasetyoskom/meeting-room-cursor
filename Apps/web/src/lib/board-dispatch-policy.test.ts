@@ -7,11 +7,12 @@ import {
 } from "./board-dispatch-policy";
 
 describe("board dispatch policy", () => {
-  it("triggers when entering development or test", () => {
+  it("triggers when entering development, test, or audit", () => {
     expect(shouldTriggerDispatch("intake", "development")).toBe(true);
     expect(shouldTriggerDispatch("plan", "development")).toBe(true);
     expect(shouldTriggerDispatch("development", "test")).toBe(true);
-    expect(shouldTriggerDispatch("development", "audit")).toBe(false);
+    expect(shouldTriggerDispatch("test", "audit")).toBe(true);
+    expect(shouldTriggerDispatch("development", "audit")).toBe(true);
     expect(shouldTriggerDispatch("test", "test")).toBe(false);
   });
 

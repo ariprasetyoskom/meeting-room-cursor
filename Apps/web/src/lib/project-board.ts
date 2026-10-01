@@ -17,7 +17,7 @@ export type BoardCard = {
 export const BOARD_REPO = "meeting-room-cursor";
 
 /** Kolom geser ke sini memicu Cursor Automation (KAD). */
-export const BOARD_DISPATCH_STAGES = ["development", "test"] as const;
+export const BOARD_DISPATCH_STAGES = ["development", "test", "audit"] as const;
 
 export type BoardDispatchStage = (typeof BOARD_DISPATCH_STAGES)[number];
 
@@ -151,11 +151,24 @@ const BOARD_STATUS_RANK: Record<BoardStatus, number> = Object.fromEntries(
   BOARD_COLUMNS.map((column, index) => [column.id, index]),
 ) as Record<BoardStatus, number>;
 
-/** Kolom minimum dari ledger KAD (development selesai → Test; test selesai → Audit). */
+/** Kolom minimum dari ledger KAD (develop → Test → Audit → Human QA / Clarify). */
 export function minBoardStatusFromKadCompletions(
   issueNumber: number,
   completedByIssue: Record<string, unknown>,
 ): BoardStatus | null {
+  const auditEntry = completedByIssue[`${issueNumber}:audit`];
+  if (auditEntry) {
+    const verdict =
+      typeof auditEntry === "object" &&
+      auditEntry !== null &&
+      "auditVerdict" in auditEntry
+        ? (auditEntry as { auditVerdict?: string }).auditVerdict
+        : undefined;
+    if (verdict === "pass") return "human_qa";
+    if (verdict === "clarify") return "human_clarify";
+    if (verdict === "fail") return "audit";
+    return "human_qa";
+  }
   if (completedByIssue[`${issueNumber}:test`]) return "audit";
   if (completedByIssue[`${issueNumber}:development`]) return "test";
   return null;

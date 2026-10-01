@@ -13,6 +13,8 @@ export function parseCompletionStorageKey(
   const [rawIssue, stage] = key.split(":");
   const issueNumber = Number(rawIssue);
   if (!Number.isInteger(issueNumber) || issueNumber <= 0) return null;
-  if (stage !== "development" && stage !== "test") return null;
+  if (stage !== "development" && stage !== "test" && stage !== "audit") {
+    return null;
+  }
   return { issueNumber, stage };
 }

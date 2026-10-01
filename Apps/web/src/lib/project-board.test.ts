@@ -44,6 +44,24 @@ describe("project board", () => {
     expect(next.find((c) => c.number === 36)?.status).toBe("audit");
   });
 
+  it("reconciles to Human QA when audit verdict pass", () => {
+    const onAudit = moveCard(BOARD_CARDS, 36, "audit");
+    const completed = {
+      "36:audit": { issueNumber: 36, auditVerdict: "pass" },
+    };
+    const next = reconcileCardsWithKadCompletions(onAudit, completed);
+    expect(next.find((c) => c.number === 36)?.status).toBe("human_qa");
+  });
+
+  it("reconciles to Human Clarify when audit verdict clarify", () => {
+    const onAudit = moveCard(BOARD_CARDS, 36, "audit");
+    const completed = {
+      "36:audit": { issueNumber: 36, auditVerdict: "clarify" },
+    };
+    const next = reconcileCardsWithKadCompletions(onAudit, completed);
+    expect(next.find((c) => c.number === 36)?.status).toBe("human_clarify");
+  });
+
   it("reconciles to Test when only development completion exists", () => {
     const onDev = moveCard(BOARD_CARDS, 36, "development");
     const completed = {

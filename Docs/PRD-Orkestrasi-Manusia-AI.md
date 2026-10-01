@@ -244,6 +244,12 @@ Agent **wajib** mempertahankan struktur di bawah di PR. Kanban membaca **## Summ
 |----------|-----------|---------|
 | `npm test` | 0 | … |
 
+## Audit
+<!-- Diisi pada stage Audit — verdict pass / fail / clarify -->
+- **Verdict:**
+- **Temuan:**
+- **Rekomendasi:**
+
 ## ORCH / dokumen stage (opsional)
 <!-- Path relatif repo -->
 - Agent develop: `Agentic/runs/{taskId}/agent/…`

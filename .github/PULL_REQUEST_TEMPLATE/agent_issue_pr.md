@@ -16,6 +16,12 @@
 |----------|-----------|---------|
 | `npm test` |  |  |
 
+## Audit
+<!-- Diisi pada stage Audit — verdict pass / fail / clarify -->
+- **Verdict:**
+- **Temuan:**
+- **Rekomendasi:**
+
 ## ORCH / dokumen stage (opsional)
 - Agent develop: `Agentic/runs/{taskId}/agent/…`
 - Development develop: `Agentic/runs/{taskId}/development/…`

@@ -30,4 +30,10 @@ describe("board dispatch prompt", () => {
     expect(prompt).toContain("**Test**");
     expect(prompt.toLowerCase()).toContain("verifikasi");
   });
+
+  it("includes audit stage instructions", () => {
+    const prompt = buildAgentPrompt(issue, "o/r", "test", "audit");
+    expect(prompt).toContain("**Audit**");
+    expect(prompt).toContain("## Audit");
+  });
 });

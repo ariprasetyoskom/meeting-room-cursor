@@ -22,7 +22,7 @@ const boardStageSchema = z.enum([
   "done",
 ]);
 
-const dispatchStageSchema = z.enum(["development", "test"]);
+const dispatchStageSchema = z.enum(["development", "test", "audit"]);
 
 const postSchema = z.object({
   issueNumber: z.number().int().positive(),

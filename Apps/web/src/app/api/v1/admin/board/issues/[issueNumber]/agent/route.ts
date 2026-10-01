@@ -15,7 +15,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
     }
     const stageParam = request.nextUrl.searchParams.get("stage");
     const contextStage =
-      stageParam === "test" || stageParam === "development"
+      stageParam === "test" ||
+      stageParam === "development" ||
+      stageParam === "audit"
         ? stageParam
         : "development";
     const detail = await getIssueAgentDetail(issueNumber, contextStage);

@@ -10,6 +10,11 @@ import {
   type DispatchCompletedRun,
   type DispatchLedger,
 } from "@/lib/board-dispatch-policy";
+import {
+  parseAuditVerdictFromLooseText,
+  parseAuditVerdictFromPrBody,
+  type AuditVerdict,
+} from "@/lib/board-audit-verdict";
 import { completionStorageKey } from "@/lib/board-dispatch-stages";
 import {
   type BoardDispatchStage,
@@ -68,6 +73,11 @@ function dispatchEnabled(): boolean {
 function autoDispatchTestAfterDev(): boolean {
   if (!dispatchEnabled()) return false;
   return process.env.BOARD_AUTO_DISPATCH_TEST !== "false";
+}
+
+function autoDispatchAuditAfterTest(): boolean {
+  if (!dispatchEnabled()) return false;
+  return process.env.BOARD_AUTO_DISPATCH_AUDIT !== "false";
 }
 
 function lockTtlMs(): number {
@@ -139,6 +149,7 @@ export function applyPullRequestCompletion(
   pr: GitHubPullSnapshot,
   nowIso: string,
   summaryOverride?: string,
+  auditVerdict?: AuditVerdict,
 ): DispatchLedger {
   const active = ledger.active;
   if (!active) return ledger;
@@ -151,6 +162,9 @@ export function applyPullRequestCompletion(
     prUrl: pr.html_url,
     prState: pr.state,
     pipelineStage: active.pipelineStage,
+    ...(active.pipelineStage === "audit" && auditVerdict
+      ? { auditVerdict }
+      : {}),
   };
   return {
     ...ledger,
@@ -273,6 +287,94 @@ async function isTestDispatchComplete(
   return { ok: false };
 }
 
+async function fetchIssueCommentsText(issueNumber: number): Promise<string> {
+  const token = githubToken();
+  if (!token) return "";
+  const repo = githubRepo();
+  const res = await fetch(
+    `https://api.github.com/repos/${repo}/issues/${issueNumber}/comments?per_page=20`,
+    {
+      headers: {
+        Accept: "application/vnd.github+json",
+        Authorization: `Bearer ${token}`,
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+      cache: "no-store",
+    },
+  );
+  if (!res.ok) return "";
+  const comments = (await res.json()) as Array<{ body?: string; created_at?: string }>;
+  return comments
+    .filter((c) => {
+      const t = c.created_at ? Date.parse(c.created_at) : 0;
+      return t > 0;
+    })
+    .map((c) => c.body ?? "")
+    .join("\n\n");
+}
+
+async function isAuditDispatchComplete(
+  active: NonNullable<DispatchLedger["active"]>,
+  pr: GitHubPullSnapshot,
+): Promise<
+  { ok: true; summary: string; auditVerdict: AuditVerdict } | { ok: false }
+> {
+  const started = Date.parse(active.startedAt);
+  const body = pr.body ?? "";
+
+  let verdict =
+    parseAuditVerdictFromPrBody(body) ??
+    parseAuditVerdictFromLooseText(body);
+
+  if (!verdict) {
+    const prComments = await fetchIssueCommentsText(pr.number);
+    verdict = parseAuditVerdictFromLooseText(prComments);
+  }
+  if (!verdict) {
+    const issueComments = await fetchIssueCommentsText(active.issueNumber);
+    verdict = parseAuditVerdictFromLooseText(issueComments);
+  }
+
+  if (!verdict) {
+    const commit = await fetchLatestCommitOnBranch(active.issueNumber);
+    if (
+      commit &&
+      !Number.isNaN(started) &&
+      Date.parse(commit.date) > started
+    ) {
+      verdict = parseAuditVerdictFromLooseText(commit.message);
+      if (verdict) {
+        const dest =
+          verdict === "pass"
+            ? "Human QA"
+            : verdict === "clarify"
+              ? "Human Clarify"
+              : "Audit (ulang)";
+        return {
+          ok: true,
+          auditVerdict: verdict,
+          summary: `Audit ORCH: verdict **${verdict}** (commit) → ${dest} · PR #${pr.number}.`,
+        };
+      }
+    }
+  }
+
+  if (verdict) {
+    const dest =
+      verdict === "pass"
+        ? "Human QA"
+        : verdict === "clarify"
+          ? "Human Clarify"
+          : "Audit (ulang)";
+    return {
+      ok: true,
+      auditVerdict: verdict,
+      summary: `Audit ORCH: verdict **${verdict}** → ${dest} · PR #${pr.number}.`,
+    };
+  }
+  return { ok: false };
+}
+
 async function syncActiveCompletion(ledger: DispatchLedger): Promise<DispatchLedger> {
   const active = getActiveLock(ledger, Date.now(), lockTtlMs());
   if (!active || !githubToken()) return ledger;
@@ -306,7 +408,9 @@ async function syncActiveCompletion(ledger: DispatchLedger): Promise<DispatchLed
       }
     }
     return readLedger();
-  } else {
+  }
+
+  if (active.pipelineStage === "test") {
     const gate = await isTestDispatchComplete(active, pr);
     if (!gate.ok) return ledger;
     summary = gate.summary;
@@ -316,8 +420,41 @@ async function syncActiveCompletion(ledger: DispatchLedger): Promise<DispatchLed
       new Date().toISOString(),
       summary,
     );
+    await writeLedger(next);
+    await logKad("info", "dispatch.completed", {
+      issueNumber: active.issueNumber,
+      correlationId: active.correlationId,
+      pipelineStage: active.pipelineStage,
+      prNumber: pr.number,
+      prUrl: pr.html_url,
+      summary,
+    });
+    if (autoDispatchAuditAfterTest()) {
+      try {
+        await dispatchBoardIssue(active.issueNumber, "test", "audit");
+        await logKad("info", "dispatch.auto_audit_chained", {
+          issueNumber: active.issueNumber,
+        });
+      } catch (e) {
+        await logKad("warn", "dispatch.auto_audit_failed", {
+          issueNumber: active.issueNumber,
+          message: e instanceof Error ? e.message : "unknown",
+        });
+      }
+    }
+    return readLedger();
   }
 
+  const gate = await isAuditDispatchComplete(active, pr);
+  if (!gate.ok) return ledger;
+  summary = gate.summary;
+  next = applyPullRequestCompletion(
+    ledger,
+    pr,
+    new Date().toISOString(),
+    summary,
+    gate.auditVerdict,
+  );
   await writeLedger(next);
   await logKad("info", "dispatch.completed", {
     issueNumber: active.issueNumber,
@@ -443,13 +580,25 @@ export function buildAgentPrompt(
           "Jalankan test/verifikasi (npm test / CI); perbaiki minimal jika gagal; tulis bukti (perintah, exit code) di komentar PR atau ## Test evidence di body PR.",
           "Update PR yang ada; jangan buka PR baru kecuali belum ada.",
           "Perbarui body PR dengan ringkasan hasil test agar kanban menampilkan summary.",
+          "Jangan jalankan Audit penuh di run ini; setelah verifikasi lulus, papan otomatis lanjut ke Audit + run terpisah.",
         ]
-      : [
-          "Kamu dipanggil pada **Development** (implementasi).",
-          "Implementasi + test lokal relevan; buka atau perbarui PR di branch agent.",
-          "Sebelum menyelesai run: perbarui **body PR** dengan bagian ## Summary (judul, file utama, cara uji) — dipakai papan kanban.",
-          "Setelah PR ada, papan otomatis pindah ke Test dan run Test terpisah akan dipanggil; jangan jalankan stage Test dalam run Development ini.",
-        ];
+      : pipelineStage === "audit"
+        ? [
+            "Kamu dipanggil pada **Audit** (review ORCH — pelaksana audit ≠ develop).",
+            "Acuan: issue acceptance, PR branch `agent/issue-" +
+              issue.number +
+              "`, ## Summary, ## Test evidence, diff PR vs scope; pasangan dokumen develop/test bila ada.",
+            "Review kontrak & diff; jangan menulis ulang fitur kecuali temuan bug kecil yang wajib diperbaiki agar audit jujur.",
+            "Sebelum run selesai: tambahkan **## Audit** di body PR dengan **Verdict:** pass | fail | clarify (wajib). pass → kanban Human QA; clarify → Human Clarify; fail → tetap Audit untuk perbaikan/ulang.",
+            "Opsional: dokumen agent + development stage audit di `Agentic/runs/` bila skill devops-agent dipakai.",
+            "Update PR yang ada; jangan merge ke main/master.",
+          ]
+        : [
+            "Kamu dipanggil pada **Development** (implementasi).",
+            "Implementasi + test lokal relevan; buka atau perbarui PR di branch agent.",
+            "Sebelum menyelesai run: perbarui **body PR** dengan bagian ## Summary (judul, file utama, cara uji) — dipakai papan kanban.",
+            "Setelah PR ada, papan otomatis pindah ke Test dan run Test terpisah akan dipanggil; jangan jalankan stage Test dalam run Development ini.",
+          ];
   return [
     `Kerjakan GitHub issue #${issue.number} di repo ${repo}.`,
     `Judul: ${issue.title}`,
@@ -533,7 +682,7 @@ export async function getDispatchStatus(): Promise<DispatchStatus> {
     activePipelineStage: active?.pipelineStage ?? null,
     correlationId: active?.correlationId ?? null,
     repository: githubRepo(),
-    dispatchStages: ["development", "test"],
+    dispatchStages: ["development", "test", "audit"],
     completedByIssue: ledger.completedByIssue,
   };
 }

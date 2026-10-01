@@ -3,6 +3,7 @@ import {
   type BoardDispatchStage,
   type BoardStatus,
 } from "@/lib/project-board";
+import type { AuditVerdict } from "@/lib/board-audit-verdict";
 import { completionStorageKey } from "@/lib/board-dispatch-stages";
 
 export const DISPATCH_EPIC_BLOCK = 30;
@@ -35,6 +36,7 @@ export type DispatchCompletedRun = {
   prUrl: string;
   prState: string;
   pipelineStage: BoardDispatchStage;
+  auditVerdict?: AuditVerdict;
 };
 
 export type DispatchLedger = {
